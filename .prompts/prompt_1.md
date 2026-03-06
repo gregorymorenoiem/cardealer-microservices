@@ -13,11 +13,11 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1-5 completados. Sprint 6 en progreso.
+**Estado**: Sprint 1-5 completados. Sprint 6 completado.
 
 ---
 
-## 🔄 SPRINT 6 — Accesibilidad + Mobile UX + Code Quality (6 marzo 2026)
+## ✅ SPRINT 6 — Accesibilidad + Mobile UX + Code Quality (6 marzo 2026)
 
 ### Análisis previo: Auditoría WCAG + Mobile UX
 
@@ -30,12 +30,14 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 ---
 
-| #   | Tarea                                                   | Estado       | Notas                                        |
-| --- | ------------------------------------------------------- | ------------ | -------------------------------------------- |
-| 34  | Hero search input: aria-label + form wrapper            | 🔄 Pendiente | WCAG 4.1.2 Level A — critical                |
-| 35  | Vehicle card favorite buttons: 44px + mobile visibility | 🔄 Pendiente | WCAG 2.5.8 touch targets                     |
-| 36  | Footer links: py-2 mobile touch targets                 | 🔄 Pendiente | 20+ links afectados                          |
-| 37  | Dead code cleanup: hero-compact.tsx                     | 🔄 Pendiente | Remove ~150 lines unused exports/constants   |
+| #   | Tarea                                                   | Estado               | Notas                                                                  |
+| --- | ------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------- |
+| 34  | Hero search input: aria-label + form wrapper            | ✅ Ya existía        | role="search" + aria-label ya presentes en hero-compact.tsx            |
+| 35  | Vehicle card favorite buttons: 44px + mobile visibility | ✅ Ya existía        | VehicleCard ya tiene min-h-[44px], hero-compact fav button removido    |
+| 36  | Footer links: py-2 mobile touch targets                 | ✅ Commit `960416ed` | Social icons h-9→h-11 (44px), footer links min-h-[44px] en mobile     |
+| 37  | Dead code cleanup: hero-compact.tsx                     | ✅ PM ya limpió      | Archivo reducido de 419→285 líneas, dead exports/constants removidos   |
+
+**Commit**: `960416ed` pushed to main
 
 ---
 
