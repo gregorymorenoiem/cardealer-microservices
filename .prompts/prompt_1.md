@@ -15,11 +15,11 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1-6 completados. Sprint 7 en progreso.
+**Estado**: Sprint 1-7 completados.
 
 ---
 
-## 🔄 SPRINT 7 — SEO Structured Data + UX Micro-fixes (6 marzo 2026)
+## ✅ SPRINT 7 — SEO Structured Data + UX Micro-fixes (6 marzo 2026)
 
 ### Análisis previo: JSON-LD faltante, alert() crudo, touch targets insuficientes
 
@@ -32,12 +32,15 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 ---
 
-| #   | Tarea                                                 | Estado     | Notas |
-| --- | ----------------------------------------------------- | ---------- | ----- |
-| 38  | ItemList JSON-LD en /vehiculos (SSR fetch + graceful) | 🔄 Pending | —     |
-| 39  | Replace alert()→toast.success() en /comparar          | 🔄 Pending | —     |
-| 40  | Hero quick filter pills min-h-[44px] touch targets    | 🔄 Pending | —     |
-| 41  | BreadcrumbList JSON-LD en /vehiculos                  | 🔄 Pending | —     |
+| #   | Tarea                                                 | Estado               | Notas                                                       |
+| --- | ----------------------------------------------------- | -------------------- | ----------------------------------------------------------- |
+| 38  | ItemList JSON-LD en /vehiculos (SSR fetch + graceful) | ✅ Commit `4d943505` | generateItemListJsonLd en seo.tsx + SSR fetch con try/catch |
+| 39  | Replace alert()→toast.success() en /comparar          | ✅ Commit `4d943505` | import { toast } from 'sonner' + toast.success()            |
+| 40  | Hero quick filter pills min-h-[44px] touch targets    | ✅ Commit `4d943505` | px-4 py-2 → px-5 py-2.5 + min-h-[44px]                      |
+| 41  | BreadcrumbList JSON-LD en /vehiculos                  | ✅ Commit `4d943505` | Inicio → Vehículos en Venta, generateBreadcrumbJsonLd       |
+
+**Build verificado**: `pnpm build` exitoso — 213 páginas, 14.9s compilación
+**Commit**: `4d943505` pushed to main
 
 ---
 
