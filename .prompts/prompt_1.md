@@ -15,7 +15,32 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1-7 completados. Sprint 8 en progreso.
+**Estado**: Sprint 1-8 completados.
+
+---
+
+## ✅ SPRINT 8 — Security Hardening + Dealer SEO + Error Boundaries (6 marzo 2026)
+
+### Análisis previo: Forms sin validación, Dealer sin JSON-LD, error boundary faltante
+
+**Hallazgos:**
+
+- /reclamaciones usa raw useState sin Zod ni sanitización — riesgo XSS/injection en form legal
+- /reportar-contenido misma vulnerabilidad — form DMCA sin validación
+- /dealers/[slug] no tiene AutoDealer JSON-LD pese a que generateDealerJsonLd existe
+- /dealers/[slug] sin error.tsx — 2da ruta dinámica más importante
+
+---
+
+| #   | Tarea                                                    | Estado               | Notas                                                      |
+| --- | -------------------------------------------------------- | -------------------- | ---------------------------------------------------------- |
+| 42  | Reclamaciones: Zod + react-hook-form + sanitización      | ✅ Commit `d907308d` | Schema con cédula regex, email, phone, sanitizeText/Email  |
+| 43  | Reportar-contenido: Zod + react-hook-form + sanitización | ✅ Commit `d907308d` | Schema con URL, z.literal(true) para checkbox, sanitizeUrl |
+| 44  | Dealer profile: AutoDealer + BreadcrumbList JSON-LD      | ✅ Commit `d907308d` | DealerSEO mapping, aggregateRating, socialMedia.sameAs     |
+| 45  | Dealer error.tsx: error boundary con retry               | ✅ Commit `d907308d` | AlertTriangle, retry, /dealers CTA, error digest display   |
+
+**Build verificado**: `pnpm build` exitoso — 213 páginas, 19.7s compilación
+**Commit**: `d907308d` pushed to main
 
 ---
 
