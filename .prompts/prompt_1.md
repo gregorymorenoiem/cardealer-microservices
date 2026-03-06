@@ -13,11 +13,11 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 completado. Sprint 4 completado. Sprint 5 en progreso.
+**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 completado. Sprint 4 completado. Sprint 5 completado.
 
 ---
 
-## 🔄 SPRINT 5 — Error Recovery + SEO Hardening + Performance (6 marzo 2026)
+## ✅ SPRINT 5 — Error Recovery + SEO Hardening + Performance (6 marzo 2026)
 
 ### Análisis previo: Páginas críticas sin error boundaries, checkout indexable, SimilarVehicles sin cache
 
@@ -31,12 +31,15 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 
 ---
 
-| #   | Tarea                                                   | Estado       | Notas                                           |
-| --- | ------------------------------------------------------- | ------------ | ----------------------------------------------- |
-| 30  | error.tsx para /vehiculos/[slug] y /checkout            | 🔄 Pendiente | Branded error boundaries con retry + nav back   |
-| 31  | Checkout noindex layout + OG image en /vehiculos        | 🔄 Pendiente | robots noindex + openGraph images para WhatsApp |
-| 32  | SimilarVehicles → TanStack Query                        | 🔄 Pendiente | useQuery con cache, staleTime, retry automático |
-| 33  | loading.tsx para /comparar y /herramientas/calculadoras | 🔄 Pendiente | Skeleton loaders matching page layout           |
+| #   | Tarea                                                   | Estado               | Notas                                                             |
+| --- | ------------------------------------------------------- | -------------------- | ----------------------------------------------------------------- |
+| 30  | error.tsx para /vehiculos/[slug] y /checkout            | ✅ Commit `9e1d9586` | Branded error boundaries con retry + nav + safety msg en checkout |
+| 31  | Checkout noindex layout + OG image en /vehiculos        | ✅ Commit `9e1d9586` | robots noindex/nofollow + OG image + Twitter card                 |
+| 32  | SimilarVehicles → TanStack Query                        | ✅ Commit `9e1d9586` | useQuery con 5min staleTime, 2 retries, gcTime 10min              |
+| 33  | loading.tsx para /comparar y /herramientas/calculadoras | ✅ Commit `9e1d9586` | /comparar ya tenía, agregado a ambas calculadoras                 |
+
+**Build verificado**: `pnpm build` exitoso — 213 páginas, 25.5s compilación
+**Commit**: `9e1d9586` pushed to main
 
 ---
 
