@@ -131,7 +131,7 @@ export default function DealersPage() {
         <div className="relative container mx-auto px-4 py-16 lg:py-24">
           <div className="mx-auto max-w-3xl text-center">
             {/* Badge */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#00A870]/30 bg-[#00A870]/10 px-4 py-2 text-sm font-medium text-[#00A870]">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
               <Building2 className="h-4 w-4" />
               Plataforma #1 para Dealers en RD
             </div>
@@ -140,7 +140,7 @@ export default function DealersPage() {
             <h1 className="mb-6 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-6xl">
               Vende más vehículos
               <br />
-              <span className="text-[#00A870]">con OKLA</span>
+              <span className="text-primary">con OKLA</span>
             </h1>
 
             {/* Subtitle */}
@@ -151,7 +151,7 @@ export default function DealersPage() {
 
             {/* CTAs */}
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button asChild size="lg" className="gap-2 bg-[#00A870] px-8 hover:bg-[#009663]">
+              <Button asChild size="lg" className="gap-2 bg-primary px-8 hover:bg-primary/90">
                 <Link href="/dealers/registro">
                   Comenzar prueba gratis
                   <ArrowRight className="h-5 w-5" />
@@ -170,15 +170,15 @@ export default function DealersPage() {
             {/* Trust indicators */}
             <div className="text-muted-foreground mt-10 flex flex-wrap items-center justify-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-[#00A870]" />
+                <CheckCircle className="h-5 w-5 text-primary" />
                 <span>14 días gratis</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-[#00A870]" />
+                <CheckCircle className="h-5 w-5 text-primary" />
                 <span>Sin tarjeta de crédito</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-[#00A870]" />
+                <CheckCircle className="h-5 w-5 text-primary" />
                 <span>Cancela cuando quieras</span>
               </div>
             </div>
@@ -218,8 +218,8 @@ export default function DealersPage() {
               return (
                 <Card key={index} className="border-none bg-white shadow-sm">
                   <CardContent className="p-6">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[#00A870]/10">
-                      <Icon className="h-6 w-6 text-[#00A870]" />
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                      <Icon className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="text-foreground mb-2 text-lg font-bold">{feature.title}</h3>
                     <p className="text-muted-foreground text-sm">{feature.description}</p>
@@ -299,8 +299,8 @@ export default function DealersPage() {
 
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#00A870]/10">
-                    <Users className="h-5 w-5 text-[#00A870]" />
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Users className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-foreground font-semibold">Audiencia verificada</h3>
@@ -311,8 +311,8 @@ export default function DealersPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#00A870]/10">
-                    <Zap className="h-5 w-5 text-[#00A870]" />
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Zap className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-foreground font-semibold">Resultados rápidos</h3>
@@ -323,8 +323,8 @@ export default function DealersPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#00A870]/10">
-                    <Shield className="h-5 w-5 text-[#00A870]" />
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Shield className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-foreground font-semibold">Plataforma segura</h3>
@@ -338,7 +338,7 @@ export default function DealersPage() {
 
             <div className="bg-muted rounded-2xl p-8 lg:p-12">
               <div className="text-center">
-                <div className="mb-4 text-5xl font-bold text-[#00A870]">40%</div>
+                <div className="mb-4 text-5xl font-bold text-primary">40%</div>
                 <div className="text-foreground mb-2 text-xl font-semibold">
                   Aumento promedio en ventas
                 </div>
@@ -363,7 +363,7 @@ export default function DealersPage() {
               Únete a los +500 dealers que ya están vendiendo más vehículos con OKLA. Comienza tu
               prueba gratis hoy.
             </p>
-            <Button asChild size="lg" className="gap-2 bg-[#00A870] px-8 hover:bg-[#009663]">
+            <Button asChild size="lg" className="gap-2 bg-primary px-8 hover:bg-primary/90">
               <Link href="/dealers/registro">
                 Comenzar prueba gratis
                 <ArrowRight className="h-5 w-5" />

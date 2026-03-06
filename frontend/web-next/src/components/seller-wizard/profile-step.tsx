@@ -77,7 +77,7 @@ export function ProfileStep({
           {userName && (
             <>
               {' '}
-              ¡Bienvenido, <span className="font-medium text-[#00A870]">{userName}</span>!
+              ¡Bienvenido, <span className="font-medium text-primary">{userName}</span>!
             </>
           )}
         </p>
@@ -213,8 +213,8 @@ export function ProfileStep({
                 className={cn(
                   'cursor-pointer transition-colors',
                   isSelected
-                    ? 'bg-[#00A870] hover:bg-[#009663]'
-                    : 'hover:border-[#00A870] hover:text-[#00A870]'
+                    ? 'bg-primary hover:bg-primary/90'
+                    : 'hover:border-primary hover:text-primary'
                 )}
                 onClick={() => toggleSpecialty(specialty)}
               >
@@ -240,7 +240,7 @@ export function ProfileStep({
         </Button>
         <Button
           type="submit"
-          className="flex-1 bg-[#00A870] hover:bg-[#009663]"
+          className="flex-1 bg-primary hover:bg-primary/90"
           disabled={isLoading || !data.displayName || (isDealer && !data.rnc)}
         >
           {isLoading ? (

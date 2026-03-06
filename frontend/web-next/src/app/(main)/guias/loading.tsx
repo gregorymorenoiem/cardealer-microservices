@@ -4,7 +4,7 @@ export default function GuiasLoading() {
   return (
     <div className="min-h-screen">
       {/* Hero skeleton */}
-      <div className="bg-gradient-to-br from-[#00A870]/10 to-[#007850]/10 py-14">
+      <div className="bg-gradient-to-br from-primary/10 to-primary/10 py-14">
         <div className="container mx-auto px-4 text-center">
           <Skeleton className="mx-auto mb-4 h-14 w-14 rounded-full" />
           <Skeleton className="mx-auto h-10 w-64" />

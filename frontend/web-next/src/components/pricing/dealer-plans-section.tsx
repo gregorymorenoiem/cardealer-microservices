@@ -133,7 +133,7 @@ export function DealerPlansSection() {
             key={index}
             className={`relative flex flex-col ${
               plan.highlighted
-                ? 'scale-[1.02] border-2 border-[#00A870] shadow-xl'
+                ? 'scale-[1.02] border-2 border-primary shadow-xl'
                 : 'border-border'
             }`}
           >
@@ -141,7 +141,7 @@ export function DealerPlansSection() {
               <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold text-white ${
-                    plan.badge === 'MÁS POPULAR' ? 'bg-[#00A870]' : 'bg-purple-600'
+                    plan.badge === 'MÁS POPULAR' ? 'bg-primary' : 'bg-purple-600'
                   }`}
                 >
                   {plan.badge}
@@ -152,7 +152,7 @@ export function DealerPlansSection() {
               <div className="mb-4">
                 <div className="mb-1 flex items-center gap-2">
                   <Icon
-                    className={`h-5 w-5 ${plan.highlighted ? 'text-[#00A870]' : 'text-muted-foreground'}`}
+                    className={`h-5 w-5 ${plan.highlighted ? 'text-primary' : 'text-muted-foreground'}`}
                   />
                   <h3 className="text-foreground text-lg font-bold">{plan.name}</h3>
                 </div>
@@ -171,7 +171,7 @@ export function DealerPlansSection() {
                     }`}
                   >
                     {feature.included ? (
-                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#00A870]" />
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     ) : (
                       <X className="text-muted-foreground/30 mt-0.5 h-4 w-4 shrink-0" />
                     )}
@@ -183,7 +183,7 @@ export function DealerPlansSection() {
                 asChild
                 className={`w-full ${
                   plan.highlighted
-                    ? 'bg-[#00A870] text-white hover:bg-[#009663]'
+                    ? 'bg-primary text-white hover:bg-primary/90'
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 }`}
               >

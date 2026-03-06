@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { csrfFetch } from '@/lib/security/csrf';
 
 interface PushNotificationConfig {
   /** VAPID public key for web push */
@@ -120,7 +121,7 @@ export function usePushNotifications(
       });
 
       // Send subscription to server
-      await fetch(subscribeEndpoint, {
+      await csrfFetch(subscribeEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +155,7 @@ export function usePushNotifications(
       await subscription.unsubscribe();
 
       // Notify server
-      await fetch(unsubscribeEndpoint, {
+      await csrfFetch(unsubscribeEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

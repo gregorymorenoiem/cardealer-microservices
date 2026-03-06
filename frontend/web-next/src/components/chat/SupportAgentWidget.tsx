@@ -31,8 +31,8 @@ function SupportMessageBubble({
   if (message.isLoading) {
     return (
       <div className="flex gap-2.5 px-4 py-1.5">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#00A870]/10">
-          <Headphones className="h-3.5 w-3.5 text-[#00A870]" />
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+          <Headphones className="h-3.5 w-3.5 text-primary" />
         </div>
         <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-3 dark:bg-gray-800">
           <div className="flex items-center gap-1">
@@ -74,7 +74,7 @@ function SupportMessageBubble({
   if (!message.isFromBot) {
     return (
       <div className="flex justify-end px-4 py-1.5">
-        <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-[#00A870] px-4 py-2.5 text-sm text-white">
+        <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm text-white">
           {message.content}
         </div>
       </div>
@@ -84,8 +84,8 @@ function SupportMessageBubble({
   // Bot
   return (
     <div className="flex gap-2.5 px-4 py-1.5">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#00A870]/10">
-        <Headphones className="h-3.5 w-3.5 text-[#00A870]" />
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+        <Headphones className="h-3.5 w-3.5 text-primary" />
       </div>
       <div className="max-w-[80%] space-y-2">
         <div className="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-3 text-sm dark:bg-gray-800">
@@ -99,7 +99,7 @@ function SupportMessageBubble({
               <button
                 key={i}
                 onClick={() => onSuggestion?.(action)}
-                className="rounded-full border border-[#00A870]/30 bg-[#00A870]/5 px-3 py-1.5 text-xs font-medium text-[#00A870] transition-colors hover:bg-[#00A870]/15"
+                className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15"
               >
                 {action}
               </button>
@@ -149,10 +149,10 @@ export function SupportAgentWidget() {
       {/* Floating support bubble — distinct from vehicle chatbot */}
       <button
         onClick={chat.toggle}
-        className={`fixed ${bubblePosition} z-[9997] flex items-center gap-2 rounded-full px-4 py-3 shadow-lg transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
+        className={`fixed ${bubblePosition} z-[9997] flex items-center gap-2 rounded-full px-4 py-3 shadow-lg transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none ${
           chat.isOpen
             ? 'bg-gray-600 hover:bg-gray-700'
-            : 'bg-gradient-to-br from-[#00A870] to-[#009663] hover:from-[#009663] hover:to-[#008555]'
+            : 'bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80'
         }`}
         aria-label={chat.isOpen ? 'Cerrar soporte' : 'Soporte OKLA'}
       >
@@ -162,7 +162,7 @@ export function SupportAgentWidget() {
           <>
             <Headphones className="h-5 w-5 text-white" />
             <span className="text-sm font-semibold text-white max-sm:hidden">Soporte</span>
-            <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20 [animation-iteration-count:3]" />
+            <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-20 [animation-iteration-count:3]" />
           </>
         )}
       </button>
@@ -176,7 +176,7 @@ export function SupportAgentWidget() {
           aria-label="Soporte OKLA"
         >
           {/* Header */}
-          <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-[#00A870] to-[#009663] px-4 py-3 text-white">
+          <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-primary to-primary/90 px-4 py-3 text-white">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
                 <Headphones className="h-5 w-5" />
@@ -254,14 +254,14 @@ export function SupportAgentWidget() {
                 <div className="flex w-full flex-col gap-2">
                   <Link
                     href="/login"
-                    className="block w-full rounded-xl bg-[#00A870] px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#009663]"
+                    className="block w-full rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-primary/90"
                     onClick={chat.close}
                   >
                     Iniciar sesión
                   </Link>
                   <Link
                     href="/registro"
-                    className="block w-full rounded-xl border border-[#00A870] px-4 py-2.5 text-center text-sm font-semibold text-[#00A870] transition-colors hover:bg-[#00A870]/5"
+                    className="block w-full rounded-xl border border-primary px-4 py-2.5 text-center text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
                     onClick={chat.close}
                   >
                     Crear cuenta gratis

@@ -858,8 +858,8 @@ export default function ProfilePage() {
                             className={cn(
                               'cursor-pointer transition-colors',
                               isSelected
-                                ? 'bg-[#00A870] hover:bg-[#009663]'
-                                : 'hover:border-[#00A870] hover:text-[#00A870]'
+                                ? 'bg-primary hover:bg-primary/90'
+                                : 'hover:border-primary hover:text-primary'
                             )}
                             onClick={() => toggleSpecialty(specialty)}
                           >

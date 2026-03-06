@@ -24,7 +24,7 @@ export default function Error({
           Ocurrió un error inesperado. Por favor intenta de nuevo.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button onClick={reset} className="bg-[#00A870] hover:bg-[#009663]">
+          <Button onClick={reset} className="bg-primary hover:bg-primary/90">
             Intentar de nuevo
           </Button>
           <Button asChild variant="outline">

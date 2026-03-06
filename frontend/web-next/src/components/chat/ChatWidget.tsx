@@ -51,7 +51,7 @@ export function ChatWidget({ dealerId }: ChatWidgetProps) {
           aria-label="Iniciar sesión para chatear"
         >
           {/* Header */}
-          <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-[#00A870] to-[#009663] px-4 py-3 text-white">
+          <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-primary to-primary/90 px-4 py-3 text-white">
             <span className="text-sm font-semibold">Asistente OKLA</span>
             <button
               onClick={chat.close}
@@ -77,14 +77,14 @@ export function ChatWidget({ dealerId }: ChatWidgetProps) {
             <div className="flex w-full flex-col gap-2">
               <Link
                 href="/login"
-                className="block w-full rounded-xl bg-[#00A870] px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#009663]"
+                className="block w-full rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-primary/90"
                 onClick={chat.close}
               >
                 Iniciar sesión
               </Link>
               <Link
                 href="/registro"
-                className="block w-full rounded-xl border border-[#00A870] px-4 py-2.5 text-center text-sm font-semibold text-[#00A870] transition-colors hover:bg-[#00A870]/5"
+                className="block w-full rounded-xl border border-primary px-4 py-2.5 text-center text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
                 onClick={chat.close}
               >
                 Crear cuenta gratis

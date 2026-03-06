@@ -134,7 +134,7 @@ export default function SellerSubscriptionPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <BarChart3 className="h-5 w-5 text-[#00A870]" />
+            <BarChart3 className="h-5 w-5 text-primary" />
             Resumen de Tu Plan
           </CardTitle>
         </CardHeader>
@@ -221,11 +221,11 @@ export default function SellerSubscriptionPage() {
       </Card>
 
       {/* ── Upgrade to Dealer CTA ──────────────────────────── */}
-      <Card className="border-[#00A870]/20 bg-gradient-to-r from-[#00A870]/5 to-emerald-50">
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-emerald-50">
         <CardContent className="flex flex-col items-center gap-4 p-6 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#00A870]/10">
-              <Crown className="h-6 w-6 text-[#00A870]" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+              <Crown className="h-6 w-6 text-primary" />
             </div>
             <div>
               <h3 className="font-semibold">¿Eres un negocio o concesionario?</h3>
@@ -235,7 +235,7 @@ export default function SellerSubscriptionPage() {
             </div>
           </div>
           <Link href="/dealers/registro">
-            <Button variant="outline" className="gap-2 border-[#00A870] text-[#00A870]">
+            <Button variant="outline" className="gap-2 border-primary text-primary">
               Ver Planes Dealer
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -314,7 +314,7 @@ function PlanCard({
     <Card
       className={`relative flex flex-col ${
         isPopular
-          ? 'border-2 border-[#00A870] shadow-lg shadow-[#00A870]/10'
+          ? 'border-2 border-primary shadow-lg shadow-primary/10'
           : isCurrent
             ? 'border-2 border-blue-400'
             : 'border-border'
@@ -322,7 +322,7 @@ function PlanCard({
     >
       {isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge className="bg-[#00A870] text-white">MÁS POPULAR</Badge>
+          <Badge className="bg-primary text-white">MÁS POPULAR</Badge>
         </div>
       )}
       {isCurrent && (
@@ -337,10 +337,10 @@ function PlanCard({
         <div className="mb-4 flex items-center gap-2">
           <div
             className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-              isPopular ? 'bg-[#00A870]/10' : 'bg-muted'
+              isPopular ? 'bg-primary/10' : 'bg-muted'
             }`}
           >
-            <Icon className={`h-5 w-5 ${isPopular ? 'text-[#00A870]' : 'text-muted-foreground'}`} />
+            <Icon className={`h-5 w-5 ${isPopular ? 'text-primary' : 'text-muted-foreground'}`} />
           </div>
           <div>
             <h3 className="text-lg font-bold">{name}</h3>
@@ -362,7 +362,7 @@ function PlanCard({
         <ul className="mb-6 flex-1 space-y-2.5">
           {features.map((feature, i) => (
             <li key={i} className="flex items-start gap-2 text-sm">
-              <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#00A870]" />
+              <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
               <span className="text-muted-foreground">{feature}</span>
             </li>
           ))}
@@ -377,7 +377,7 @@ function PlanCard({
             onClick={onSelect}
             disabled={isChanging}
             className={`w-full gap-2 ${
-              isUpgrade ? 'bg-[#00A870] hover:bg-[#009663]' : 'bg-gray-600 hover:bg-gray-700'
+              isUpgrade ? 'bg-primary hover:bg-primary/90' : 'bg-gray-600 hover:bg-gray-700'
             }`}
           >
             {isChanging ? (
@@ -445,12 +445,12 @@ function ComparisonTable({ currentPlan }: { currentPlan: string }) {
             <th
               key={h}
               className={`py-3 text-center text-sm font-medium ${
-                planColumns[i] === currentPlan ? 'text-[#00A870]' : ''
+                planColumns[i] === currentPlan ? 'text-primary' : ''
               }`}
             >
               {h}
               {planColumns[i] === currentPlan && (
-                <Badge className="ml-1 bg-[#00A870] text-[10px]">Actual</Badge>
+                <Badge className="ml-1 bg-primary text-[10px]">Actual</Badge>
               )}
             </th>
           ))}
@@ -466,14 +466,14 @@ function ComparisonTable({ currentPlan }: { currentPlan: string }) {
                 <td key={col} className="py-3 text-center">
                   {typeof val === 'boolean' ? (
                     val ? (
-                      <Check className="mx-auto h-4 w-4 text-[#00A870]" />
+                      <Check className="mx-auto h-4 w-4 text-primary" />
                     ) : (
                       <X className="text-muted-foreground/30 mx-auto h-4 w-4" />
                     )
                   ) : (
                     <span
                       className={`text-sm font-medium ${
-                        col === currentPlan ? 'text-[#00A870]' : 'text-foreground'
+                        col === currentPlan ? 'text-primary' : 'text-foreground'
                       }`}
                     >
                       {val}

@@ -181,7 +181,7 @@ export default function SavedSearchesPage() {
           <h1 className="text-foreground text-2xl font-bold">Búsquedas Guardadas</h1>
           <p className="text-muted-foreground">Accede rápidamente a tus filtros favoritos</p>
         </div>
-        <Button asChild className="bg-[#00A870] hover:bg-[#008a5c]">
+        <Button asChild className="bg-primary hover:bg-primary/80">
           <Link href="/vehiculos">
             <Plus className="mr-2 h-4 w-4" />
             Nueva Búsqueda
@@ -194,8 +194,8 @@ export default function SavedSearchesPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-[#00A870]/10 p-2">
-                <Search className="h-5 w-5 text-[#00A870]" />
+              <div className="rounded-lg bg-primary/10 p-2">
+                <Search className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats?.totalSavedSearches ?? searches.length}</p>
@@ -250,7 +250,7 @@ export default function SavedSearchesPage() {
                       <div className="flex items-center gap-2">
                         <h3 className="text-lg font-semibold">{search.name}</h3>
                         {search.newMatchCount > 0 && (
-                          <Badge className="bg-[#00A870]/10 text-[#00A870]">
+                          <Badge className="bg-primary/10 text-primary">
                             {search.newMatchCount} nuevos
                           </Badge>
                         )}
@@ -304,7 +304,7 @@ export default function SavedSearchesPage() {
                         )}
                       </Button>
                       <Button
-                        className="bg-[#00A870] hover:bg-[#008a5c]"
+                        className="bg-primary hover:bg-primary/80"
                         onClick={() => handleRunSearch(search)}
                       >
                         <Play className="mr-1 h-4 w-4" />
@@ -328,7 +328,7 @@ export default function SavedSearchesPage() {
             <p className="text-muted-foreground mb-6">
               Guarda tus búsquedas favoritas para acceder a ellas rápidamente
             </p>
-            <Button asChild className="bg-[#00A870] hover:bg-[#008a5c]">
+            <Button asChild className="bg-primary hover:bg-primary/80">
               <Link href="/vehiculos">
                 <Search className="mr-2 h-4 w-4" />
                 Buscar Vehículos

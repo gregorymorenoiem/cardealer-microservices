@@ -172,7 +172,7 @@ export function InstallPrompt({ delay = 60000, onInstall, onDismiss }: InstallPr
 
         <div className="flex items-start gap-3">
           {/* App icon */}
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00A870] to-[#009663] shadow-lg">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/90 shadow-lg">
             <span className="text-xl font-bold text-white">O</span>
           </div>
 
@@ -238,7 +238,7 @@ export function InstallPrompt({ delay = 60000, onInstall, onDismiss }: InstallPr
         {/* Main content */}
         <div className="flex items-center gap-3">
           {/* App icon */}
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00A870] to-[#009663] shadow-lg sm:h-14 sm:w-14">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/90 shadow-lg sm:h-14 sm:w-14">
             <span className="text-xl font-bold text-white sm:text-2xl">O</span>
           </div>
 
@@ -256,7 +256,7 @@ export function InstallPrompt({ delay = 60000, onInstall, onDismiss }: InstallPr
           <button
             onClick={handleInstallClick}
             type="button"
-            className="flex-shrink-0 rounded-xl bg-[#00A870] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#009663] hover:shadow-lg active:scale-95"
+            className="flex-shrink-0 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-primary/90 hover:shadow-lg active:scale-95"
           >
             Instalar
           </button>

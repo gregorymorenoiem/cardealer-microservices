@@ -452,7 +452,7 @@ export default function SellerRegistrationPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#00A870]" />
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
           <p className="mt-4 text-gray-500">Cargando...</p>
         </div>
       </div>
@@ -464,7 +464,7 @@ export default function SellerRegistrationPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#00A870]" />
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
           <p className="mt-4 text-gray-500">Redirigiendo...</p>
         </div>
       </div>

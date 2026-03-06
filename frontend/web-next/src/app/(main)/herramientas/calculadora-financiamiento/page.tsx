@@ -25,7 +25,7 @@ export default function CalculadoraFinanciamientoPage() {
   return (
     <div className="bg-background min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-[#00A870] to-[#007850] py-14 text-white">
+      <section className="bg-gradient-to-br from-primary to-primary/80 py-14 text-white">
         <div className="container mx-auto px-4 text-center">
           <h1 className="mb-3 text-3xl font-bold md:text-4xl">
             Calculadora de Financiamiento Vehicular

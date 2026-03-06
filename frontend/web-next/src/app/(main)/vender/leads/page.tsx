@@ -225,7 +225,7 @@ function SellerLeadsContent() {
     <div className="container mx-auto space-y-6 px-4 py-8">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
+        <Button variant="ghost" size="icon" asChild aria-label="Volver">
           <Link href="/vender/dashboard">
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -370,6 +370,7 @@ function SellerLeadsContent() {
             size="sm"
             disabled={page <= 1}
             onClick={() => setPage(p => Math.max(1, p - 1))}
+            aria-label="Página anterior"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -381,6 +382,7 @@ function SellerLeadsContent() {
             size="sm"
             disabled={page >= totalPages}
             onClick={() => setPage(p => p + 1)}
+            aria-label="Página siguiente"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -506,6 +508,7 @@ function SellerLeadsContent() {
                   onClick={sendReply}
                   disabled={!replyText.trim() || replying}
                   className="shrink-0 self-end"
+                  aria-label="Enviar respuesta"
                 >
                   <Send className="h-4 w-4" />
                 </Button>

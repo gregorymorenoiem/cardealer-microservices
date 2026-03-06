@@ -306,7 +306,7 @@ export function FinancingCalculator() {
             {result ? (
               <>
                 {/* Cuota mensual */}
-                <div className="rounded-xl bg-gradient-to-br from-[#00A870] to-[#007850] p-6 text-center text-white">
+                <div className="rounded-xl bg-gradient-to-br from-primary to-primary/80 p-6 text-center text-white">
                   <p className="mb-1 text-sm text-white/80">Tu cuota mensual</p>
                   <p className="text-4xl font-bold">{formatRD(result.monthlyPayment)}</p>
                   <p className="mt-1 text-sm text-white/70">por {months} meses</p>

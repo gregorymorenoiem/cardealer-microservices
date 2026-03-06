@@ -252,7 +252,7 @@ export default async function GuiaDetailPage({ params }: { params: Promise<{ slu
       </nav>
 
       {/* Header */}
-      <section className="bg-gradient-to-br from-[#00A870] to-[#007850] py-12 text-white">
+      <section className="bg-gradient-to-br from-primary to-primary/80 py-12 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
             <div className="mb-4 flex items-center gap-3">
@@ -289,13 +289,13 @@ export default async function GuiaDetailPage({ params }: { params: Promise<{ slu
           {/* Sidebar */}
           <aside className="space-y-6">
             {/* CTA */}
-            <Card className="border-[#00A870]/30 bg-gradient-to-br from-[#00A870]/5 to-[#007850]/5">
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-primary/5">
               <CardContent className="pt-6 text-center">
                 <h3 className="text-foreground font-semibold">¿Listo para buscar?</h3>
                 <p className="text-muted-foreground mt-2 text-sm">
                   Encuentra tu próximo vehículo con las herramientas de OKLA.
                 </p>
-                <Button asChild className="mt-4 w-full bg-[#00A870] hover:bg-[#007850]">
+                <Button asChild className="mt-4 w-full bg-primary hover:bg-primary/80">
                   <Link href="/vehiculos">Ver vehículos</Link>
                 </Button>
               </CardContent>

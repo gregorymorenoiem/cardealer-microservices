@@ -93,7 +93,7 @@ export function VehicleStep({
       {/* ── Section: Vehicle Info ── */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Car className="h-5 w-5 text-[#00A870]" />
+          <Car className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Información del vehículo</h3>
         </div>
 
@@ -289,7 +289,7 @@ export function VehicleStep({
       {/* ── Section: Photos ── */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Camera className="h-5 w-5 text-[#00A870]" />
+          <Camera className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Fotos del vehículo</h3>
         </div>
         <p className="text-muted-foreground text-sm">
@@ -303,7 +303,7 @@ export function VehicleStep({
       {/* ── Section: Pricing ── */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-[#00A870]" />
+          <DollarSign className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Precio</h3>
         </div>
 
@@ -363,7 +363,7 @@ export function VehicleStep({
       {/* ── Section: Description ── */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-[#00A870]" />
+          <FileText className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Descripción</h3>
         </div>
 
@@ -388,7 +388,7 @@ export function VehicleStep({
       {/* ── Section: Location ── */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-[#00A870]" />
+          <MapPin className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Ubicación</h3>
         </div>
 
@@ -482,7 +482,7 @@ export function VehicleStep({
         </Button>
         <Button
           type="submit"
-          className="flex-1 bg-[#00A870] hover:bg-[#009663]"
+          className="flex-1 bg-primary hover:bg-primary/90"
           disabled={
             isLoading ||
             !data.make ||

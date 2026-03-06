@@ -181,8 +181,8 @@ export function BodyTypeSelector({
               'flex flex-shrink-0 flex-col items-center gap-1 rounded-xl border-2 transition-all duration-150',
               isCompact ? 'min-w-[64px] px-2 py-2 text-[10px]' : 'min-w-[80px] px-3 py-2.5 text-xs',
               isActive
-                ? 'border-[#00A870] bg-[#00A870]/10 font-semibold text-[#00A870]'
-                : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-[#00A870]/40'
+                ? 'border-primary bg-primary/10 font-semibold text-primary'
+                : 'border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40'
             )}
             aria-pressed={isActive}
             aria-label={type.label}
@@ -190,7 +190,7 @@ export function BodyTypeSelector({
             <span
               className={cn(
                 'text-current',
-                isActive ? 'text-[#00A870]' : 'text-muted-foreground group-hover:text-foreground'
+                isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
               )}
             >
               {type.icon}

@@ -192,7 +192,7 @@ export function UpgradePrompt({
               <h4 className="mb-1 font-semibold">{displayTitle}</h4>
               <p className="text-muted-foreground mb-4 text-sm">{displayDesc}</p>
               <Link href={upgradeUrl}>
-                <Button className="w-full gap-2 bg-[#00A870] hover:bg-[#009663]">
+                <Button className="w-full gap-2 bg-primary hover:bg-primary/90">
                   <Crown className="h-4 w-4" />
                   Upgrade a {requiredPlan}
                 </Button>
@@ -218,10 +218,10 @@ export function UpgradePrompt({
             Plan actual: {planLabel}
           </Badge>
           <ArrowRight className="h-4 w-4 text-amber-500" />
-          <Badge className="bg-[#00A870] text-white">Requiere: {requiredPlan}</Badge>
+          <Badge className="bg-primary text-white">Requiere: {requiredPlan}</Badge>
         </div>
         <Link href={upgradeUrl}>
-          <Button size="lg" className="gap-2 bg-[#00A870] hover:bg-[#009663]">
+          <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90">
             <Crown className="h-5 w-5" />
             {isDealer ? 'Mejorar Plan Dealer' : 'Mejorar Mi Plan'}
           </Button>
@@ -336,7 +336,7 @@ export function PlanUsageBar({ current, max, label, showUnlimited = true }: Plan
       <div className="h-2 overflow-hidden rounded-full bg-gray-100">
         <div
           className={`h-full rounded-full transition-all ${
-            isAtLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-[#00A870]'
+            isAtLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-primary'
           }`}
           style={{ width: `${percentage}%` }}
         />

@@ -82,7 +82,7 @@ export default function PreciosPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-[#00A870] to-[#007850] py-14 text-white">
+      <section className="bg-gradient-to-br from-primary to-primary/80 py-14 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/20">
@@ -95,7 +95,7 @@ export default function PreciosPage() {
             </p>
             <Button
               asChild
-              className="mt-6 bg-white font-semibold text-[#00A870] hover:bg-white/90"
+              className="mt-6 bg-white font-semibold text-primary hover:bg-white/90"
               size="lg"
             >
               <Link href="/buscar">

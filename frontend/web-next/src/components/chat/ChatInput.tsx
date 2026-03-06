@@ -59,7 +59,7 @@ export function ChatInput({
             placeholder={placeholder || 'Escribe tu mensaje...'}
             disabled={disabled}
             rows={1}
-            className="w-full resize-none rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-[#00A870] focus:ring-1 focus:ring-[#00A870] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+            className="w-full resize-none rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
             aria-label="Mensaje al chatbot"
           />
         </div>
@@ -67,7 +67,7 @@ export function ChatInput({
         <button
           onClick={handleSend}
           disabled={disabled || !value.trim() || isLoading}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#00A870] text-white transition-all hover:bg-[#009663] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Enviar mensaje"
         >
           {isLoading ? (

@@ -4,7 +4,7 @@ export default function FinancingCalculatorLoading() {
   return (
     <div className="min-h-screen">
       {/* Hero skeleton */}
-      <div className="bg-gradient-to-br from-[#00A870] to-[#007850] py-12">
+      <div className="bg-gradient-to-br from-primary to-primary/80 py-12">
         <div className="container mx-auto px-4 text-center">
           <Skeleton className="mx-auto h-8 w-72 bg-white/20" />
           <Skeleton className="mx-auto mt-3 h-5 w-[28rem] max-w-full bg-white/20" />

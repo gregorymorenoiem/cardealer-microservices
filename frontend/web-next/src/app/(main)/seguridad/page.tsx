@@ -61,7 +61,7 @@ export default function SeguridadPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-[#00A870] to-[#007850] py-16 text-white">
+      <section className="bg-gradient-to-br from-primary to-primary/80 py-16 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20">

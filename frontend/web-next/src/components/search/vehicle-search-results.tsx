@@ -130,7 +130,7 @@ export function VehicleSearchResults({
                 <SlidersHorizontal className="h-4 w-4" />
                 Filtros
                 {activeFilterCount > 0 && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#00A870] text-xs text-white">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-white">
                     {activeFilterCount}
                   </span>
                 )}
@@ -296,7 +296,7 @@ function EmptyState({
           : 'No hay vehículos disponibles en este momento.'}
       </p>
       {hasFilters && (
-        <Button onClick={onClearFilters} className="mt-4 gap-2 bg-[#00A870] hover:bg-[#009663]">
+        <Button onClick={onClearFilters} className="mt-4 gap-2 bg-primary hover:bg-primary/90">
           Limpiar filtros
         </Button>
       )}
@@ -373,7 +373,7 @@ function Pagination({
             onClick={() => onPageChange(pageItem)}
             className={cn(
               'min-w-[36px]',
-              currentPage === pageItem && 'bg-[#00A870] hover:bg-[#009663]'
+              currentPage === pageItem && 'bg-primary hover:bg-primary/90'
             )}
           >
             {pageItem}

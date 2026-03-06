@@ -38,19 +38,19 @@ export function VehicleTabs({ vehicle, className }: VehicleTabsProps) {
         <TabsList className="border-border scrollbar-hide flex h-auto w-full justify-start overflow-x-auto rounded-none border-b bg-transparent p-0">
           <TabsTrigger
             value="description"
-            className="flex-shrink-0 rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none sm:px-6 sm:py-3 sm:text-base"
+            className="flex-shrink-0 rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none sm:px-6 sm:py-3 sm:text-base"
           >
             Descripción
           </TabsTrigger>
           <TabsTrigger
             value="specs"
-            className="flex-shrink-0 rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none sm:px-6 sm:py-3 sm:text-base"
+            className="flex-shrink-0 rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none sm:px-6 sm:py-3 sm:text-base"
           >
             Especificaciones
           </TabsTrigger>
           <TabsTrigger
             value="features"
-            className="flex-shrink-0 rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm data-[state=active]:border-[#00A870] data-[state=active]:bg-transparent data-[state=active]:text-[#00A870] data-[state=active]:shadow-none sm:px-6 sm:py-3 sm:text-base"
+            className="flex-shrink-0 rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none sm:px-6 sm:py-3 sm:text-base"
           >
             Características
           </TabsTrigger>
@@ -173,7 +173,7 @@ function SpecificationsTab({ vehicle }: { vehicle: Vehicle }) {
             className="flex items-center gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm dark:bg-slate-700">
-              <spec.icon className="h-5 w-5 text-[#00A870]" />
+              <spec.icon className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-muted-foreground text-xs">{spec.label}</p>
@@ -290,7 +290,7 @@ function FeaturesTab({ vehicle }: { vehicle: Vehicle }) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature: string, index: number) => (
             <div key={index} className="text-foreground flex items-center gap-2">
-              <Check className="h-4 w-4 flex-shrink-0 text-[#00A870]" />
+              <Check className="h-4 w-4 flex-shrink-0 text-primary" />
               <span>{feature}</span>
             </div>
           ))}
@@ -303,7 +303,7 @@ function FeaturesTab({ vehicle }: { vehicle: Vehicle }) {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {category.features.map((feature: string, index: number) => (
                   <div key={index} className="text-foreground flex items-center gap-2">
-                    <Check className="h-4 w-4 flex-shrink-0 text-[#00A870]" />
+                    <Check className="h-4 w-4 flex-shrink-0 text-primary" />
                     <span>{feature}</span>
                   </div>
                 ))}

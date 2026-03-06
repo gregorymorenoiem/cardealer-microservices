@@ -142,7 +142,7 @@ function CompareContent() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-[#00A870] border-t-transparent" />
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-muted-foreground mt-2">Cargando comparación...</p>
         </div>
       </div>
@@ -170,7 +170,7 @@ function CompareContent() {
             <p className="text-muted-foreground mt-2 max-w-md">
               Agrega vehículos a la comparación desde la página de búsqueda o detalle de vehículo.
             </p>
-            <Button asChild className="mt-6 gap-2 bg-[#00A870] hover:bg-[#009663]">
+            <Button asChild className="mt-6 gap-2 bg-primary hover:bg-primary/90">
               <Link href="/vehiculos">
                 <Car className="h-4 w-4" />
                 Explorar vehículos
@@ -249,7 +249,7 @@ function CompareContent() {
                   {vehicle.year} {vehicle.make} {vehicle.model}
                 </h2>
                 {vehicle.trim && <p className="text-muted-foreground text-sm">{vehicle.trim}</p>}
-                <p className="mt-2 text-xl font-bold text-[#00A870]">
+                <p className="mt-2 text-xl font-bold text-primary">
                   RD$ {vehicle.price.toLocaleString()}
                 </p>
                 {vehicle.dealRating && (
@@ -280,10 +280,10 @@ function CompareContent() {
 
           {/* Add vehicle card */}
           {vehicles.length < 3 && (
-            <Card className="flex min-h-[300px] cursor-pointer items-center justify-center border-2 border-dashed transition-colors hover:border-[#00A870] hover:bg-[#00A870]/5">
+            <Card className="flex min-h-[300px] cursor-pointer items-center justify-center border-2 border-dashed transition-colors hover:border-primary hover:bg-primary/5">
               <Link href="/vehiculos" className="flex flex-col items-center p-6 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#00A870]/10">
-                  <Plus className="h-6 w-6 text-[#00A870]" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Plus className="h-6 w-6 text-primary" />
                 </div>
                 <p className="text-foreground mt-2 font-medium">Agregar vehículo</p>
                 <p className="text-muted-foreground text-sm">Hasta 3 vehículos</p>
@@ -356,7 +356,7 @@ function CompareLoading() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="text-center">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-[#00A870] border-t-transparent" />
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         <p className="text-muted-foreground mt-2">Cargando comparación...</p>
       </div>
     </div>

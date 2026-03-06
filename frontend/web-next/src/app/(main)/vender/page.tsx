@@ -122,7 +122,7 @@ export default function VenderPage() {
       </Suspense>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#00A870] via-[#009663] to-[#007d52]">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-[#007d52]">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div
@@ -203,7 +203,7 @@ export default function VenderPage() {
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl font-bold text-[#00A870] md:text-4xl">{stat.value}</div>
+                <div className="text-3xl font-bold text-primary md:text-4xl">{stat.value}</div>
                 <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
               </div>
             ))}
@@ -229,18 +229,18 @@ export default function VenderPage() {
                 <div key={index} className="relative">
                   {/* Connector line (hidden on last item and mobile) */}
                   {index < steps.length - 1 && (
-                    <div className="absolute top-12 left-1/2 hidden h-0.5 w-full bg-[#00A870]/20 lg:block" />
+                    <div className="absolute top-12 left-1/2 hidden h-0.5 w-full bg-primary/20 lg:block" />
                   )}
 
                   <Card className="bg-card relative">
                     <CardContent className="p-6 text-center">
                       {/* Step number badge */}
-                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#00A870]/10">
-                        <Icon className="h-8 w-8 text-[#00A870]" />
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                        <Icon className="h-8 w-8 text-primary" />
                       </div>
 
                       {/* Step number */}
-                      <div className="mb-2 text-sm font-semibold text-[#00A870]">
+                      <div className="mb-2 text-sm font-semibold text-primary">
                         Paso {step.number}
                       </div>
 
@@ -276,8 +276,8 @@ export default function VenderPage() {
               return (
                 <Card key={index} className="bg-muted/50 border-none shadow-none">
                   <CardContent className="p-6">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[#00A870]/10">
-                      <Icon className="h-6 w-6 text-[#00A870]" />
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                      <Icon className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="text-foreground mb-2 text-lg font-bold">{benefit.title}</h3>
                     <p className="text-muted-foreground text-sm">{benefit.description}</p>
@@ -317,7 +317,7 @@ export default function VenderPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="bg-[#00A870] py-16 lg:py-20">
+      <section className="bg-primary py-16 lg:py-20">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">

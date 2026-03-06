@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { csrfFetch } from '@/lib/security/csrf';
 import {
   ShieldCheck,
   Rocket,
@@ -248,7 +249,7 @@ async function saveConfig(phase: number, toggles: Record<string, boolean>): Prom
       },
     ];
 
-    const res = await fetch('/api/configurations/bulk', {
+    const res = await csrfFetch('/api/configurations/bulk', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(configs),

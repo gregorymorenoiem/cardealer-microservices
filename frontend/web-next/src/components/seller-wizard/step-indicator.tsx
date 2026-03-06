@@ -26,7 +26,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
     <nav aria-label="Progreso del registro" className="w-full">
       {/* Mobile: Compact view */}
       <div className="flex items-center justify-between sm:hidden">
-        <span className="text-sm font-medium text-[#00A870]">
+        <span className="text-sm font-medium text-primary">
           Paso {currentStep + 1} de {steps.length}
         </span>
         <span className="text-muted-foreground text-sm">{steps[currentStep]?.label}</span>
@@ -45,8 +45,8 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                 <div
                   className={cn(
                     'flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-300',
-                    isCompleted && 'border-[#00A870] bg-[#00A870] text-white',
-                    isCurrent && 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]',
+                    isCompleted && 'border-primary bg-primary text-white',
+                    isCurrent && 'border-primary bg-primary/10 text-primary',
                     !isCompleted && !isCurrent && 'border-muted-foreground/30 text-muted-foreground'
                   )}
                   aria-current={isCurrent ? 'step' : undefined}
@@ -57,7 +57,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                   <p
                     className={cn(
                       'text-xs font-medium',
-                      isCompleted || isCurrent ? 'text-[#00A870]' : 'text-muted-foreground'
+                      isCompleted || isCurrent ? 'text-primary' : 'text-muted-foreground'
                     )}
                   >
                     {step.label}
@@ -73,7 +73,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                 <div
                   className={cn(
                     'mx-4 h-0.5 w-16 transition-colors duration-300 lg:w-24',
-                    isCompleted ? 'bg-[#00A870]' : 'bg-muted-foreground/20'
+                    isCompleted ? 'bg-primary' : 'bg-muted-foreground/20'
                   )}
                 />
               )}
@@ -86,7 +86,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
       <div className="mt-3 sm:hidden">
         <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
           <div
-            className="h-full rounded-full bg-[#00A870] transition-all duration-500"
+            className="h-full rounded-full bg-primary transition-all duration-500"
             style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
           />
         </div>

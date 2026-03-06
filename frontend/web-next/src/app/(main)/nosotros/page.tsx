@@ -30,7 +30,7 @@ export default function NosotrosPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#00A870] to-[#007850] py-20 text-white">
+      <section className="relative bg-gradient-to-br from-primary to-primary/80 py-20 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="text-4xl font-bold md:text-5xl">
@@ -60,7 +60,7 @@ export default function NosotrosPage() {
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {ABOUT_STATS.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl font-bold text-[#00A870] md:text-4xl">{stat.value}</div>
+                <div className="text-3xl font-bold text-primary md:text-4xl">{stat.value}</div>
                 <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
               </div>
             ))}
@@ -122,8 +122,8 @@ export default function NosotrosPage() {
             ].map((value, index) => (
               <Card key={index}>
                 <CardContent className="pt-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#00A870]/10">
-                    <value.icon className="h-6 w-6 text-[#00A870]" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                    <value.icon className="h-6 w-6 text-primary" />
                   </div>
                   <h3 className="text-foreground mt-4 text-xl font-semibold">{value.title}</h3>
                   <p className="text-muted-foreground mt-2">{value.description}</p>
@@ -148,7 +148,7 @@ export default function NosotrosPage() {
                 name: 'Carlos Rodríguez',
                 role: 'CEO & Co-Fundador',
                 initials: 'CR',
-                color: 'from-[#00A870] to-[#007850]',
+                color: 'from-primary to-primary/80',
               },
               {
                 name: 'María Santos',
@@ -186,13 +186,13 @@ export default function NosotrosPage() {
       {/* Contact CTA */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl rounded-2xl bg-gradient-to-br from-[#00A870] to-[#007850] p-8 text-center text-white md:p-12">
+          <div className="mx-auto max-w-3xl rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-8 text-center text-white md:p-12">
             <h2 className="text-2xl font-bold md:text-3xl">¿Tienes preguntas?</h2>
             <p className="mt-4 text-white/90">
               Estamos aquí para ayudarte. Contáctanos y te responderemos a la brevedad.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white text-[#00A870]">
+              <Button asChild size="lg" className="hover:bg-muted gap-2 bg-white text-primary">
                 <Link href="/contacto">
                   <Mail className="h-4 w-4" />
                   Contáctanos

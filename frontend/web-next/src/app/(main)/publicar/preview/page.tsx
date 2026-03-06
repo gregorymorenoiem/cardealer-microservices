@@ -125,12 +125,14 @@ export default function PublicarPreviewPage() {
                 <button
                   onClick={prevImage}
                   className="absolute top-1/2 left-4 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                  aria-label="Imagen anterior"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
                 <button
                   onClick={nextImage}
                   className="absolute top-1/2 right-4 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                  aria-label="Imagen siguiente"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
@@ -142,10 +144,10 @@ export default function PublicarPreviewPage() {
 
                 {/* Action buttons */}
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <Button size="icon" variant="secondary" className="bg-white/90 hover:bg-white">
+                  <Button size="icon" variant="secondary" className="bg-white/90 hover:bg-white" aria-label="Agregar a favoritos">
                     <Heart className="h-5 w-5" />
                   </Button>
-                  <Button size="icon" variant="secondary" className="bg-white/90 hover:bg-white">
+                  <Button size="icon" variant="secondary" className="bg-white/90 hover:bg-white" aria-label="Compartir">
                     <Share2 className="h-5 w-5" />
                   </Button>
                 </div>

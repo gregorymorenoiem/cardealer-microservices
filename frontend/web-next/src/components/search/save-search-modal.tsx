@@ -184,12 +184,12 @@ export function SaveSearchModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <BookmarkPlus className="h-5 w-5 text-[#00A870]" />
+            <BookmarkPlus className="h-5 w-5 text-primary" />
             Guardar búsqueda
           </DialogTitle>
           <DialogDescription>
             {totalResults !== undefined && totalResults > 0 && (
-              <span className="font-medium text-[#00A870]">
+              <span className="font-medium text-primary">
                 {totalResults.toLocaleString()} vehículos
               </span>
             )}{' '}
@@ -224,7 +224,7 @@ export function SaveSearchModal({
             <div className="border-border bg-muted/30 flex items-center justify-between rounded-lg border p-3">
               <div className="flex items-center gap-2">
                 {notifyEnabled ? (
-                  <Bell className="h-4 w-4 text-[#00A870]" />
+                  <Bell className="h-4 w-4 text-primary" />
                 ) : (
                   <BellOff className="text-muted-foreground h-4 w-4" />
                 )}
@@ -269,7 +269,7 @@ export function SaveSearchModal({
               </Button>
               <Button
                 type="submit"
-                className="bg-[#00A870] hover:bg-[#008a5c]"
+                className="bg-primary hover:bg-primary/80"
                 disabled={createSavedSearch.isPending}
               >
                 {createSavedSearch.isPending ? (

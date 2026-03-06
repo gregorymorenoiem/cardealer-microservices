@@ -75,10 +75,10 @@ export function VehicleChatWidget({
       {/* OKLA Support floating bubble — green branded */}
       <button
         onClick={chat.toggle}
-        className={`fixed right-4 bottom-4 z-[9998] flex items-center gap-2 rounded-full px-5 py-3 shadow-lg transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-[#00A870] focus:ring-offset-2 focus:outline-none ${
+        className={`fixed right-4 bottom-4 z-[9998] flex items-center gap-2 rounded-full px-5 py-3 shadow-lg transition-all duration-300 hover:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none ${
           chat.isOpen
             ? 'bg-gray-600 hover:bg-gray-700'
-            : 'bg-gradient-to-r from-[#00A870] to-emerald-600 hover:from-[#009060] hover:to-emerald-700'
+            : 'bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-700'
         }`}
         aria-label={chat.isOpen ? 'Cerrar soporte OKLA' : 'Abrir asistente de soporte OKLA'}
       >
@@ -88,7 +88,7 @@ export function VehicleChatWidget({
           <>
             <Bot className="h-5 w-5 text-white" />
             <span className="text-sm font-semibold text-white max-sm:hidden">Soporte OKLA</span>
-            <span className="absolute inset-0 animate-ping rounded-full bg-[#00A870] opacity-20" />
+            <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-20" />
           </>
         )}
       </button>

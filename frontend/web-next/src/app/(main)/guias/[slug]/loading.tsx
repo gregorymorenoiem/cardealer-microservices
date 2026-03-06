@@ -11,7 +11,7 @@ export default function GuiaDetailLoading() {
       </div>
 
       {/* Hero skeleton */}
-      <div className="bg-gradient-to-br from-[#00A870]/10 to-[#007850]/10 py-12">
+      <div className="bg-gradient-to-br from-primary/10 to-primary/10 py-12">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
             <div className="mb-4 flex items-center gap-3">

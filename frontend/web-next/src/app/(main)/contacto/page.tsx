@@ -113,7 +113,7 @@ export default function ContactoPage() {
             posible.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Button asChild className="gap-2 bg-[#00A870] hover:bg-[#009663]">
+            <Button asChild className="gap-2 bg-primary hover:bg-primary/90">
               <Link href="/">Volver al inicio</Link>
             </Button>
             <Button asChild variant="outline">
@@ -128,7 +128,7 @@ export default function ContactoPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-[#00A870] to-[#007850] py-16 text-white">
+      <section className="bg-gradient-to-br from-primary to-primary/80 py-16 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-3xl font-bold md:text-4xl">Contáctanos</h1>
@@ -152,14 +152,14 @@ export default function ContactoPage() {
 
               <div className="mt-8 space-y-6">
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#00A870]/10">
-                    <Mail className="h-5 w-5 text-[#00A870]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Mail className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <div className="text-foreground font-medium">Correo electrónico</div>
                     <a
                       href={`mailto:${config.supportEmail}`}
-                      className="text-[#00A870] hover:underline"
+                      className="text-primary hover:underline"
                     >
                       {config.supportEmail}
                     </a>
@@ -167,20 +167,20 @@ export default function ContactoPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#00A870]/10">
-                    <Phone className="h-5 w-5 text-[#00A870]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Phone className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <div className="text-foreground font-medium">Teléfono</div>
-                    <a href={config.phoneHref} className="text-[#00A870] hover:underline">
+                    <a href={config.phoneHref} className="text-primary hover:underline">
                       {config.supportPhone}
                     </a>
                   </div>
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#00A870]/10">
-                    <MessageCircle className="h-5 w-5 text-[#00A870]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <MessageCircle className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <div className="text-foreground font-medium">WhatsApp</div>
@@ -188,7 +188,7 @@ export default function ContactoPage() {
                       href={config.whatsappUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#00A870] hover:underline"
+                      className="text-primary hover:underline"
                     >
                       {config.supportPhone}
                     </a>
@@ -196,8 +196,8 @@ export default function ContactoPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#00A870]/10">
-                    <MapPin className="h-5 w-5 text-[#00A870]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <MapPin className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <div className="text-foreground font-medium">Ubicación</div>
@@ -213,8 +213,8 @@ export default function ContactoPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#00A870]/10">
-                    <Clock className="h-5 w-5 text-[#00A870]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Clock className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <div className="text-foreground font-medium">Horario de atención</div>
@@ -319,7 +319,7 @@ export default function ContactoPage() {
                     <Button
                       type="submit"
                       size="lg"
-                      className="w-full gap-2 bg-[#00A870] hover:bg-[#009663] sm:w-auto"
+                      className="w-full gap-2 bg-primary hover:bg-primary/90 sm:w-auto"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (

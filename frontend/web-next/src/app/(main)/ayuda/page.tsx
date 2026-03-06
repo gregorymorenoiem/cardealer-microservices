@@ -245,7 +245,7 @@ export default function AyudaPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-[#00A870] to-[#007850] py-16 text-white">
+      <section className="bg-gradient-to-br from-primary to-primary/80 py-16 text-white">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-3xl font-bold md:text-4xl">¿En qué podemos ayudarte?</h1>
@@ -277,11 +277,11 @@ export default function AyudaPage() {
                 key={category.id}
                 onClick={() => setActiveCategory(category.id)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg border p-4 transition-colors hover:border-[#00A870] hover:bg-[#00A870]/5',
-                  activeCategory === category.id && 'border-[#00A870] bg-[#00A870]/5'
+                  'flex items-center gap-3 rounded-lg border p-4 transition-colors hover:border-primary hover:bg-primary/5',
+                  activeCategory === category.id && 'border-primary bg-primary/5'
                 )}
               >
-                <category.icon className="h-5 w-5 text-[#00A870]" />
+                <category.icon className="h-5 w-5 text-primary" />
                 <span className="text-foreground font-medium">{category.name}</span>
               </button>
             ))}
@@ -303,7 +303,7 @@ export default function AyudaPage() {
                   <Button
                     variant="link"
                     onClick={() => setSearchQuery('')}
-                    className="mt-2 text-[#00A870]"
+                    className="mt-2 text-primary"
                   >
                     Limpiar búsqueda
                   </Button>
@@ -316,11 +316,11 @@ export default function AyudaPage() {
                       id={category.id}
                       className={cn(
                         'overflow-hidden transition-shadow',
-                        activeCategory === category.id && 'ring-2 ring-[#00A870]'
+                        activeCategory === category.id && 'ring-2 ring-primary'
                       )}
                     >
                       <div className="border-border bg-muted/50 flex items-center gap-3 border-b px-6 py-4">
-                        <category.icon className="h-5 w-5 text-[#00A870]" />
+                        <category.icon className="h-5 w-5 text-primary" />
                         <h2 className="text-foreground font-semibold">{category.name}</h2>
                       </div>
                       <CardContent className="p-6 pt-0">
@@ -347,9 +347,9 @@ export default function AyudaPage() {
                     <div className="mt-6 space-y-4">
                       <a
                         href={`mailto:${config.supportEmail}`}
-                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-[#00A870] hover:bg-[#00A870]/5"
+                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-primary hover:bg-primary/5"
                       >
-                        <Mail className="h-5 w-5 text-[#00A870]" />
+                        <Mail className="h-5 w-5 text-primary" />
                         <div>
                           <div className="text-foreground font-medium">Email</div>
                           <div className="text-muted-foreground text-sm">{config.supportEmail}</div>
@@ -358,9 +358,9 @@ export default function AyudaPage() {
 
                       <a
                         href={config.phoneHref}
-                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-[#00A870] hover:bg-[#00A870]/5"
+                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-primary hover:bg-primary/5"
                       >
-                        <Phone className="h-5 w-5 text-[#00A870]" />
+                        <Phone className="h-5 w-5 text-primary" />
                         <div>
                           <div className="text-foreground font-medium">Teléfono</div>
                           <div className="text-muted-foreground text-sm">{config.supportPhone}</div>
@@ -371,9 +371,9 @@ export default function AyudaPage() {
                         href={config.whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-[#00A870] hover:bg-[#00A870]/5"
+                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-primary hover:bg-primary/5"
                       >
-                        <MessageCircle className="h-5 w-5 text-[#00A870]" />
+                        <MessageCircle className="h-5 w-5 text-primary" />
                         <div>
                           <div className="text-foreground font-medium">WhatsApp</div>
                           <div className="text-muted-foreground text-sm">Chat en vivo</div>
@@ -383,7 +383,7 @@ export default function AyudaPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-[#00A870] text-white">
+                <Card className="bg-primary text-white">
                   <CardContent className="p-6">
                     <h3 className="font-semibold">Horario de atención</h3>
                     <div className="mt-4 space-y-2 text-sm text-white/90">

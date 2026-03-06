@@ -181,7 +181,7 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
       <div className="mt-6 space-y-2.5">
         {/* PRIMARY CTA: Chat en vivo — requires auth, redirects to /mensajes */}
         <Button
-          className="h-11 w-full gap-2 bg-[#00A870] text-base font-semibold text-white shadow-md hover:bg-[#008F60]"
+          className="h-11 w-full gap-2 bg-primary text-base font-semibold text-white shadow-md hover:bg-primary/80"
           onClick={() => {
             if (isAuthenticated) {
               // Redirect to messaging view with seller context
@@ -217,7 +217,7 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
                 <div className="mt-3 flex gap-2">
                   <Button
                     size="sm"
-                    className="h-8 gap-1.5 bg-[#00A870] text-xs text-white hover:bg-[#008F60]"
+                    className="h-8 gap-1.5 bg-primary text-xs text-white hover:bg-primary/80"
                     onClick={() =>
                       router.push(
                         `/login?callbackUrl=${encodeURIComponent(`/vehiculos/${vehicle.slug || vehicle.id}}`)}`
@@ -319,7 +319,7 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
       {/* Trust signals */}
       <div className="border-border mt-6 border-t pt-4">
         <div className="text-muted-foreground flex items-center gap-2 text-sm">
-          <Shield className="h-4 w-4 text-[#00A870]" />
+          <Shield className="h-4 w-4 text-primary" />
           <span>Contacto verificado por OKLA</span>
         </div>
         <p className="text-muted-foreground mt-2 text-xs">
@@ -332,7 +332,7 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
         <div className="mt-4 flex flex-col items-center gap-1">
           <Link
             href={`/dealers/${sellerData.id}`}
-            className="flex items-center gap-1 text-sm text-[#00A870] hover:underline"
+            className="flex items-center gap-1 text-sm text-primary hover:underline"
           >
             <Store className="h-3.5 w-3.5" />
             Ver perfil y todo el inventario

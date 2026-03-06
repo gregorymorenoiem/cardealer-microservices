@@ -191,7 +191,7 @@ export function VehicleCard({
     <Link
       href={vehicleUrl}
       className={cn(
-        'group border-border bg-card block overflow-hidden rounded-xl border shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[#00A870]/30 hover:shadow-xl',
+        'group border-border bg-card block overflow-hidden rounded-xl border shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl',
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -286,7 +286,7 @@ export function VehicleCard({
         </div>
 
         {/* Title */}
-        <h3 className="text-card-foreground text-base leading-tight font-bold transition-colors group-hover:text-[#00A870]">
+        <h3 className="text-card-foreground text-base leading-tight font-bold transition-colors group-hover:text-primary">
           {vehicle.year} {vehicle.make} {vehicle.model}
         </h3>
         {vehicle.trim && <p className="text-muted-foreground mt-0.5 text-xs">{vehicle.trim}</p>}
@@ -319,7 +319,7 @@ export function VehicleCard({
         <div className="border-border mt-3 border-t pt-3">
           <div className="flex items-end justify-between">
             <div>
-              <span className="text-xl font-extrabold text-[#00A870]">
+              <span className="text-xl font-extrabold text-primary">
                 {formatCurrency(vehicle.price)}
               </span>
               {vehicle.monthlyPayment && (
@@ -341,7 +341,7 @@ export function VehicleCard({
               window.location.href = vehicleUrl;
             }}
             className={cn(
-              'mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#00A870] py-2.5 text-sm font-semibold text-white transition-all duration-200',
+              'mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-white transition-all duration-200',
               'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
             )}
             aria-label="Ver detalles y contactar vendedor"

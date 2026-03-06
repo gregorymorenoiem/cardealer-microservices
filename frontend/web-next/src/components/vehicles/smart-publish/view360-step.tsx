@@ -34,6 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { csrfFetch } from '@/lib/security/csrf';
 import { DEALER_PLAN_LIMITS, SELLER_PLAN_LIMITS, DealerPlan, SellerPlan } from '@/lib/plan-config';
 
 // ============================================================
@@ -204,7 +205,7 @@ export function View360Step({
         if (vehicleId) formData.append('vehicleId', vehicleId);
 
         // Upload to the vehicle360 API
-        const response = await fetch('/api/vehicle360/upload', {
+        const response = await csrfFetch('/api/vehicle360/upload', {
           method: 'POST',
           body: formData,
         });

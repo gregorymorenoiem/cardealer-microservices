@@ -117,7 +117,7 @@ export default function ConversationPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Link href="/cuenta/mensajes">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label="Volver">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
@@ -143,10 +143,10 @@ export default function ConversationPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="text-primary">
+              <Button variant="ghost" size="icon" className="text-primary" aria-label="Llamar">
                 <Phone className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="Más opciones">
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </div>
@@ -255,10 +255,10 @@ export default function ConversationPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="shrink-0">
+            <Button variant="ghost" size="icon" className="shrink-0" aria-label="Adjuntar archivo">
               <Paperclip className="text-muted-foreground h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="shrink-0">
+            <Button variant="ghost" size="icon" className="shrink-0" aria-label="Insertar imagen">
               <ImageIcon className="text-muted-foreground h-5 w-5" />
             </Button>
 
@@ -270,7 +270,7 @@ export default function ConversationPage() {
               className="flex-1"
             />
 
-            <Button variant="ghost" size="icon" className="shrink-0">
+            <Button variant="ghost" size="icon" className="shrink-0" aria-label="Emojis">
               <Smile className="text-muted-foreground h-5 w-5" />
             </Button>
 
@@ -279,6 +279,7 @@ export default function ConversationPage() {
               className="shrink-0 bg-primary hover:bg-primary/90"
               onClick={handleSend}
               disabled={!newMessage.trim() || isSending}
+              aria-label="Enviar mensaje"
             >
               <Send className="h-4 w-4" />
             </Button>

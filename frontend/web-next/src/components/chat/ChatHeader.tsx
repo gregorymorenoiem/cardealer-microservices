@@ -20,7 +20,7 @@ export function ChatHeader({
   onTransfer,
 }: ChatHeaderProps) {
   return (
-    <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-[#00A870] to-[#009663] px-4 py-3 text-white">
+    <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-primary to-primary/90 px-4 py-3 text-white">
       {/* Left — Bot info */}
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">

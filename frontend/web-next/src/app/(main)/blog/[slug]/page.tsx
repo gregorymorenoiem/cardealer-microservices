@@ -148,7 +148,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute right-0 bottom-0 left-0 p-6 md:p-10">
           <div className="container mx-auto">
-            <Badge className="mb-3 bg-[#00A870] text-white hover:bg-[#009663]">
+            <Badge className="mb-3 bg-primary text-white hover:bg-primary/90">
               {post.category}
             </Badge>
             <h1 className="max-w-3xl text-2xl font-bold text-white md:text-4xl">{post.title}</h1>
@@ -282,14 +282,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </div>
 
               {/* CTA */}
-              <div className="mt-8 rounded-xl bg-gradient-to-r from-[#00A870] to-[#007850] p-6 text-white md:p-8">
+              <div className="mt-8 rounded-xl bg-gradient-to-r from-primary to-primary/80 p-6 text-white md:p-8">
                 <h3 className="text-xl font-bold">¿Buscas tu próximo vehículo?</h3>
                 <p className="mt-2 text-white/90">
                   Explora miles de vehículos verificados en el marketplace más completo de República
                   Dominicana.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
-                  <Button asChild className="bg-white text-[#00A870] hover:bg-white/90">
+                  <Button asChild className="bg-white text-primary hover:bg-white/90">
                     <Link href="/vehiculos">Explorar Vehículos</Link>
                   </Button>
                   <Button

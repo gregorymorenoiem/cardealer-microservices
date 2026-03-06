@@ -4,7 +4,7 @@ export default function VenderLoading() {
   return (
     <div className="bg-background min-h-screen">
       {/* Hero skeleton */}
-      <div className="bg-[#00A870] py-16 lg:py-24">
+      <div className="bg-primary py-16 lg:py-24">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <Skeleton className="mx-auto mb-6 h-8 w-64 rounded-full bg-white/20" />
           <Skeleton className="mx-auto mb-4 h-12 w-3/4 bg-white/20" />

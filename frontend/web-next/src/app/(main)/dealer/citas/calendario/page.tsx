@@ -243,7 +243,7 @@ export default function CalendarPage() {
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/dealer/citas">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Volver">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
@@ -276,7 +276,7 @@ export default function CalendarPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/dealer/citas">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Volver">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
@@ -300,13 +300,13 @@ export default function CalendarPage() {
               {getMonthLabel(currentYear, currentMonth)}
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={goToPrevMonth}>
+              <Button variant="outline" size="icon" onClick={goToPrevMonth} aria-label="Mes anterior">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="sm" onClick={goToToday}>
                 Hoy
               </Button>
-              <Button variant="outline" size="icon" onClick={goToNextMonth}>
+              <Button variant="outline" size="icon" onClick={goToNextMonth} aria-label="Mes siguiente">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

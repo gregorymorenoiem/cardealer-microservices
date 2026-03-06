@@ -322,8 +322,8 @@ export function VehicleFilters({
                     className={cn(
                       'flex-1 rounded-lg border py-1.5 text-xs font-medium transition-all',
                       isActive
-                        ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
-                        : 'border-border text-muted-foreground hover:text-foreground hover:border-[#00A870]/30'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
                     )}
                   >
                     {opt.label}
@@ -345,7 +345,7 @@ export function VehicleFilters({
             <select
               value={filters.make ?? ''}
               onChange={e => onChange({ make: e.target.value || undefined, model: undefined })}
-              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-[#00A870] focus:outline-none"
+              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
             >
               <option value="">Todas las marcas</option>
               {makes.map(m => (
@@ -358,7 +358,7 @@ export function VehicleFilters({
               <select
                 value={filters.model ?? ''}
                 onChange={e => onChange({ model: e.target.value || undefined })}
-                className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-[#00A870] focus:outline-none"
+                className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
               >
                 <option value="">Todos los modelos</option>
                 {availableModels.map(m => (
@@ -424,7 +424,7 @@ export function VehicleFilters({
                       onChange({ priceMin: chip.min, priceMax: chip.max });
                       setPriceRange([chip.min ?? 0, chip.max ?? 10_000_000]);
                     }}
-                    className="border-border text-muted-foreground rounded-full border px-2.5 py-0.5 text-xs transition-colors hover:border-[#00A870] hover:text-[#00A870]"
+                    className="border-border text-muted-foreground rounded-full border px-2.5 py-0.5 text-xs transition-colors hover:border-primary hover:text-primary"
                   >
                     {chip.label}
                   </button>
@@ -448,7 +448,7 @@ export function VehicleFilters({
                 onChange={e =>
                   onChange({ yearMin: e.target.value ? Number(e.target.value) : undefined })
                 }
-                className="border-input bg-background h-9 rounded-md border px-2 text-sm focus:ring-1 focus:ring-[#00A870] focus:outline-none"
+                className="border-input bg-background h-9 rounded-md border px-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
               >
                 <option value="">Desde</option>
                 {years.map(y => (
@@ -462,7 +462,7 @@ export function VehicleFilters({
                 onChange={e =>
                   onChange({ yearMax: e.target.value ? Number(e.target.value) : undefined })
                 }
-                className="border-input bg-background h-9 rounded-md border px-2 text-sm focus:ring-1 focus:ring-[#00A870] focus:outline-none"
+                className="border-input bg-background h-9 rounded-md border px-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
               >
                 <option value="">Hasta</option>
                 {years.map(y => (
@@ -486,8 +486,8 @@ export function VehicleFilters({
                   className={cn(
                     'rounded-full border px-2.5 py-0.5 text-xs transition-colors',
                     filters.yearMin === chip.min && !filters.yearMax
-                      ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
-                      : 'border-border text-muted-foreground hover:border-[#00A870] hover:text-[#00A870]'
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border text-muted-foreground hover:border-primary hover:text-primary'
                   )}
                 >
                   {chip.label}
@@ -524,7 +524,7 @@ export function VehicleFilters({
             <select
               value={filters.province ?? ''}
               onChange={e => onChange({ province: e.target.value || undefined })}
-              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-[#00A870] focus:outline-none"
+              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
             >
               <option value="">Todas las provincias</option>
               {dominicanProvinces.map(p => {
@@ -547,7 +547,7 @@ export function VehicleFilters({
             <span className="flex items-center gap-2">
               Filtros avanzados
               {advancedActiveCount > 0 && (
-                <Badge className="flex h-4 w-4 items-center justify-center rounded-full bg-[#00A870] p-0 text-[10px] text-white">
+                <Badge className="flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-[10px] text-white">
                   {advancedActiveCount}
                 </Badge>
               )}
@@ -616,8 +616,8 @@ export function VehicleFilters({
                     className={cn(
                       'flex-1 rounded-lg border py-1.5 text-xs font-medium transition-all',
                       filters.transmission === opt.value
-                        ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
-                        : 'border-border text-muted-foreground hover:border-[#00A870]/30'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/30'
                     )}
                   >
                     {opt.label}
@@ -647,8 +647,8 @@ export function VehicleFilters({
                     className={cn(
                       'rounded-lg border px-2 py-1.5 text-left text-xs font-medium transition-all',
                       filters.drivetrain === opt.value
-                        ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
-                        : 'border-border text-muted-foreground hover:border-[#00A870]/30'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/30'
                     )}
                   >
                     {opt.label}
@@ -675,7 +675,7 @@ export function VehicleFilters({
                       'h-7 w-7 rounded-full border-2 transition-all',
                       c.value === 'blanco' ? 'border-gray-300' : 'border-transparent',
                       filters.color === c.value &&
-                        'border-[#00A870] ring-2 ring-[#00A870] ring-offset-1'
+                        'border-primary ring-2 ring-primary ring-offset-1'
                     )}
                     style={{ backgroundColor: c.hex }}
                     aria-label={c.label}
@@ -684,7 +684,7 @@ export function VehicleFilters({
                 ))}
               </div>
               {filters.color && (
-                <p className="mt-1 text-xs text-[#00A870] capitalize">{filters.color}</p>
+                <p className="mt-1 text-xs text-primary capitalize">{filters.color}</p>
               )}
             </div>
 
@@ -708,8 +708,8 @@ export function VehicleFilters({
                     className={cn(
                       'flex-1 rounded-lg border py-1.5 text-xs font-medium transition-all',
                       filters.sellerType === opt.v
-                        ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
-                        : 'border-border text-muted-foreground hover:border-[#00A870]/30'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/30'
                     )}
                   >
                     {opt.label}
@@ -728,7 +728,7 @@ export function VehicleFilters({
                   onCheckedChange={c => onChange({ isCertified: c ? true : undefined })}
                 />
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-[#00A870]" />
+                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                   Con garantía del vendedor
                 </span>
               </label>
@@ -784,8 +784,8 @@ export function VehicleFilters({
                     className={cn(
                       'rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
                       filters.seats === opt.value
-                        ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
-                        : 'border-border text-muted-foreground hover:border-[#00A870]/30'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/30'
                     )}
                   >
                     {opt.label}
@@ -812,8 +812,8 @@ export function VehicleFilters({
                     className={cn(
                       'flex-1 rounded-lg border py-1.5 text-xs font-medium transition-all',
                       filters.cylinders === opt.value
-                        ? 'border-[#00A870] bg-[#00A870]/10 text-[#00A870]'
-                        : 'border-border text-muted-foreground hover:border-[#00A870]/30'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/30'
                     )}
                   >
                     {opt.label}
@@ -842,7 +842,7 @@ export function VehicleFilters({
                       'h-7 w-7 rounded-full border-2 transition-all',
                       c.value === 'crema' ? 'border-gray-300' : 'border-transparent',
                       filters.interiorColor === c.value &&
-                        'border-[#00A870] ring-2 ring-[#00A870] ring-offset-1'
+                        'border-primary ring-2 ring-primary ring-offset-1'
                     )}
                     style={{ backgroundColor: c.hex }}
                     aria-label={c.label}
@@ -851,7 +851,7 @@ export function VehicleFilters({
                 ))}
               </div>
               {filters.interiorColor && (
-                <p className="mt-1 text-xs text-[#00A870] capitalize">{filters.interiorColor}</p>
+                <p className="mt-1 text-xs text-primary capitalize">{filters.interiorColor}</p>
               )}
             </div>
 

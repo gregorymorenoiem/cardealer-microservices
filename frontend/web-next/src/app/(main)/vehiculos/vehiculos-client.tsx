@@ -236,8 +236,8 @@ function AdSlotRectangle({ className }: { className?: string }) {
       aria-label="Panel de alertas"
     >
       <div className="flex flex-col items-center gap-3 p-5 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#00A870]/20">
-          <Bell className="h-6 w-6 text-[#00A870]" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
+          <Bell className="h-6 w-6 text-primary" />
         </div>
         <div>
           <p className="font-bold text-white">Crea una alerta</p>
@@ -247,7 +247,7 @@ function AdSlotRectangle({ className }: { className?: string }) {
         </div>
         <Link
           href="/cuenta/alertas"
-          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#00A870] py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#008a5c]"
+          className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition-all hover:bg-primary/80"
         >
           <Bell className="h-4 w-4" />
           Activar alertas
@@ -291,9 +291,9 @@ function SponsoredRowGrid({ vehicles }: { vehicles: SponsoredVehicle[] }) {
   return (
     <div className="col-span-full my-3">
       {/* Green banner container — visually separates sponsored from organic */}
-      <div className="rounded-xl border-2 border-[#00A870] bg-[#00A870]/5 px-4 py-4 dark:bg-[#00A870]/10">
+      <div className="rounded-xl border-2 border-primary bg-primary/5 px-4 py-4 dark:bg-primary/10">
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-[11px] font-semibold tracking-wider text-[#00A870] uppercase">
+          <span className="text-[11px] font-semibold tracking-wider text-primary uppercase">
             Vehículos Patrocinados
           </span>
           <SponsoredBadge tier="sponsored" />
@@ -691,7 +691,7 @@ export default function VehiculosClient() {
               }}
             >
               {isAiSearching ? (
-                <Sparkles className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 animate-pulse text-[#00A870]" />
+                <Sparkles className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 animate-pulse text-primary" />
               ) : (
                 <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               )}
@@ -706,7 +706,7 @@ export default function VehiculosClient() {
                 }}
                 className={cn(
                   'h-10 pr-10 pl-9 text-sm',
-                  isAiSearching && 'ring-2 ring-[#00A870]/40'
+                  isAiSearching && 'ring-2 ring-primary/40'
                 )}
                 aria-label="Buscar vehículos con IA"
                 disabled={isAiSearching}
@@ -751,7 +751,7 @@ export default function VehiculosClient() {
                 className={cn(
                   'rounded-md p-1.5 transition-colors',
                   viewMode === 'grid'
-                    ? 'bg-card text-[#00A870] shadow-sm'
+                    ? 'bg-card text-primary shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
                 aria-label="Vista cuadrícula"
@@ -765,7 +765,7 @@ export default function VehiculosClient() {
                 className={cn(
                   'rounded-md p-1.5 transition-colors',
                   viewMode === 'list'
-                    ? 'bg-card text-[#00A870] shadow-sm'
+                    ? 'bg-card text-primary shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
                 aria-label="Vista lista"
@@ -785,7 +785,7 @@ export default function VehiculosClient() {
               <SlidersHorizontal className="h-4 w-4" />
               <span className="hidden sm:inline">Filtros</span>
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#00A870] text-[10px] font-bold text-white">
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
                   {activeFilterCount}
                 </span>
               )}
@@ -795,7 +795,7 @@ export default function VehiculosClient() {
           {/* Row 2: Trust micro-bar (social proof — compact, always visible) */}
           <div className="scrollbar-none mt-1.5 flex items-center gap-4 overflow-x-auto pb-0.5">
             <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
-              <ShieldCheck className="h-3 w-3 text-[#00A870]" />
+              <ShieldCheck className="h-3 w-3 text-primary" />
               <span>Vendedores verificados</span>
             </div>
             <span className="text-border shrink-0">·</span>
@@ -805,30 +805,30 @@ export default function VehiculosClient() {
             </div>
             <span className="text-border shrink-0">·</span>
             <div className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
-              <Phone className="h-3 w-3 text-[#00A870]" />
+              <Phone className="h-3 w-3 text-primary" />
               <span>Contacto directo</span>
             </div>
             <span className="text-border hidden shrink-0 sm:inline">·</span>
             <div className="text-muted-foreground hidden shrink-0 items-center gap-1 text-[11px] sm:flex">
-              <Bell className="h-3 w-3 text-[#00A870]" />
+              <Bell className="h-3 w-3 text-primary" />
               <span>Alertas gratis</span>
             </div>
           </div>
 
           {/* AI search info banner */}
           {aiSearchInfo && (
-            <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-[#00A870]/5 px-3 py-1.5 dark:bg-[#00A870]/10">
-              <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#00A870]" />
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-1.5 dark:bg-primary/10">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
               <span className="truncate text-xs text-[#005236] dark:text-[#4fd4a4]">
                 IA interpretó: <strong>&ldquo;{aiSearchInfo.query}&rdquo;</strong>
               </span>
               <div className="ml-auto flex shrink-0 items-center gap-2">
-                <span className="rounded-full bg-[#00A870]/10 px-2 py-0.5 text-[10px] font-medium text-[#00A870] dark:bg-[#00A870]/20 dark:text-[#4fd4a4]">
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary dark:bg-primary/20 dark:text-[#4fd4a4]">
                   {Math.round(aiSearchInfo.confidence * 100)}% confianza
                 </span>
-                <span className="text-[10px] text-[#00A870]/60">{aiSearchInfo.latencyMs}ms</span>
+                <span className="text-[10px] text-primary/60">{aiSearchInfo.latencyMs}ms</span>
                 {aiSearchInfo.wasCached && (
-                  <span className="rounded-full bg-[#00A870]/10 px-1.5 py-0.5 text-[10px] text-[#00A870]">
+                  <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
                     caché
                   </span>
                 )}
@@ -839,7 +839,7 @@ export default function VehiculosClient() {
                     clearFilters();
                     setSearchInput('');
                   }}
-                  className="ml-1 text-[#00A870]/50 hover:text-[#00A870]"
+                  className="ml-1 text-primary/50 hover:text-primary"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -860,10 +860,10 @@ export default function VehiculosClient() {
               {/* Sidebar header */}
               <div className="border-border flex items-center justify-between border-b px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="h-4 w-4 text-[#00A870]" />
+                  <SlidersHorizontal className="h-4 w-4 text-primary" />
                   <span className="text-sm font-bold">Filtros</span>
                   {activeFilterCount > 0 && (
-                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#00A870] px-1 text-[10px] font-bold text-white">
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
                       {activeFilterCount}
                     </span>
                   )}
@@ -920,8 +920,8 @@ export default function VehiculosClient() {
                     className={cn(
                       'flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all',
                       isActive
-                        ? 'border-[#00A870] bg-[#00A870] text-white shadow-sm'
-                        : 'border-border text-muted-foreground hover:text-foreground bg-white hover:border-[#00A870]/60 dark:bg-slate-900'
+                        ? 'border-primary bg-primary text-white shadow-sm'
+                        : 'border-border text-muted-foreground hover:text-foreground bg-white hover:border-primary/60 dark:bg-slate-900'
                     )}
                   >
                     <qf.icon className="h-3 w-3" />
@@ -976,7 +976,7 @@ export default function VehiculosClient() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 gap-1.5 border-[#00A870] text-xs text-[#00A870] hover:bg-[#00A870]/10"
+                      className="h-8 gap-1.5 border-primary text-xs text-primary hover:bg-primary/10"
                       onClick={() => setSaveModalOpen(true)}
                     >
                       <BookmarkPlus className="h-3.5 w-3.5" />
@@ -1063,7 +1063,7 @@ export default function VehiculosClient() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="mt-5 rounded-xl bg-[#00A870] px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#008a5c] hover:shadow-lg"
+                  className="mt-5 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-primary/80 hover:shadow-lg"
                 >
                   Limpiar filtros y ver todos
                 </button>
@@ -1071,7 +1071,7 @@ export default function VehiculosClient() {
                   <button
                     type="button"
                     onClick={() => setSaveModalOpen(true)}
-                    className="mt-3 flex items-center gap-2 text-sm text-[#00A870] underline-offset-2 hover:underline"
+                    className="mt-3 flex items-center gap-2 text-sm text-primary underline-offset-2 hover:underline"
                   >
                     <Bell className="h-3.5 w-3.5" />
                     Recibir alerta cuando haya resultados
@@ -1087,7 +1087,7 @@ export default function VehiculosClient() {
             {(isLoading || isFetching) && allVehicles.length > 0 && (
               <div className="mt-2 flex justify-center py-8">
                 <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                  <RefreshCcw className="h-4 w-4 animate-spin text-[#00A870]" />
+                  <RefreshCcw className="h-4 w-4 animate-spin text-primary" />
                   Cargando más vehículos…
                 </div>
               </div>
@@ -1127,7 +1127,7 @@ export default function VehiculosClient() {
           />
           <div className="bg-card sticky bottom-0 mt-4 pt-4 pb-2">
             <Button
-              className="w-full bg-[#00A870] hover:bg-[#008a5c]"
+              className="w-full bg-primary hover:bg-primary/80"
               onClick={() => setMobileFiltersOpen(false)}
             >
               Ver {totalResults > 0 ? `${totalResults.toLocaleString()} ` : ''}resultados
@@ -1147,7 +1147,7 @@ export default function VehiculosClient() {
               ? setSaveModalOpen(true)
               : (window.location.href = '/login?redirect=/vehiculos')
           }
-          className="flex items-center gap-2 rounded-full bg-[#00A870] px-4 py-3 text-sm font-semibold text-white shadow-xl ring-2 ring-white/30 transition-all hover:bg-[#008a5c] hover:shadow-2xl active:scale-95"
+          className="flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-xl ring-2 ring-white/30 transition-all hover:bg-primary/80 hover:shadow-2xl active:scale-95"
           aria-label="Guardar búsqueda y crear alerta"
         >
           <Bell className="h-4 w-4" />

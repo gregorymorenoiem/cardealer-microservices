@@ -139,7 +139,7 @@ export function ChatPanel({
           </p>
           <button
             onClick={onTransfer}
-            className="mt-1.5 text-xs font-medium text-[#00A870] hover:underline"
+            className="mt-1.5 text-xs font-medium text-primary hover:underline"
           >
             Hablar con un agente →
           </button>

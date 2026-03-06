@@ -32,6 +32,7 @@ Ahora Cuando todo este listo revisa el archivo, ".prompts/prompt-1.md", Y temina
 ## 📋 Sprints Completados
 
 ### Sprint 11 — Security, Forms & Design Tokens (2026-03-06) ✅
+
 **Commit:** `a541e0cb` | **Build:** 213 páginas, 17.3s
 
 - [x] **Task 54**: csrfFetch en vender/leads (POST+PATCH), vender/importar (POST×2), vehiculos-client (POST×2) — 6 endpoints protegidos

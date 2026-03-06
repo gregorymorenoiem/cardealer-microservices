@@ -87,14 +87,14 @@ export function AccountStep({ data, onChange, onSubmit, isLoading, error }: Acco
             className={cn(
               'flex cursor-pointer items-start gap-3 rounded-lg border-2 p-4 transition-all',
               data.accountType === 'individual'
-                ? 'border-[#00A870] bg-[#00A870]/5'
-                : 'border-border hover:border-[#00A870]/40'
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/40'
             )}
           >
             <RadioGroupItem value="individual" id="individual" className="mt-0.5" />
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-[#00A870]" />
+                <User className="h-4 w-4 text-primary" />
                 <span className="font-medium">Vendedor individual</span>
               </div>
               <p className="text-muted-foreground text-xs">
@@ -107,14 +107,14 @@ export function AccountStep({ data, onChange, onSubmit, isLoading, error }: Acco
             className={cn(
               'flex cursor-pointer items-start gap-3 rounded-lg border-2 p-4 transition-all',
               data.accountType === 'dealer'
-                ? 'border-[#00A870] bg-[#00A870]/5'
-                : 'border-border hover:border-[#00A870]/40'
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/40'
             )}
           >
             <RadioGroupItem value="dealer" id="dealer" className="mt-0.5" />
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-[#00A870]" />
+                <Building2 className="h-4 w-4 text-primary" />
                 <span className="font-medium">Dealer / Empresa</span>
               </div>
               <p className="text-muted-foreground text-xs">
@@ -296,11 +296,11 @@ export function AccountStep({ data, onChange, onSubmit, isLoading, error }: Acco
           className="text-muted-foreground cursor-pointer text-sm leading-relaxed"
         >
           Acepto los{' '}
-          <a href="/terminos" target="_blank" className="text-[#00A870] underline">
+          <a href="/terminos" target="_blank" className="text-primary underline">
             Términos y Condiciones
           </a>{' '}
           y la{' '}
-          <a href="/privacidad" target="_blank" className="text-[#00A870] underline">
+          <a href="/privacidad" target="_blank" className="text-primary underline">
             Política de Privacidad
           </a>
         </Label>
@@ -318,7 +318,7 @@ export function AccountStep({ data, onChange, onSubmit, isLoading, error }: Acco
       <Button
         type="submit"
         size="lg"
-        className="w-full bg-[#00A870] hover:bg-[#009663]"
+        className="w-full bg-primary hover:bg-primary/90"
         disabled={isLoading || !isPasswordValid || !doPasswordsMatch || !data.acceptTerms}
       >
         {isLoading ? (

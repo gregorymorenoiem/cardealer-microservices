@@ -77,7 +77,7 @@ export function ChatMessageBubble({
   if (!isFromBot) {
     return (
       <div className="flex items-start justify-end gap-2.5 px-4 py-1.5">
-        <div className="max-w-[75%] rounded-2xl rounded-tr-md bg-[#00A870] px-4 py-2.5 text-sm text-white">
+        <div className="max-w-[75%] rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-sm text-white">
           <p className="break-words whitespace-pre-wrap">{content}</p>
           <span className="mt-1 block text-right text-[10px] text-white/60">
             {formatTime(timestamp)}
@@ -119,7 +119,7 @@ export function ChatMessageBubble({
               <button
                 key={`${reply.text}-${idx}`}
                 onClick={() => onQuickReply(reply)}
-                className="rounded-full border border-[#00A870] bg-white px-3 py-1.5 text-xs font-medium text-[#00A870] transition-colors hover:bg-[#00A870] hover:text-white dark:bg-gray-900 dark:hover:bg-[#00A870]"
+                className="rounded-full border border-primary bg-white px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white dark:bg-gray-900 dark:hover:bg-primary"
               >
                 {reply.text}
               </button>
@@ -151,7 +151,7 @@ function BotAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | nul
   }
 
   return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#00A870] to-[#009663]">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/90">
       <Bot className="h-4 w-4 text-white" />
     </div>
   );
@@ -188,7 +188,7 @@ function VehicleCardInline({ card }: { card: VehicleCard }) {
         <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{card.subtitle}</p>
 
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold text-[#00A870]">{formatVehiclePrice(card.price)}</span>
+          <span className="text-lg font-bold text-primary">{formatVehiclePrice(card.price)}</span>
           {card.originalPrice && card.originalPrice > card.price && (
             <span className="text-xs text-gray-400 line-through">
               {formatVehiclePrice(card.originalPrice)}
@@ -216,7 +216,7 @@ function VehicleCardInline({ card }: { card: VehicleCard }) {
             href={card.detailsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2.5 flex items-center justify-center gap-1.5 rounded-lg bg-[#00A870] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#009663]"
+            className="mt-2.5 flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90"
           >
             Ver detalles
             <ExternalLink className="h-3 w-3" />

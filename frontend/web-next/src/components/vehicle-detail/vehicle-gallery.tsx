@@ -283,7 +283,7 @@ export function VehicleGallery({
                   className={cn(
                     'relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all',
                     index === currentIndex
-                      ? 'border-[#00A870] ring-2 ring-[#00A870]/20'
+                      ? 'border-primary ring-2 ring-primary/20'
                       : 'border-transparent hover:border-slate-300'
                   )}
                   aria-label={`Ver imagen ${index + 1}`}

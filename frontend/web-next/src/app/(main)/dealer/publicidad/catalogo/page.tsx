@@ -308,7 +308,7 @@ export default function AdCatalogPage() {
 
                     {/* CTA */}
                     <div className="mt-auto">
-                      <Button className="w-full bg-[#00A870] text-white hover:bg-[#009663]" asChild>
+                      <Button className="w-full bg-primary text-white hover:bg-primary/90" asChild>
                         <Link href={`/dealer/publicidad/nueva?product=${product.slug}`}>
                           Contratar
                         </Link>

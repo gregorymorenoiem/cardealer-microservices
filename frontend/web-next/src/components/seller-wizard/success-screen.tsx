@@ -78,8 +78,8 @@ export function SuccessScreen({
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 text-center">
       {/* Confetti Icon */}
-      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#00A870]/10">
-        <PartyPopper className="h-10 w-10 text-[#00A870]" />
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+        <PartyPopper className="h-10 w-10 text-primary" />
       </div>
 
       {/* Title */}
@@ -89,9 +89,9 @@ export function SuccessScreen({
       </p>
 
       {/* Published Vehicle Card */}
-      <Card className="mb-8 border-[#00A870]/20 bg-[#00A870]/5">
+      <Card className="mb-8 border-primary/20 bg-primary/5">
         <CardContent className="p-6">
-          <div className="flex items-center justify-center gap-2 text-[#00A870]">
+          <div className="flex items-center justify-center gap-2 text-primary">
             <CheckCircle className="h-5 w-5" />
             <span className="font-semibold">Publicación activa</span>
           </div>
@@ -161,7 +161,7 @@ export function SuccessScreen({
 
       {/* Navigation Buttons */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <Button asChild size="lg" className="bg-[#00A870] hover:bg-[#009663]">
+        <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
           <Link href="/vender/dashboard">
             <LayoutDashboard className="mr-2 h-5 w-5" />
             Ir a mi panel

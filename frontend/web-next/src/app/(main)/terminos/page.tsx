@@ -195,13 +195,13 @@ export default function TerminosPage() {
 
           {/* Footer Links */}
           <div className="text-muted-foreground mt-8 flex justify-center gap-6 text-sm">
-            <Link href="/privacidad" className="hover:text-[#00A870]">
+            <Link href="/privacidad" className="hover:text-primary">
               Política de Privacidad
             </Link>
-            <Link href="/contacto" className="hover:text-[#00A870]">
+            <Link href="/contacto" className="hover:text-primary">
               Contacto
             </Link>
-            <Link href="/" className="hover:text-[#00A870]">
+            <Link href="/" className="hover:text-primary">
               Volver al inicio
             </Link>
           </div>

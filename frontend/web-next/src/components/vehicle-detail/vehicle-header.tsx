@@ -116,7 +116,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
 
           {/* Price */}
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-extrabold text-[#00A870] lg:text-4xl">
+            <span className="text-3xl font-extrabold text-primary lg:text-4xl">
               {formatCurrency(vehicle.price)}
             </span>
             {vehicle.originalPrice && vehicle.originalPrice > vehicle.price && (
@@ -135,7 +135,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
             <span className="ml-1 text-xs">(60 meses)</span>
             <a
               href={`/herramientas/calculadora-financiamiento?precio=${vehicle.price}`}
-              className="ml-2 text-xs font-medium text-[#00A870] hover:underline"
+              className="ml-2 text-xs font-medium text-primary hover:underline"
             >
               Calcular cuota real →
             </a>

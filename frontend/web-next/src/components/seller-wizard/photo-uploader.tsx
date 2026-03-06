@@ -216,13 +216,13 @@ export function PhotoUploader({ images, onImagesChange, disabled }: PhotoUploade
         onClick={() => !disabled && canAddMore && fileInputRef.current?.click()}
         className={cn(
           'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors',
-          isDragOver && 'border-[#00A870] bg-[#00A870]/5',
+          isDragOver && 'border-primary bg-primary/5',
           !canAddMore && 'cursor-not-allowed opacity-50',
           disabled && 'cursor-not-allowed opacity-50',
           !isDragOver &&
             canAddMore &&
             !disabled &&
-            'border-muted-foreground/30 hover:border-[#00A870]/50'
+            'border-muted-foreground/30 hover:border-primary/50'
         )}
       >
         <Camera className="text-muted-foreground mb-3 h-10 w-10" />
@@ -280,7 +280,7 @@ export function PhotoUploader({ images, onImagesChange, disabled }: PhotoUploade
               key={image.id}
               className={cn(
                 'group relative aspect-[4/3] overflow-hidden rounded-lg border',
-                image.isPrimary && 'ring-2 ring-[#00A870] ring-offset-2',
+                image.isPrimary && 'ring-2 ring-primary ring-offset-2',
                 image.status === 'error' && 'border-red-300'
               )}
             >
@@ -324,7 +324,7 @@ export function PhotoUploader({ images, onImagesChange, disabled }: PhotoUploade
                 <div className="absolute inset-0 flex items-start justify-between bg-gradient-to-b from-black/40 to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
                   {/* Primary badge / button */}
                   {image.isPrimary ? (
-                    <span className="flex items-center gap-1 rounded bg-[#00A870] px-1.5 py-0.5 text-[10px] font-medium text-white">
+                    <span className="flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-white">
                       <Star className="h-3 w-3" />
                       Principal
                     </span>
@@ -352,7 +352,7 @@ export function PhotoUploader({ images, onImagesChange, disabled }: PhotoUploade
 
               {/* Primary indicator */}
               {image.isPrimary && image.status === 'done' && (
-                <div className="absolute right-0 bottom-0 left-0 bg-[#00A870]/90 px-2 py-0.5 text-center text-[10px] font-medium text-white group-hover:opacity-0">
+                <div className="absolute right-0 bottom-0 left-0 bg-primary/90 px-2 py-0.5 text-center text-[10px] font-medium text-white group-hover:opacity-0">
                   Foto principal
                 </div>
               )}

@@ -300,11 +300,11 @@ function Logo() {
   return (
     <Link href="/" className="group flex items-center gap-2.5">
       <div className="relative">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#00A870] to-[#009663] shadow-lg shadow-[#00A870]/20 transition-all group-hover:shadow-xl group-hover:shadow-[#00A870]/30">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/90 shadow-lg shadow-primary/20 transition-all group-hover:shadow-xl group-hover:shadow-primary/30">
           <span className="text-xl font-bold text-white">O</span>
         </div>
         {/* Subtle glow effect */}
-        <div className="absolute inset-0 rounded-xl bg-[#00A870] opacity-0 blur-lg transition-opacity group-hover:opacity-30" />
+        <div className="absolute inset-0 rounded-xl bg-primary opacity-0 blur-lg transition-opacity group-hover:opacity-30" />
       </div>
       <span className="text-foreground text-2xl font-bold tracking-tight">OKLA</span>
     </Link>
@@ -357,7 +357,7 @@ function DesktopNav({
           {link.icon}
           {link.label}
           {(pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))) && (
-            <span className="absolute right-2 bottom-0 left-2 h-0.5 rounded-full bg-[#00A870] transition-all duration-300" />
+            <span className="absolute right-2 bottom-0 left-2 h-0.5 rounded-full bg-primary transition-all duration-300" />
           )}
         </Link>
       ))}
@@ -405,7 +405,7 @@ function DesktopNav({
                       <Bell className="h-4 w-4" />
                       {/* Unread count badge */}
                       {unreadCount > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#00A870] px-1 text-[10px] font-bold text-white shadow-sm">
+                        <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-sm">
                           {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                       )}
@@ -476,7 +476,7 @@ function DesktopNav({
                           </div>
                           {!notification.isRead && (
                             <div className="flex-shrink-0 self-center">
-                              <span className="h-2 w-2 rounded-full bg-[#00A870]" />
+                              <span className="h-2 w-2 rounded-full bg-primary" />
                             </div>
                           )}
                         </Link>
@@ -578,7 +578,7 @@ function RightActions({
           <Button
             asChild
             size="sm"
-            className="group to-primary hover:shadow-primary/25 relative gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-[#00A870] px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl"
+            className="group to-primary hover:shadow-primary/25 relative gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl"
           >
             <Link href="/registro">
               <UserPlus className="h-4 w-4 transition-transform group-hover:scale-110" />
@@ -875,7 +875,7 @@ function MobileMenu({
               <Bell className="h-4 w-4" />
               Notificaciones
               {unreadCount > 0 && (
-                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#00A870] px-1.5 text-xs font-bold text-white">
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}

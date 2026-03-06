@@ -82,7 +82,7 @@ export default function HomepageClient() {
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {HOMEPAGE_STATS.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl font-bold text-[#00A870] md:text-4xl">{stat.value}</div>
+                <div className="text-3xl font-bold text-primary md:text-4xl">{stat.value}</div>
                 <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
               </div>
             ))}
