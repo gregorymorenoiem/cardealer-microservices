@@ -133,7 +133,7 @@ export function VehicleCard({
               <button
                 onClick={handleFavoriteClick}
                 className={cn(
-                  'rounded-full p-2 transition-colors',
+                  'min-h-[44px] min-w-[44px] rounded-full p-2.5 transition-colors',
                   isFavorite
                     ? 'text-red-500 hover:text-red-600'
                     : 'text-muted-foreground hover:text-foreground'
@@ -228,8 +228,8 @@ export function VehicleCard({
           <button
             onClick={handleFavoriteClick}
             className={cn(
-              'bg-background/90 absolute top-3 right-3 rounded-full p-2 shadow-md backdrop-blur-sm transition-all',
-              isHovered ? 'opacity-100' : 'opacity-0 sm:opacity-100',
+              'bg-background/90 absolute top-3 right-3 min-h-[44px] min-w-[44px] rounded-full p-2.5 shadow-md backdrop-blur-sm transition-all',
+              'opacity-100 sm:opacity-0 sm:group-hover:opacity-100',
               isFavorite
                 ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-950'
                 : 'text-muted-foreground hover:bg-muted hover:text-red-500'

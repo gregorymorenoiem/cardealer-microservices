@@ -107,7 +107,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+                  className="bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground flex h-11 w-11 items-center justify-center rounded-lg transition-colors"
                   aria-label={social.label}
                 >
                   <social.icon className="h-4 w-4" />
@@ -120,12 +120,12 @@ export function Footer() {
           {Object.entries(footerLinks).map(([key, section]) => (
             <div key={key}>
               <h3 className="text-foreground text-sm font-semibold">{section.title}</h3>
-              <ul className="mt-4 space-y-2">
+              <ul className="mt-4 space-y-0">
                 {section.links.map(link => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-muted-foreground hover:text-primary text-sm transition-colors"
+                      className="text-muted-foreground hover:text-primary inline-block min-h-[44px] py-2 text-sm leading-[44px] transition-colors sm:min-h-0 sm:leading-normal"
                     >
                       {link.label}
                     </Link>
@@ -143,14 +143,14 @@ export function Footer() {
           <p className="text-muted-foreground text-sm">
             © {currentYear} {config.siteName}. Todos los derechos reservados.
           </p>
-          <div className="flex gap-6">
-            <Link href="/terminos" className="text-muted-foreground hover:text-primary text-sm">
+          <div className="flex gap-2 sm:gap-6">
+            <Link href="/terminos" className="text-muted-foreground hover:text-primary px-2 py-2 text-sm">
               Términos
             </Link>
-            <Link href="/privacidad" className="text-muted-foreground hover:text-primary text-sm">
+            <Link href="/privacidad" className="text-muted-foreground hover:text-primary px-2 py-2 text-sm">
               Privacidad
             </Link>
-            <Link href="/cookies" className="text-muted-foreground hover:text-primary text-sm">
+            <Link href="/cookies" className="text-muted-foreground hover:text-primary px-2 py-2 text-sm">
               Cookies
             </Link>
           </div>

@@ -13,7 +13,29 @@ Todas las tareas que hagas tienes que confirmar en este archivo que la hiciste. 
 | 16   | Vehículo del Día homepage                                          | PM creó archivos                   |
 | 17   | Hub de Herramientas                                                | PM creó archivos                   |
 
-**Estado**: Sprint 1 completado. Sprint 2 completado. Sprint 3 completado. Sprint 4 completado. Sprint 5 completado.
+**Estado**: Sprint 1-5 completados. Sprint 6 en progreso.
+
+---
+
+## 🔄 SPRINT 6 — Accesibilidad + Mobile UX + Code Quality (6 marzo 2026)
+
+### Análisis previo: Auditoría WCAG + Mobile UX
+
+**Hallazgos:**
+
+- Hero search input sin aria-label (WCAG 4.1.2 Level A failure)
+- Favorite buttons 36px < 44px mínimo touch target (WCAG 2.5.8)
+- Footer links ~22px height — debajo del mínimo 44px en mobile
+- ~150 líneas dead code en hero-compact.tsx (3 exports + 2 constants sin usar)
+
+---
+
+| #   | Tarea                                                   | Estado       | Notas                                        |
+| --- | ------------------------------------------------------- | ------------ | -------------------------------------------- |
+| 34  | Hero search input: aria-label + form wrapper            | 🔄 Pendiente | WCAG 4.1.2 Level A — critical                |
+| 35  | Vehicle card favorite buttons: 44px + mobile visibility | 🔄 Pendiente | WCAG 2.5.8 touch targets                     |
+| 36  | Footer links: py-2 mobile touch targets                 | 🔄 Pendiente | 20+ links afectados                          |
+| 37  | Dead code cleanup: hero-compact.tsx                     | 🔄 Pendiente | Remove ~150 lines unused exports/constants   |
 
 ---
 

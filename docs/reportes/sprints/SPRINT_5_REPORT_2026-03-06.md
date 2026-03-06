@@ -97,14 +97,14 @@ Auditoría técnica profunda de ~30 archivos identificó 8 gaps. Sprint 5 ejecut
 
 ## 📈 Métricas del Sprint
 
-| Métrica                          | Antes | Después |
-| -------------------------------- | ----- | ------- |
-| Páginas con error boundary       | 2     | 4+      |
-| Páginas con robots noindex       | 0     | 4       |
-| Páginas con OG image completo    | ~10   | 11+     |
-| Componentes con TanStack Query   | ~8    | 9       |
-| Calculadoras con loading state   | 0     | 2       |
-| Network requests evitados (cache)| 0     | ~40%    |
+| Métrica                           | Antes | Después |
+| --------------------------------- | ----- | ------- |
+| Páginas con error boundary        | 2     | 4+      |
+| Páginas con robots noindex        | 0     | 4       |
+| Páginas con OG image completo     | ~10   | 11+     |
+| Componentes con TanStack Query    | ~8    | 9       |
+| Calculadoras con loading state    | 0     | 2       |
+| Network requests evitados (cache) | 0     | ~40%    |
 
 ---
 
@@ -128,4 +128,4 @@ Auditoría técnica profunda de ~30 archivos identificó 8 gaps. Sprint 5 ejecut
 
 ---
 
-*Reporte generado automáticamente por PM Agent — Sprint 5*
+_Reporte generado automáticamente por PM Agent — Sprint 5_
