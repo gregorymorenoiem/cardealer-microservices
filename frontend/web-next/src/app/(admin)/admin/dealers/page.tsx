@@ -164,7 +164,8 @@ export default function AdminDealersPage() {
     try {
       await verifyMutation.mutateAsync(id);
       toast.success('Dealer verificado exitosamente');
-    } catch {
+    } catch (error) {
+      console.error('Error al verificar dealer:', error);
       toast.error('Error al verificar dealer');
     }
   };
@@ -173,7 +174,8 @@ export default function AdminDealersPage() {
     try {
       await suspendMutation.mutateAsync({ id, reason });
       toast.success('Dealer suspendido');
-    } catch {
+    } catch (error) {
+      console.error('Error al suspender dealer:', error);
       toast.error('Error al suspender dealer');
     }
   };
@@ -182,7 +184,8 @@ export default function AdminDealersPage() {
     try {
       await reactivateMutation.mutateAsync(id);
       toast.success('Dealer reactivado');
-    } catch {
+    } catch (error) {
+      console.error('Error al reactivar dealer:', error);
       toast.error('Error al reactivar dealer');
     }
   };

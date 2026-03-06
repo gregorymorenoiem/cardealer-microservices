@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
 import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
+import { formatPrice } from '@/lib/format';
 
 // ─────────────────────────────────────────────
 // Types
@@ -67,12 +68,6 @@ export interface VehicleTypeSectionConfig {
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
-
-function formatPrice(price: number, currency = 'DOP') {
-  return currency === 'USD'
-    ? `US$${price.toLocaleString('en-US')}`
-    : `RD$${price.toLocaleString('es-DO')}`;
-}
 
 function buildVehicleSlug(vehicle: VehicleItem) {
   const slug = `${vehicle.year}-${vehicle.make}-${vehicle.model}`
@@ -235,7 +230,7 @@ function VehicleCard({
 
   return (
     <Link href={buildVehicleSlug(vehicle)} className="group block h-full">
-      <Card className="border-border flex h-full flex-col overflow-hidden border shadow-md transition-all duration-200 hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl">
+      <Card className="border-border hover:border-primary/50 flex h-full flex-col overflow-hidden border shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
         <div className="bg-muted relative aspect-[4/3]">
           <Image
             src={primaryImage}

@@ -30,7 +30,7 @@ import {
   Star,
   Check,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // =============================================================================
@@ -62,14 +62,6 @@ const BOOST_OPTIONS = [
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function statusBadge(status: CampaignStatus) {
   const map: Record<string, string> = {

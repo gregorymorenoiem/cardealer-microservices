@@ -23,18 +23,11 @@ import {
 } from '@/hooks/use-advertising';
 import type { AdCampaignSummary, CampaignStatus } from '@/types/advertising';
 import { PlanGate } from '@/components/plan/plan-gate';
+import { formatCurrency } from '@/lib/utils';
 
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('es-DO', {

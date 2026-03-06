@@ -10,7 +10,7 @@ import { CheckCircle, ThumbsUp, Flag, MessageSquare } from 'lucide-react';
 import { StarRating } from './star-rating';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { useVoteReview } from '@/hooks/use-reviews';
 import Image from 'next/image';
 import type { Review } from '@/services/reviews';
@@ -27,15 +27,6 @@ function getInitials(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 2);
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-DO', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 export function ReviewCard({ review, className }: ReviewCardProps) {

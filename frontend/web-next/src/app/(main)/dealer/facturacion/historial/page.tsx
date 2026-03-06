@@ -395,7 +395,7 @@ export default function BillingHistoryPage() {
                   <div className="flex items-center gap-6">
                     <div className="text-right">
                       <p className="text-lg font-bold">
-                        {formatCurrency(invoice.amount, invoice.currency)}
+                        {formatCurrency(invoice.amount, { currency: invoice.currency })}
                       </p>
                       {invoice.paidAt && (
                         <p className="text-muted-foreground text-xs">

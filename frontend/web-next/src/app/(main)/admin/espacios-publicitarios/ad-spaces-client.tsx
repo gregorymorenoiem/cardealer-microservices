@@ -68,7 +68,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 
 // ============================================================
 // TYPES
@@ -564,10 +564,6 @@ const FORMAT_ICONS: Record<string, string> = {
   floating: '💫',
   inline: '📌',
 };
-
-function formatCurrency(amount: number): string {
-  return `RD$${amount.toLocaleString()}`;
-}
 
 // ============================================================
 // MAIN COMPONENT

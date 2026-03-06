@@ -26,18 +26,7 @@ import {
   MousePointerClick,
 } from 'lucide-react';
 import { calculateRoi } from '@/lib/ad-engine';
-
-// =============================================================================
-// HELPERS
-// =============================================================================
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatCurrency } from '@/lib/utils';
 
 // =============================================================================
 // COMPONENT

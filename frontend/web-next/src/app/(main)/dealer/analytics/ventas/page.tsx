@@ -42,18 +42,11 @@ import {
 } from '@/hooks/use-dealer-analytics';
 import type { VehiclePerformance } from '@/services/dealer-analytics';
 import { PlanGate } from '@/components/plan/plan-gate';
+import { formatPrice } from '@/lib/format';
 
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function formatPrice(value: number): string {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 function getDateRange(period: string): { fromDate: string; toDate: string } {
   const now = new Date();

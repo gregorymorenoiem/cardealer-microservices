@@ -6,6 +6,8 @@
  */
 
 import { apiClient } from '@/lib/api-client';
+import { formatDate } from '@/lib/utils';
+export { formatDate };
 
 // ============================================================================
 // Types
@@ -422,17 +424,6 @@ export function getStatusColor(status: TransactionStatus): string {
     default:
       return 'text-gray-600 bg-gray-50';
   }
-}
-
-/**
- * Format date for display
- */
-export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('es-DO', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 /**

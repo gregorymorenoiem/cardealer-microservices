@@ -3,6 +3,7 @@
 import { ListingQualityScore } from './listing-quality-score';
 import type { VehicleFormData } from './smart-publish-wizard';
 import { escapeHtml } from '@/lib/security/sanitize';
+import { formatPrice } from '@/lib/format';
 import {
   Car,
   Calendar,
@@ -32,14 +33,6 @@ interface ReviewStepProps {
   onSaveDraft: () => void;
   onBack: () => void;
   isPublishing: boolean;
-}
-
-function formatPrice(amount: number, currency: 'DOP' | 'USD'): string {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 function InfoRow({

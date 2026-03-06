@@ -9,13 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useHomepageRotation, useRecordImpression, useRecordClick } from '@/hooks/use-advertising';
 import type { RotatedVehicle } from '@/types/advertising';
-
-function formatPrice(price: number, currency: string = 'DOP') {
-  if (currency === 'DOP') {
-    return `RD$${price.toLocaleString('es-DO')}`;
-  }
-  return `US$${price.toLocaleString('en-US')}`;
-}
+import { formatPrice } from '@/lib/format';
 
 function FeaturedVehicleCard({
   vehicle,

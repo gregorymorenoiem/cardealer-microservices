@@ -31,7 +31,7 @@ import {
   Timer,
   Loader2,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 
 // =============================================================================
 // TYPES
@@ -139,14 +139,6 @@ const TESTIMONIALS = [
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 // =============================================================================
 // MAIN

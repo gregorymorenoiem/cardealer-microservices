@@ -67,12 +67,44 @@ Ahora Cuando todo este listo revisa el archivo, ".prompts/prompt-1.md", Y temina
 
 ---
 
+## 🚧 Sprint 14 — DRY Refactoring & Error Handling (Asignado al Desarrollador)
+
+**Objetivo:** Eliminar ~28 funciones utilitarias duplicadas y corregir ~12 catch blocks silenciosos.
+
+### Task 66: Consolidar 8 funciones `formatPrice` duplicadas
+
+- Existe versión canónica en `lib/format.ts` o `lib/utils.ts`
+- Eliminar copias locales en: featured-vehicles.tsx, vehicle-card.tsx, publicar pages, dealer/analytics, vender/promover
+- Reemplazar con `import { formatPrice } from '@/lib/format'` o similar
+
+### Task 67: Consolidar 10 funciones `formatCurrency` duplicadas
+
+- Existe versión canónica en `lib/utils.ts`
+- Eliminar copias en: vender/publicidad, dealer/publicidad, dealer/publicidad/paquetes, dealer/publicidad/roi, impulsar/mis-campanas, admin/espacios-publicitarios, admin/publicidad
+- Reemplazar con `import { formatCurrency } from '@/lib/utils'`
+
+### Task 68: Consolidar 7 funciones `formatDate` duplicadas
+
+- Existe versión canónica en `lib/utils.ts`
+- Eliminar copias en: admin/mantenimiento, cuenta/resenas, dealer/resenas, dealer/publicidad, dealer/leads/[id]
+- Usar `formatDate`, `formatDateTime`, o `formatShortDate` según contexto
+
+### Task 69: Corregir empty catch blocks en páginas críticas
+
+- recuperar-contrasena/page.tsx: password recovery resend falla silenciosamente — agregar toast.error
+- admin/vehiculos/page.tsx: 6 empty catches — agregar console.error para debugging
+- admin/dealers/page.tsx: 3 empty catches — agregar console.error
+- admin/usuarios/page.tsx: 3 empty catches — agregar console.error
+
+---
+
 ## �📋 Sprints Completados
 
 ### Sprint 13 — Security, Performance & Navigation (2026-03-06) ✅
+
 **Commit:** `26174275` | **Build:** 213 páginas, 28.9s
 
-- [x] **Task 62**: rel="noopener noreferrer" en 7 links target=_blank (5 archivos)
+- [x] **Task 62**: rel="noopener noreferrer" en 7 links target=\_blank (5 archivos)
 - [x] **Task 63**: Fix sanitización muerta en dealer/leads — notas ahora se envían al servidor
 - [x] **Task 64**: Image priority en FeaturedVehicleCard para LCP optimization
 - [x] **Task 65**: 4 links internos `<a>` → `<Link>` en configuracion y seller-wizard

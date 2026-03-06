@@ -17,6 +17,7 @@ import {
 } from '@/hooks/use-advertising';
 import useAuthStore from '@/hooks/use-auth';
 import type { CampaignStatus, AdCampaignSummary } from '@/types/advertising';
+import { formatCurrency } from '@/lib/utils';
 
 const statusLabels: Record<
   CampaignStatus,
@@ -29,14 +30,6 @@ const statusLabels: Record<
   Completed: { label: 'Completada', variant: 'secondary' },
   Expired: { label: 'Expirada', variant: 'outline' },
 };
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function CampaignCard({ campaign }: { campaign: AdCampaignSummary }) {
   const pauseMutation = usePauseCampaign();

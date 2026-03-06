@@ -15,6 +15,7 @@ import { ArrowLeft, Loader2, Mail, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 import { authService } from '@/services/auth';
 
 export default function ForgotPasswordPage() {
@@ -60,7 +61,9 @@ export default function ForgotPasswordPage() {
 
     try {
       await authService.forgotPassword(email);
-    } catch {
+    } catch (error) {
+      console.error('Error al reenviar código:', error);
+      toast.error('Error al reenviar el código. Intenta de nuevo.');
     } finally {
       setIsLoading(false);
     }

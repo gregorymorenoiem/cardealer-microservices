@@ -38,20 +38,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import type { Review } from '@/services/reviews';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────────────────────────────────────
-
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString('es-DO', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
 
 function getInitials(name: string) {
   return name

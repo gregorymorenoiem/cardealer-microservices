@@ -169,7 +169,8 @@ export default function AdminUsersPage() {
       toast.success(
         `Usuario ${status === 'active' ? 'activado' : status === 'suspended' ? 'suspendido' : 'baneado'}`
       );
-    } catch {
+    } catch (error) {
+      console.error('Error al actualizar estado de usuario:', error);
       toast.error('Error al actualizar estado');
     }
   };
@@ -178,7 +179,8 @@ export default function AdminUsersPage() {
     try {
       await verifyMutation.mutateAsync(userId);
       toast.success('Usuario verificado');
-    } catch {
+    } catch (error) {
+      console.error('Error al verificar usuario:', error);
       toast.error('Error al verificar usuario');
     }
   };
@@ -187,7 +189,8 @@ export default function AdminUsersPage() {
     try {
       await deleteMutation.mutateAsync(userId);
       toast.success('Usuario eliminado');
-    } catch {
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
       toast.error('Error al eliminar usuario');
     }
   };

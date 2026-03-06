@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trophy, Calendar, Gauge, MapPin, Clock, ArrowRight } from 'lucide-react';
+import { formatPrice } from '@/lib/format';
 
 interface Vehicle {
   id: string;
@@ -28,15 +29,6 @@ interface Vehicle {
 
 interface VehicleOfTheDayProps {
   vehicles: Vehicle[];
-}
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
 }
 
 function formatMileage(km: number): string {

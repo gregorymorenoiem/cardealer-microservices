@@ -478,7 +478,8 @@ function ModerationTab() {
         refetchQueue();
         setCurrentIndex(0);
       }
-    } catch {
+    } catch (error) {
+      console.error('Error al aprobar vehículo:', error);
       toast.error('Error al aprobar');
     }
   };
@@ -494,7 +495,8 @@ function ModerationTab() {
         refetchQueue();
         setCurrentIndex(0);
       }
-    } catch {
+    } catch (error) {
+      console.error('Error al rechazar vehículo:', error);
       toast.error('Error al rechazar');
     }
   };
@@ -636,7 +638,8 @@ function VehiclesGridTab() {
     try {
       await approveMutation.mutateAsync(id);
       toast.success('Vehículo aprobado');
-    } catch {
+    } catch (error) {
+      console.error('Error al aprobar vehículo:', error);
       toast.error('Error al aprobar vehículo');
     }
   };
@@ -648,7 +651,8 @@ function VehiclesGridTab() {
       toast.success('Vehículo rechazado');
       setRejectingId(null);
       setRejectReason('');
-    } catch {
+    } catch (error) {
+      console.error('Error al rechazar vehículo:', error);
       toast.error('Error al rechazar vehículo');
     }
   };
@@ -657,7 +661,8 @@ function VehiclesGridTab() {
     try {
       await toggleFeaturedMutation.mutateAsync({ id, featured: !featured });
       toast.success(featured ? 'Quitado de destacados' : 'Agregado a destacados');
-    } catch {
+    } catch (error) {
+      console.error('Error al actualizar destacado:', error);
       toast.error('Error al actualizar');
     }
   };
@@ -666,7 +671,8 @@ function VehiclesGridTab() {
     try {
       await deleteMutation.mutateAsync(id);
       toast.success('Vehículo eliminado');
-    } catch {
+    } catch (error) {
+      console.error('Error al eliminar vehículo:', error);
       toast.error('Error al eliminar vehículo');
     }
   };

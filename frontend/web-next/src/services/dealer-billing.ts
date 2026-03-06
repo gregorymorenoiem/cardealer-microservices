@@ -5,6 +5,8 @@
  */
 
 import { apiClient } from '@/lib/api-client';
+import { formatCurrency } from '@/lib/utils';
+export { formatCurrency };
 
 // ============================================================================
 // Types
@@ -269,17 +271,6 @@ export async function reactivateSubscription(dealerId: string): Promise<Subscrip
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Format currency for display
- */
-export function formatCurrency(amount: number, currency: 'DOP' | 'USD' = 'DOP'): string {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 /**
  * Get status label in Spanish

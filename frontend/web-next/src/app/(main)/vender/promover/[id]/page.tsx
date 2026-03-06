@@ -34,6 +34,7 @@ import { vehicleService } from '@/services/vehicles';
 import { checkoutService } from '@/services/checkout';
 import type { Vehicle } from '@/types';
 import type { Product } from '@/services/checkout';
+import { formatPrice } from '@/lib/format';
 
 const boostPlans = [
   {
@@ -51,14 +52,6 @@ const boostPlans = [
     iconColor: 'text-purple-600',
   },
 ];
-
-function formatPrice(price: number, currency: string) {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(price);
-}
 
 export default function PromoteVehiclePage() {
   const params = useParams();

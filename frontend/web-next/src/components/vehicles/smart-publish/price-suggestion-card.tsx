@@ -1,6 +1,7 @@
 'use client';
 
 import { DollarSign, TrendingUp, TrendingDown, Minus, Info, BarChart3 } from 'lucide-react';
+import { formatPrice } from '@/lib/format';
 
 interface PriceSuggestionCardProps {
   suggestedPrice: number;
@@ -11,14 +12,6 @@ interface PriceSuggestionCardProps {
   currentPrice: number;
   confidence?: 'high' | 'medium' | 'low';
   comparableCount?: number;
-}
-
-function formatPrice(amount: number, currency: 'DOP' | 'USD'): string {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 export function PriceSuggestionCard({

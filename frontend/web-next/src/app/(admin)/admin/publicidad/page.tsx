@@ -52,7 +52,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // =============================================================================
@@ -94,14 +94,6 @@ const ALGORITHMS: { value: RotationAlgorithmType; label: string; description: st
     description: 'Mayor presupuesto = mayor visibilidad',
   },
 ];
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 function formatNumber(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;

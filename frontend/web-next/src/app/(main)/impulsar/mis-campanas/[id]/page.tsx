@@ -6,14 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCampaign, useCampaignReport } from '@/hooks/use-advertising';
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatCurrency } from '@/lib/utils';
 
 export default function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

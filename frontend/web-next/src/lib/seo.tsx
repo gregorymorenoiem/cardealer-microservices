@@ -6,6 +6,7 @@
  */
 
 import { Metadata } from 'next';
+import { formatPrice } from '@/lib/format';
 
 // =============================================================================
 // TYPES
@@ -488,15 +489,6 @@ export function generateArticleJsonLd(article: ArticleSEO) {
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
-
-function formatPrice(price: number, currency = 'DOP'): string {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
-}
 
 function mapFuelType(fuelType?: string): string | undefined {
   const mapping: Record<string, string> = {
