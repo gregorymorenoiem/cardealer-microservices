@@ -14,6 +14,7 @@ const footerLinks = {
       { href: '/dealers', label: 'Para Dealers' },
       { href: '/precios', label: 'Guía de Precios' },
       { href: '/comparar', label: 'Comparar Vehículos' },
+      { href: '/herramientas', label: 'Herramientas' },
     ],
   },
   company: {
@@ -41,6 +42,8 @@ const footerLinks = {
       { href: '/ayuda', label: 'Centro de Ayuda' },
       { href: '/faq', label: 'Preguntas Frecuentes' },
       { href: '/guias', label: 'Guías de Compra' },
+      { href: '/herramientas/calculadora-financiamiento', label: 'Calculadora Financiamiento' },
+      { href: '/herramientas/calculadora-importacion', label: 'Calculadora Importación' },
       { href: '/reportar', label: 'Reportar Fraude' },
     ],
   },

@@ -13,7 +13,9 @@ import VehicleTypeSection from '@/components/homepage/vehicle-type-section';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
 import { NativeBannerAd } from '@/components/advertising/native-ads';
 import { DealerPromoSection } from '@/components/homepage/dealer-promo-section';
+import { VehicleOfTheDay } from '@/components/homepage/vehicle-of-the-day';
 import { useBrands } from '@/hooks/use-advertising';
+import { useQuery } from '@tanstack/react-query';
 import type { BrandConfig } from '@/types/advertising';
 import { Bus, Car, Gauge, Leaf, Truck, Wind, Zap } from 'lucide-react';
 
@@ -52,10 +54,29 @@ export default function HomepageClient() {
   // Stable impression token for the dealer banner
   const bannerImpressionToken = 'banner-dealer-cta-homepage';
 
+  // Fetch vehicles for "Vehicle of the Day"
+  const { data: vodVehicles } = useQuery({
+    queryKey: ['vehicle-of-the-day'],
+    queryFn: async () => {
+      try {
+        const res = await fetch('/api/vehicles?pageSize=50&sortBy=newest');
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data?.data?.items || data?.items || data?.data || [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   return (
     <>
       {/* ── 1. HERO — NL search + vehicle photos ─────────────────────────── */}
       <HeroCompact />
+
+      {/* ── 🏆 VEHÍCULO DEL DÍA ─────────────────────────────────────────── */}
+      {vodVehicles && vodVehicles.length > 0 && <VehicleOfTheDay vehicles={vodVehicles} />}
 
       {/* ── SECCIONES PAGADAS CON FOTOS GRANDES (primeras) ───────────────── */}
 
