@@ -10,6 +10,7 @@
 
 import { MetadataRoute } from 'next';
 import { blogPosts } from './(main)/blog/blog-data';
+import { guides as guideData } from './(main)/guias/guide-data';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://okla.com.do';
 
@@ -331,6 +332,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // Guide pages
+  const guidePages: MetadataRoute.Sitemap = guideData.map(guide => ({
+    url: `${SITE_URL}/guias/${guide.slug}`,
+    lastModified: guide.lastUpdated,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
   // Combine all pages
   return [
     ...staticPages,
@@ -341,5 +350,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...vehiclePages,
     ...dealerPages,
     ...blogPages,
+    ...guidePages,
   ];
 }

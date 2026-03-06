@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { BookOpen, Car, FileCheck, DollarSign, Search, Shield, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { guides } from './guide-data';
 
 export const metadata = {
   title: 'Guías de Compra de Vehículos | OKLA',
@@ -15,62 +16,23 @@ export const metadata = {
     'Guías completas para comprar y vender vehículos en República Dominicana. Aprende a detectar fraudes, verificar documentos y negociar el mejor precio.',
 };
 
-const guides = [
-  {
-    icon: Search,
-    title: 'Cómo Buscar tu Vehículo Ideal',
-    description:
-      'Aprende a usar los filtros de OKLA para encontrar exactamente lo que buscas según tu presupuesto y necesidades.',
-    topics: ['Filtros de búsqueda', 'Comparar modelos', 'Alertas de precio'],
-    href: '/ayuda',
-    readTime: '5 min',
-  },
-  {
-    icon: FileCheck,
-    title: 'Verificación de Documentos',
-    description:
-      'Todo lo que necesitas verificar antes de comprar: título, matrícula, historial del vehículo y deudas pendientes.',
-    topics: ['Verificar título', 'Historial de VIN', 'Deudas en DGII'],
-    href: '/ayuda',
-    readTime: '8 min',
-  },
-  {
-    icon: Car,
-    title: 'Inspección del Vehículo',
-    description:
-      'Guía paso a paso para inspeccionar un vehículo usado antes de comprarlo. Qué revisar en carrocería, motor y interior.',
-    topics: ['Inspección visual', 'Prueba de manejo', 'Mecánico de confianza'],
-    href: '/ayuda',
-    readTime: '10 min',
-  },
-  {
-    icon: DollarSign,
-    title: 'Financiamiento y Pagos',
-    description:
-      'Opciones de financiamiento disponibles en RD, tasas de interés bancarias y cómo calcular el pago mensual.',
-    topics: ['Bancos locales', 'Cuota inicial', 'Tasas de interés'],
-    href: '/precios',
-    readTime: '7 min',
-  },
-  {
-    icon: Shield,
-    title: 'Compra Segura: Evitar Fraudes',
-    description:
-      'Cómo identificar anuncios fraudulentos, qué señales de alerta buscar y cómo protegerte durante la transacción.',
-    topics: ['Señales de fraude', 'Pago seguro', 'Verificar vendedor'],
-    href: '/seguridad',
-    readTime: '6 min',
-  },
-  {
-    icon: BookOpen,
-    title: 'Traspaso y Documentación',
-    description:
-      'Proceso completo para el traspaso del vehículo en República Dominicana: DGII, placa, seguro obligatorio.',
-    topics: ['Proceso DGII', 'Costo de traspaso', 'Seguro obligatorio'],
-    href: '/ayuda',
-    readTime: '9 min',
-  },
-];
+const iconMap: Record<string, typeof Search> = {
+  Search,
+  FileCheck,
+  Car,
+  DollarSign,
+  Shield,
+  BookOpen,
+};
+
+const guideCards = guides.map(g => ({
+  icon: iconMap[g.icon] || BookOpen,
+  title: g.title,
+  description: g.description,
+  topics: g.topics,
+  href: `/guias/${g.slug}`,
+  readTime: g.readTime,
+}));
 
 const quickTips = [
   'Siempre inspecciona el vehículo en persona antes de pagar',
@@ -104,7 +66,7 @@ export default function GuiasPage() {
         <div className="container mx-auto px-4">
           <h2 className="text-foreground mb-8 text-2xl font-bold">Guías Disponibles</h2>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {guides.map((guide, index) => (
+            {guideCards.map((guide, index) => (
               <Card
                 key={index}
                 className="border-border hover:border-primary group transition-colors"

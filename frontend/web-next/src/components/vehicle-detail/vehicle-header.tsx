@@ -133,6 +133,12 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
               {formatCurrency(Math.round(vehicle.price / 60))}/mes
             </span>
             <span className="ml-1 text-xs">(60 meses)</span>
+            <a
+              href={`/herramientas/calculadora-financiamiento?precio=${vehicle.price}`}
+              className="ml-2 text-xs font-medium text-[#00A870] hover:underline"
+            >
+              Calcular cuota real →
+            </a>
           </p>
         </div>
 

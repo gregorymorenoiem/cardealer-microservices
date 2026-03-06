@@ -16,12 +16,14 @@ Sprint 3 enfocado en **credibilidad de marca, SEO técnico y optimización de co
 ## 🔍 Auditorías Previas
 
 ### Auditoría SEO & Performance
+
 - 🔴 4 páginas client-component (`/contacto`, `/buscar`, `/comparar`, `/ayuda`) sin metadata SEO — solo heredan del root layout
 - 🔴 `global-error.tsx` → Ya existía ✅ (no era necesario crear)
 - 🟡 TestimonialsCarousel existente pero nunca importado en ninguna página
 - 🟡 Homepage sin sección de estadísticas ni testimonios
 
 ### Auditoría UX & Conversión
+
 - 🔴 **Estadísticas inconsistentes** entre 4 páginas:
   - `/vender`: 15K+ vendidos, 98% satisfacción
   - `/nosotros`: 10,000+ publicados, 95% satisfacción, fundada 2024
@@ -38,11 +40,13 @@ Sprint 3 enfocado en **credibilidad de marca, SEO técnico y optimización de co
 **Archivo creado:** `src/lib/platform-stats.ts`
 
 **Funcionalidades:**
+
 - Objeto `PLATFORM_STATS` con 10 métricas unificadas (vehiclesPublished, activeUsers, registeredDealers, satisfactionRate, foundingYear, avgSaleTime, totalTransacted, vehiclesSold, supportResponseTime)
 - Arrays pre-configurados por página: `SELLER_STATS`, `ABOUT_STATS`, `PRESS_STATS`, `DEALER_STATS`, `HOMEPAGE_STATS`
 - TypeScript `as const` para type safety
 
 **Archivos modificados:**
+
 - `src/app/(main)/vender/page.tsx` — Import `SELLER_STATS`, eliminado array hardcoded
 - `src/app/(main)/nosotros/page.tsx` — Import `ABOUT_STATS` + `PLATFORM_STATS`, eliminado inline array
 - `src/app/(main)/prensa/page.tsx` — Import `PRESS_STATS`, eliminado array hardcoded
@@ -57,12 +61,14 @@ Sprint 3 enfocado en **credibilidad de marca, SEO técnico y optimización de co
 **Archivo modificado:** `src/app/(main)/homepage-client.tsx`
 
 **Cambios:**
+
 - Importado `TestimonialsCarousel` desde `@/components/homepage` (componente existente con 5 testimonios, carrusel animado, ratings)
 - Importado `HOMEPAGE_STATS` desde `@/lib/platform-stats`
 - **Nueva sección Stats** insertada después del Hero: 4 métricas en grid responsive (2 cols mobile, 4 cols desktop)
 - **TestimonialsCarousel** insertado antes de WhyChooseUs con auto-play de 6 segundos
 
 **Orden de secciones actualizado:**
+
 1. Hero → **Stats (NUEVO)** → Vehicle of the Day → Featured → Premium → Dealers → 12 Vehicle Types → Legal → **Testimonials (NUEVO)** → WhyChooseUs → CTA
 
 **Impacto:** Social proof visible inmediatamente al entrar. Testimonios reales aumentan confianza 15-25% según estudios de conversión en marketplaces.
@@ -74,6 +80,7 @@ Sprint 3 enfocado en **credibilidad de marca, SEO técnico y optimización de co
 **Archivo modificado:** `src/app/(main)/nosotros/page.tsx`
 
 **Cambios en team section:**
+
 - **Antes:** Emoji avatars (`👨‍💼`, `👩‍💻`, `👨‍💼`, `👩‍💼`) en div gris
 - **Después:** Iniciales profesionales (CR, MS, JP, AG) en divs circulares con gradients de marca:
   - Carlos Rodríguez: gradient `#00A870 → #007850` (brand green)
@@ -82,6 +89,7 @@ Sprint 3 enfocado en **credibilidad de marca, SEO técnico y optimización de co
   - Ana García: gradient `purple-500 → purple-700`
 
 **Cambios en founding year:**
+
 - **Antes:** Hardcoded `"fundada en 2024"` en texto
 - **Después:** Dinámico `PLATFORM_STATS.foundingYear` → actualmente "2025"
 
@@ -111,15 +119,15 @@ Sprint 3 enfocado en **credibilidad de marca, SEO técnico y optimización de co
 
 ## 📈 Métricas del Sprint
 
-| Métrica | Valor |
-|---------|-------|
-| Archivos creados | 5 (platform-stats.ts + 4 layouts) |
-| Archivos modificados | 5 (vender, nosotros, prensa, dealers, homepage-client) |
-| Inconsistencias de datos resueltas | 6 (vehicles, satisfaction, founding year) |
-| Páginas con SEO metadata nuevo | 4 (/contacto, /buscar, /comparar, /ayuda) |
-| Componentes activados | 1 (TestimonialsCarousel — existente pero no usado) |
-| Commit | `385d4010` |
-| Build status | ✅ Exitoso |
+| Métrica                            | Valor                                                  |
+| ---------------------------------- | ------------------------------------------------------ |
+| Archivos creados                   | 5 (platform-stats.ts + 4 layouts)                      |
+| Archivos modificados               | 5 (vender, nosotros, prensa, dealers, homepage-client) |
+| Inconsistencias de datos resueltas | 6 (vehicles, satisfaction, founding year)              |
+| Páginas con SEO metadata nuevo     | 4 (/contacto, /buscar, /comparar, /ayuda)              |
+| Componentes activados              | 1 (TestimonialsCarousel — existente pero no usado)     |
+| Commit                             | `385d4010`                                             |
+| Build status                       | ✅ Exitoso                                             |
 
 ---
 
@@ -128,22 +136,25 @@ Sprint 3 enfocado en **credibilidad de marca, SEO técnico y optimización de co
 ### Brechas restantes identificadas en auditorías
 
 **SEO:**
+
 - Blog posts (`/blog/[slug]`) no incluidos en sitemap.xml
 - Páginas de herramientas no incluidas en sitemap.xml
 - `/faq`, `/empleos`, `/prensa` no incluidas en sitemap.xml
 - No hay `ItemList` JSON-LD en `/vehiculos` listing
 
 **Conversión:**
+
 - `/guias` tiene botones "Leer Guía" que linkan a `/ayuda` en vez de contenido real
 - Calculadora de financiamiento no linkeada desde detalle de vehículo
 - `PremiumSellerContactCard` existe pero no se usa (tiene urgency signals)
 - Homepage tiene 12 secciones de tipo vehículo — excesivo scroll depth
 
 **Performance:**
+
 - Falta `loading.tsx` en `/vehiculos/[slug]` (página más visitada)
 - Falta `loading.tsx` en `/blog`, `/blog/[slug]`
 - No hay `error.tsx` en `/vehiculos/[slug]` ni `/checkout`
 
 ---
 
-*Reporte generado automáticamente por OKLA Project Manager*
+_Reporte generado automáticamente por OKLA Project Manager_
