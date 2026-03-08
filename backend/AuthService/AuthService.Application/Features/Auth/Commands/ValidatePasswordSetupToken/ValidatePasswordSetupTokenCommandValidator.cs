@@ -1,4 +1,5 @@
 using FluentValidation;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.Auth.Commands.ValidatePasswordSetupToken;
 
@@ -13,6 +14,8 @@ public class ValidatePasswordSetupTokenCommandValidator : AbstractValidator<Vali
             .NotEmpty()
             .WithMessage("Token is required.")
             .MinimumLength(20)
-            .WithMessage("Invalid token format.");
+            .WithMessage("Invalid token format.")
+            .NoSqlInjection()
+            .NoXss();
     }
 }

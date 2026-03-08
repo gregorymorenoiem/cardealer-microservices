@@ -1,4 +1,5 @@
 using FluentValidation;
+using RoleService.Application.Validators;
 
 namespace RoleService.Application.UseCases.Roles.UpdateRole;
 
@@ -18,6 +19,8 @@ public class UpdateRoleCommandValidator : AbstractValidator<UpdateRoleCommand>
             .MaximumLength(100)
                 .WithMessage("Display name cannot exceed 100 characters")
                 .WithErrorCode("INVALID_DISPLAY_NAME")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.Request.DisplayName));
 
         // Description: Opcional, pero con límite de longitud
@@ -25,6 +28,8 @@ public class UpdateRoleCommandValidator : AbstractValidator<UpdateRoleCommand>
             .MaximumLength(500)
                 .WithMessage("Description cannot exceed 500 characters")
                 .WithErrorCode("INVALID_DESCRIPTION")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.Request.Description));
 
         // PermissionIds: Validar límites y duplicados

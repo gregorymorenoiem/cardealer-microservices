@@ -50,13 +50,27 @@ public class UserLoggedInEventConsumer : BackgroundService
         // Wait a bit for RabbitMQ to be ready
         await Task.Delay(5000, stoppingToken);
 
+        // Retry loop — matches UserRegisteredEventConsumer pattern
+        const int maxRetries = 10;
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            if (stoppingToken.IsCancellationRequested) return;
+
+            InitializeRabbitMQ();
+            if (_channel != null) break;
+
+            var delay = TimeSpan.FromSeconds(Math.Min(attempt * 5, 60));
+            _logger.LogWarning(
+                "UserLoggedInEventConsumer: RabbitMQ not available, retry {Attempt}/{MaxRetries} in {Delay}s",
+                attempt, maxRetries, delay.TotalSeconds);
+            await Task.Delay(delay, stoppingToken);
+        }
+
         try
         {
-            InitializeRabbitMQ();
-
             if (_channel == null)
             {
-                _logger.LogWarning("RabbitMQ channel not available, UserLoggedInEventConsumer will not start");
+                _logger.LogError("RabbitMQ channel not available after {MaxRetries} retries, UserLoggedInEventConsumer will not start", maxRetries);
                 return;
             }
 

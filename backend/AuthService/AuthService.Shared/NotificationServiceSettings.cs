@@ -3,7 +3,7 @@ namespace AuthService.Shared;
 public class NotificationServiceSettings
 {
     /// <summary>Base URL of the Notification Service</summary>
-    public string BaseUrl { get; set; } = "http://notificationservice:80"; // Valor por defecto
+    public string BaseUrl { get; set; } = "http://notificationservice:8080"; // Valor por defecto
 
     /// <summary>Request timeout in seconds</summary>
     public int TimeoutSeconds { get; set; } = 30; // Valor por defecto

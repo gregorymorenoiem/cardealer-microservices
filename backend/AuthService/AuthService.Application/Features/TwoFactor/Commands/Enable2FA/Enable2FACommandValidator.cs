@@ -1,5 +1,6 @@
 using FluentValidation;
 using AuthService.Domain.Enums;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.TwoFactor.Commands.Enable2FA;
 
@@ -9,7 +10,9 @@ public class Enable2FACommandValidator : AbstractValidator<Enable2FACommand>
     {
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required.")
-            .MinimumLength(1).WithMessage("User ID cannot be empty.");
+            .MinimumLength(1).WithMessage("User ID cannot be empty.")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Type)
             .IsInEnum().WithMessage("Invalid two-factor authentication type.")

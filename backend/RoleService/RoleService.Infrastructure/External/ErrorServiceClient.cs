@@ -26,12 +26,12 @@ namespace RoleService.Infrastructure.External
             try
             {
                 var instance = await _serviceDiscovery.FindServiceInstanceAsync("ErrorService");
-                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://errorservice:80";
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://errorservice:8080";
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Error resolving ErrorService from Consul, using fallback");
-                return "http://errorservice:80";
+                return "http://errorservice:8080";
             }
         }
 

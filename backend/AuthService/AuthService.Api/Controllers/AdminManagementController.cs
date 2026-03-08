@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AuthService.Api.Controllers;
 
@@ -15,10 +16,12 @@ namespace AuthService.Api.Controllers;
 /// Controller for admin user management operations
 /// Used by AdminService to create admin users and manage security
 /// All endpoints require Admin or SuperAdmin role (OWASP A01:2021)
+/// Rate-limited to prevent abuse of admin creation endpoint (OWASP API4:2023)
 /// </summary>
 [ApiController]
 [Route("api/auth/admin")]
 [Authorize(Roles = "SuperAdmin,Admin")]
+[EnableRateLimiting("AuthPolicy")]
 public class AdminManagementController : ControllerBase
 {
     private readonly ILogger<AdminManagementController> _logger;

@@ -51,7 +51,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
 
     public async Task<AcceptInvitationResponse> Handle(AcceptInvitationCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Processing invitation acceptance for token {Token}", request.Token);
+        _logger.LogInformation("Processing invitation acceptance for token ...{TokenSuffix}", request.Token.Length > 8 ? request.Token[^8..] : "***");
 
         // 1. Find the invitation by token
         var invitation = await _employeeRepository.GetInvitationByTokenAsync(request.Token);

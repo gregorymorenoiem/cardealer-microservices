@@ -286,9 +286,9 @@ public class TwoFactorService : ITwoFactorService
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Log the exception
+            _logger.LogError(ex, "Failed to send 2FA code via {Type} for user {UserId}", type, userId);
             return false;
         }
     }
@@ -318,9 +318,9 @@ public class TwoFactorService : ITwoFactorService
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Log the exception
+            _logger.LogError(ex, "Failed to send 2FA code via {Type} to {Destination}", type, destination);
             return false;
         }
     }

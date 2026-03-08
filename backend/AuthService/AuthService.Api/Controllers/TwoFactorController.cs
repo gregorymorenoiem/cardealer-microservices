@@ -15,12 +15,17 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AuthService.Api.Controllers;
 
+/// <summary>
+/// Rate-limited to prevent brute-force attacks on 2FA verification/recovery codes (OWASP API4:2023)
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[EnableRateLimiting("AuthPolicy")]
 public class TwoFactorController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -1,5 +1,7 @@
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using CarDealer.Shared.Messaging;
+using CarDealer.Shared.ErrorHandling.Extensions;
 using RoleService.Domain.Interfaces;
 using RoleService.Infrastructure.Messaging;
 using RoleService.Infrastructure.Persistence;
@@ -10,11 +12,12 @@ using RoleService.Shared.Middleware;
 using RoleService.Shared.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using Serilog.Enrichers.Span;
+using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.Database;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -30,21 +33,24 @@ using RoleService.Api.Middleware;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
+using System.IO.Compression;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using Microsoft.AspNetCore.ResponseCompression;
+
+const string ServiceName = "RoleService";
+const string ServiceVersion = "1.0.1";
+
+try
+{
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Secret Provider for externalized secrets
 builder.Services.AddSecretProvider();
 
-// Configurar Serilog con enriquecimiento de TraceId
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .Enrich.WithSpan() // Agregar TraceId, SpanId de OpenTelemetry
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j} TraceId={TraceId} SpanId={SpanId}{NewLine}{Exception}")
-    .CreateLogger();
-builder.Host.UseSerilog();
+// ============= CENTRALIZED LOGGING (Serilog → Seq) =============
+builder.UseStandardSerilog(ServiceName);
 
 // Add services to the container
 builder.Services.AddControllers()
@@ -65,8 +71,9 @@ builder.Services.AddCors(options =>
             ?? new[] { "http://localhost:3000", "https://okla.com.do" };
 
         policy.WithOrigins(allowedOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader()
+              // Security: Restrict to specific HTTP methods and headers (OWASP)
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
               .AllowCredentials();
     });
 });
@@ -121,14 +128,14 @@ builder.Services.AddAuthentication(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = jwtSettings.GetValue<bool>("ValidateIssuer", true),
-        ValidateAudience = jwtSettings.GetValue<bool>("ValidateAudience", true),
-        ValidateLifetime = jwtSettings.GetValue<bool>("ValidateLifetime", true),
-        ValidateIssuerSigningKey = jwtSettings.GetValue<bool>("ValidateIssuerSigningKey", true),
+        ValidateIssuer = true,              // SECURITY: never config-driven
+        ValidateAudience = true,            // SECURITY: never config-driven
+        ValidateLifetime = true,            // SECURITY: never config-driven
+        ValidateIssuerSigningKey = true,    // SECURITY: never config-driven
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        ClockSkew = TimeSpan.FromMinutes(5)
+        ClockSkew = TimeSpan.Zero           // No tolerance — tokens expire exactly at exp claim
     };
 
     // Logging para debugging
@@ -263,7 +270,7 @@ if (!string.IsNullOrEmpty(redisConnection))
         options.Configuration = redisConnection;
         options.InstanceName = "RoleService:";
     });
-    Log.Information("Using Redis for permission caching: {RedisConnection}", redisConnection);
+    Log.Information("Using Redis for permission caching (connection configured)");
 }
 else
 {
@@ -279,7 +286,7 @@ builder.Services.AddHttpClient<RoleService.Application.Interfaces.IAuditServiceC
     client.BaseAddress = new Uri(auditServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 builder.Services.AddHttpClient<RoleService.Application.Interfaces.INotificationServiceClient, RoleService.Infrastructure.External.NotificationServiceClient>(client =>
 {
@@ -287,7 +294,7 @@ builder.Services.AddHttpClient<RoleService.Application.Interfaces.INotificationS
     client.BaseAddress = new Uri(notificationServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 builder.Services.AddHttpClient<RoleService.Application.Interfaces.IErrorServiceClient, RoleService.Infrastructure.External.ErrorServiceClient>(client =>
 {
@@ -295,7 +302,7 @@ builder.Services.AddHttpClient<RoleService.Application.Interfaces.IErrorServiceC
     client.BaseAddress = new Uri(errorServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // Error Reporter - envía errores al ErrorService
 var errorServiceUrl = builder.Configuration["ServiceUrls:ErrorService"];
@@ -305,7 +312,7 @@ if (!string.IsNullOrEmpty(errorServiceUrl))
     {
         client.BaseAddress = new Uri(errorServiceUrl);
         client.Timeout = TimeSpan.FromSeconds(10);
-    });
+    }).AddStandardResilience(builder.Configuration);
 }
 else
 {
@@ -418,14 +425,39 @@ builder.Services.AddCustomRateLimiting(rateLimitingConfig);
 // Registrar el consumidor RabbitMQ como hosted service
 // builder.Services.AddHostedService<RabbitMQErrorConsumer>();
 
+// ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/problem+json"
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
+// Add shared global error handling DI
+builder.Services.AddStandardErrorHandling(builder.Configuration, "RoleService");
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-// Security (CWE-532): UseRequestLogging() from shared lib masks sensitive headers
+// 1. Global Error Handling — ALWAYS FIRST (catches all middleware + controller exceptions)
+app.UseGlobalErrorHandling();
+
+// 2. Security (CWE-532): UseRequestLogging() from shared lib masks sensitive headers
 app.UseRequestLogging();
 
 // OWASP Security Headers
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+// Response Compression — early, after error handling
+app.UseResponseCompression();
 
 if (app.Environment.IsDevelopment())
 {
@@ -434,18 +466,23 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Middleware para bypass de Rate Limiting (debe estar antes del middleware de rate limiting)
-app.UseMiddleware<RateLimitBypassMiddleware>();
+if (!app.Environment.IsProduction())
+    app.UseHttpsRedirection();
 
-// Middleware para Rate Limiting (debe estar antes de otros middlewares)
-app.UseCustomRateLimiting(rateLimitingConfig);
+// Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
-app.UseHttpsRedirection();
-
-// CORS middleware (before auth)
+// CORS middleware — BEFORE rate limiting (so OPTIONS preflight isn't blocked)
 app.UseCors();
 
-// Agregar autenticación y autorización
+// Rate Limiting — after CORS, before auth
+app.UseMiddleware<RateLimitBypassMiddleware>();
+app.UseCustomRateLimiting(rateLimitingConfig);
+
+// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -459,16 +496,27 @@ if (consulEnabled)
 // Middleware para capturar respuestas
 app.UseMiddleware<ResponseCaptureMiddleware>();
 
-// Middleware para manejo de errores
-app.UseErrorHandling();
+// NOTE: Local UseErrorHandling() REMOVED — UseGlobalErrorHandling() at pipeline top
+// now catches all exceptions with RFC 7807 ProblemDetails responses.
 
 // Middleware para auditoría
 app.UseAuditMiddleware();
 
 app.MapControllers();
 
-// Health check endpoints - acceso anónimo
-app.MapHealthChecks("/health");
+// Health check endpoints - acceso anónimo (triple: liveness, readiness, startup)
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+});
 
 // Apply migrations on startup
 using (var scope = app.Services.CreateScope())
@@ -486,8 +534,18 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-Log.Information("RoleService starting up...");
+Log.Information("{ServiceName} v{ServiceVersion} starting up...", ServiceName, ServiceVersion);
 app.Run();
+
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "{ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Make Program class accessible for integration testing
 public partial class Program { }

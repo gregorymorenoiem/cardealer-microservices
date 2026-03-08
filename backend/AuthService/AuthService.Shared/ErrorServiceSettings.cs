@@ -6,7 +6,7 @@ namespace AuthService.Shared;
 public class ErrorServiceSettings
 {
     /// <summary>Base URL of the Error Service</summary>
-    public string BaseUrl { get; set; } = "http://errorservice:80";
+    public string BaseUrl { get; set; } = "http://errorservice:8080";
 
     /// <summary>Request timeout in seconds</summary>
     public int TimeoutSeconds { get; set; } = 30;

@@ -24,6 +24,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
     private readonly IDeadLetterQueue? _deadLetterQueue;
     private readonly ResiliencePipeline _resiliencePipeline;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly object _publishLock = new();
 
     public RabbitMqEventPublisher(
         IConfiguration configuration,
@@ -119,18 +120,21 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 var message = JsonSerializer.Serialize(@event, _jsonOptions);
                 var body = Encoding.UTF8.GetBytes(message);
 
-                var properties = _channel.CreateBasicProperties();
-                properties.Persistent = true;
-                properties.MessageId = @event.EventId.ToString();
-                properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                properties.Type = @event.EventType;
-                properties.ContentType = "application/json";
+                lock (_publishLock)
+                {
+                    var properties = _channel.CreateBasicProperties();
+                    properties.Persistent = true;
+                    properties.MessageId = @event.EventId.ToString();
+                    properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                    properties.Type = @event.EventType;
+                    properties.ContentType = "application/json";
 
-                _channel.BasicPublish(
-                    exchange: _exchangeName,
-                    routingKey: routingKey,
-                    basicProperties: properties,
-                    body: body);
+                    _channel.BasicPublish(
+                        exchange: _exchangeName,
+                        routingKey: routingKey,
+                        basicProperties: properties,
+                        body: body);
+                }
 
                 _logger.LogInformation(
                     "Published event {EventType} with EventId={EventId} to exchange={Exchange}, routingKey={RoutingKey}",

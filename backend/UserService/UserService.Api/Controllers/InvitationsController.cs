@@ -34,7 +34,7 @@ public class InvitationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status410Gone)]
     public async Task<ActionResult<InvitationDetailsDto>> GetInvitationDetails(string token)
     {
-        _logger.LogInformation("Getting invitation details for token {Token}", token);
+        _logger.LogInformation("Getting invitation details for token ...{TokenSuffix}", token.Length > 8 ? token[^8..] : "***");
         
         var result = await _mediator.Send(new GetInvitationDetailsQuery(token));
         
@@ -63,7 +63,7 @@ public class InvitationsController : ControllerBase
         string token,
         [FromBody] AcceptInvitationRequest request)
     {
-        _logger.LogInformation("Processing invitation acceptance for token {Token}", token);
+        _logger.LogInformation("Processing invitation acceptance for token ...{TokenSuffix}", token.Length > 8 ? token[^8..] : "***");
 
         var command = new AcceptInvitationCommand(
             Token: token,
@@ -86,7 +86,7 @@ public class InvitationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeclineInvitation(string token)
     {
-        _logger.LogInformation("Declining invitation for token {Token}", token);
+        _logger.LogInformation("Declining invitation for token ...{TokenSuffix}", token.Length > 8 ? token[^8..] : "***");
         
         await _mediator.Send(new DeclineInvitationCommand(token));
         

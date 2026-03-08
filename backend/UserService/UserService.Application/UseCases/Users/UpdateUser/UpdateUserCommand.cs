@@ -3,6 +3,7 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using UserService.Domain.Interfaces;
 using UserService.Shared.Exceptions;
 using UserService.Application.Interfaces;
@@ -21,13 +22,16 @@ namespace UserService.Application.UseCases.Users.UpdateUser
     {
         private readonly IUserRepository _userRepository;
         private readonly IAuditServiceClient _auditClient;
+        private readonly ILogger<UpdateUserCommandHandler> _logger;
 
         public UpdateUserCommandHandler(
             IUserRepository userRepository,
-            IAuditServiceClient auditClient)
+            IAuditServiceClient auditClient,
+            ILogger<UpdateUserCommandHandler> logger)
         {
             _userRepository = userRepository;
             _auditClient = auditClient;
+            _logger = logger;
         }
 
         public async Task<Unit> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -67,10 +71,20 @@ namespace UserService.Application.UseCases.Users.UpdateUser
 
             await _userRepository.UpdateAsync(user);
 
-            // Auditoría
+            // Auditoría (fire-and-forget with error logging)
             if (changes.Length > 0)
             {
-                _ = _auditClient.LogUserUpdatedAsync(user.Id, changes.ToString(), "system");
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _auditClient.LogUserUpdatedAsync(user.Id, changes.ToString(), "system");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to log audit for user update {UserId}", user.Id);
+                    }
+                });
             }
 
             return Unit.Value;

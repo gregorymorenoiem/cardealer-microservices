@@ -88,7 +88,7 @@ public class DeclineInvitationCommandHandler : IRequestHandler<DeclineInvitation
         var invitation = await _employeeRepository.GetInvitationByTokenAsync(request.Token);
         if (invitation == null)
         {
-            _logger.LogWarning("Attempted to decline non-existent invitation with token {Token}", request.Token);
+            _logger.LogWarning("Attempted to decline non-existent invitation with token ...{TokenSuffix}", request.Token.Length > 8 ? request.Token[^8..] : "***");
             return Unit.Value; // Silently ignore
         }
 

@@ -13,16 +13,19 @@ using System.Security.Claims;
 using AuthService.Domain.Entities;
 using MediatR;
 using FluentValidation;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AuthService.Api.Controllers;
 
 /// <summary>
 /// Controller for managing user security settings
 /// Proceso: AUTH-SEC-001, AUTH-SEC-002, AUTH-SEC-003, AUTH-SEC-004
+/// Rate-limited to prevent brute-force attacks on password/session endpoints (OWASP API4:2023)
 /// </summary>
 [ApiController]
 [Route("api/auth/security")]
 [Authorize]
+[EnableRateLimiting("AuthPolicy")]
 public class SecurityController : ControllerBase
 {
     private readonly ILogger<SecurityController> _logger;

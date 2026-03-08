@@ -1,4 +1,5 @@
 using FluentValidation;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.RequestUnlinkCode;
 
@@ -13,13 +14,17 @@ public class RequestUnlinkCodeCommandValidator : AbstractValidator<RequestUnlink
     {
         RuleFor(x => x.UserId)
             .NotEmpty()
-            .WithMessage("User ID is required.");
+            .WithMessage("User ID is required.")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Provider)
             .NotEmpty()
             .WithMessage("Provider is required.")
             .Must(BeValidProvider)
-            .WithMessage("Invalid provider. Supported providers: Google, Microsoft, Facebook, Apple.");
+            .WithMessage("Invalid provider. Supported providers: Google, Microsoft, Facebook, Apple.")
+            .NoSqlInjection()
+            .NoXss();
     }
 
     private static bool BeValidProvider(string provider)

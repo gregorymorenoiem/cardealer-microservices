@@ -1,5 +1,6 @@
 using FluentValidation;
 using System.Text.RegularExpressions;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.Auth.Commands.SetPasswordForOAuthUser;
 
@@ -19,7 +20,9 @@ public class SetPasswordForOAuthUserCommandValidator : AbstractValidator<SetPass
     {
         RuleFor(x => x.Token)
             .NotEmpty()
-            .WithMessage("Token is required.");
+            .WithMessage("Token is required.")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.NewPassword)
             .NotEmpty()
@@ -33,13 +36,17 @@ public class SetPasswordForOAuthUserCommandValidator : AbstractValidator<SetPass
             .Must(HaveDigit)
             .WithMessage("Password must contain at least one number.")
             .Must(HaveSpecialCharacter)
-            .WithMessage("Password must contain at least one special character (@$!%*?&).");
+            .WithMessage("Password must contain at least one special character (@$!%*?&).")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.ConfirmPassword)
             .NotEmpty()
             .WithMessage("Password confirmation is required.")
             .Equal(x => x.NewPassword)
-            .WithMessage("Passwords do not match.");
+            .WithMessage("Passwords do not match.")
+            .NoSqlInjection()
+            .NoXss();
     }
 
     private static bool HaveUppercase(string password)

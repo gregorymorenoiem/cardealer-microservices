@@ -37,8 +37,9 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
     {
         try
         {
-            // Validar token
-            if (!_tokenService.ValidateResetToken(request.Token, out var email))
+            // Validar token (async — avoids thread pool starvation from .Result)
+            var (isValidToken, email) = await _tokenService.ValidateResetTokenAsync(request.Token);
+            if (!isValidToken)
             {
                 throw new BadRequestException("Invalid or expired reset token.");
             }

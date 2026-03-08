@@ -1,5 +1,6 @@
 using AuthService.Domain.Enums;
 using FluentValidation;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.LinkExternalAccount;
 
@@ -16,17 +17,23 @@ public class LinkExternalAccountCommandValidator : AbstractValidator<LinkExterna
     {
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required")
-            .Must(BeValidGuid).WithMessage("User ID must be a valid GUID");
+            .Must(BeValidGuid).WithMessage("User ID must be a valid GUID")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Provider)
             .NotEmpty().WithMessage("Provider is required")
             .Must(BeValidProvider)
-            .WithMessage($"Provider must be one of: {string.Join(", ", SupportedProviders)}");
+            .WithMessage($"Provider must be one of: {string.Join(", ", SupportedProviders)}")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.IdToken)
             .NotEmpty().WithMessage("ID token is required")
             .MinimumLength(50).WithMessage("ID token is too short to be valid")
-            .MaximumLength(10000).WithMessage("ID token is too long");
+            .MaximumLength(10000).WithMessage("ID token is too long")
+            .NoSqlInjection()
+            .NoXss();
     }
 
     private static bool BeValidGuid(string userId)

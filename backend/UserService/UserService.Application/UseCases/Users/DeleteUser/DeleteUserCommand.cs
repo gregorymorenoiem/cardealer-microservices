@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using UserService.Domain.Interfaces;
 using UserService.Shared.Exceptions;
 using UserService.Application.Interfaces;
@@ -14,13 +15,16 @@ namespace UserService.Application.UseCases.Users.DeleteUser
     {
         private readonly IUserRepository _userRepository;
         private readonly IAuditServiceClient _auditClient;
+        private readonly ILogger<DeleteUserCommandHandler> _logger;
 
         public DeleteUserCommandHandler(
             IUserRepository userRepository,
-            IAuditServiceClient auditClient)
+            IAuditServiceClient auditClient,
+            ILogger<DeleteUserCommandHandler> logger)
         {
             _userRepository = userRepository;
             _auditClient = auditClient;
+            _logger = logger;
         }
 
         public async Task<Unit> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
@@ -33,10 +37,24 @@ namespace UserService.Application.UseCases.Users.DeleteUser
 
             await _userRepository.DeleteAsync(request.UserId);
 
-            // Auditoría
-            _ = _auditClient.LogUserDeletedAsync(user.Id, user.Email, "system");
+            // Auditoría (fire-and-forget with error logging)
+            _ = SafeFireAndForgetAsync(
+                _auditClient.LogUserDeletedAsync(user.Id, user.Email, "system"),
+                user.Id);
 
             return Unit.Value;
+        }
+
+        private async Task SafeFireAndForgetAsync(Task task, Guid userId)
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to log audit for user deletion {UserId}", userId);
+            }
         }
     }
 }

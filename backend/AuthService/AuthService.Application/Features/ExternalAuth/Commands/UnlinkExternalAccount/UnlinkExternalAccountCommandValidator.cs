@@ -1,5 +1,6 @@
 using AuthService.Domain.Enums;
 using FluentValidation;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.UnlinkExternalAccount;
 
@@ -16,12 +17,16 @@ public class UnlinkExternalAccountCommandValidator : AbstractValidator<UnlinkExt
     {
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required")
-            .Must(BeValidGuid).WithMessage("User ID must be a valid GUID");
+            .Must(BeValidGuid).WithMessage("User ID must be a valid GUID")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Provider)
             .NotEmpty().WithMessage("Provider is required")
             .Must(BeValidProvider)
-            .WithMessage($"Provider must be one of: {string.Join(", ", SupportedProviders)}");
+            .WithMessage($"Provider must be one of: {string.Join(", ", SupportedProviders)}")
+            .NoSqlInjection()
+            .NoXss();
     }
 
     private static bool BeValidGuid(string userId)

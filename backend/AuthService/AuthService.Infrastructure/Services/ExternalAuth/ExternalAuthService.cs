@@ -14,15 +14,18 @@ public class ExternalAuthService : IExternalAuthService
     private readonly IExternalTokenValidator _tokenValidator;
     private readonly IUserRepository _userRepository;
     private readonly ILogger<ExternalAuthService> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public ExternalAuthService(
         IExternalTokenValidator tokenValidator,
         IUserRepository userRepository,
-        ILogger<ExternalAuthService> logger)
+        ILogger<ExternalAuthService> logger,
+        IHttpClientFactory httpClientFactory)
     {
         _tokenValidator = tokenValidator;
         _userRepository = userRepository;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<(ApplicationUser user, bool isNewUser)> AuthenticateAsync(ExternalAuthProvider provider, string idToken)
@@ -39,7 +42,7 @@ public class ExternalAuthService : IExternalAuthService
             if (existingUser != null)
             {
                 // Update profile info if missing
-                UpdateUserProfileIfNeeded(existingUser, validationResult);
+                await UpdateUserProfileIfNeededAsync(existingUser, validationResult);
                 
                 _logger.LogInformation("External user found for {Email} with provider {Provider}",
                     validationResult.Email, provider);
@@ -54,7 +57,7 @@ public class ExternalAuthService : IExternalAuthService
                 if (!existingUser.IsExternalUser)
                 {
                     existingUser.LinkExternalAccount(provider, validationResult.UserId);
-                    UpdateUserProfileIfNeeded(existingUser, validationResult);
+                    await UpdateUserProfileIfNeededAsync(existingUser, validationResult);
                     await _userRepository.UpdateAsync(existingUser);
                     _logger.LogInformation("Linked external account to existing user {Email}", validationResult.Email);
                 }
@@ -86,7 +89,7 @@ public class ExternalAuthService : IExternalAuthService
         }
     }
 
-    private void UpdateUserProfileIfNeeded(ApplicationUser user, ExternalTokenValidationResult validationResult)
+    private async Task UpdateUserProfileIfNeededAsync(ApplicationUser user, ExternalTokenValidationResult validationResult)
     {
         bool updated = false;
         
@@ -111,7 +114,7 @@ public class ExternalAuthService : IExternalAuthService
         if (updated)
         {
             user.MarkAsUpdated();
-            _userRepository.UpdateAsync(user).Wait();
+            await _userRepository.UpdateAsync(user);
         }
     }
 
@@ -179,7 +182,7 @@ public class ExternalAuthService : IExternalAuthService
 
     private async Task<string> GetGoogleUserInfoAsync(string accessToken)
     {
-        using var httpClient = new HttpClient();
+        using var httpClient = _httpClientFactory.CreateClient("ExternalAuth");
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v3/userinfo");
@@ -213,7 +216,7 @@ public class ExternalAuthService : IExternalAuthService
 
     private async Task<string> GetMicrosoftUserInfoAsync(string accessToken)
     {
-        using var httpClient = new HttpClient();
+        using var httpClient = _httpClientFactory.CreateClient("ExternalAuth");
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await httpClient.GetAsync("https://graph.microsoft.com/v1.0/me");
@@ -248,7 +251,7 @@ public class ExternalAuthService : IExternalAuthService
 
     private async Task<string> GetFacebookUserInfoAsync(string accessToken)
     {
-        using var httpClient = new HttpClient();
+        using var httpClient = _httpClientFactory.CreateClient("ExternalAuth");
 
         var url = $"https://graph.facebook.com/me?fields=id,name,email,first_name,last_name,picture.type(large)&access_token={accessToken}";
         var response = await httpClient.GetAsync(url);

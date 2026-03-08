@@ -28,6 +28,7 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly ResiliencePipeline _resiliencePipeline;
     private readonly IConfiguration _configuration;
+    private readonly object _publishLock = new();
     private readonly object _connectionLock = new();
     private bool _isConnected;
 
@@ -171,18 +172,21 @@ public class RabbitMqEventPublisher : IEventPublisher, IDisposable
                 var messageBody = JsonSerializer.Serialize(@event, _jsonOptions);
                 var body = Encoding.UTF8.GetBytes(messageBody);
 
-                var properties = _channel.CreateBasicProperties();
-                properties.Persistent = true;
-                properties.ContentType = "application/json";
-                properties.MessageId = @event.EventId.ToString();
-                properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                properties.Type = @event.EventType;
+                lock (_publishLock)
+                {
+                    var properties = _channel.CreateBasicProperties();
+                    properties.Persistent = true;
+                    properties.ContentType = "application/json";
+                    properties.MessageId = @event.EventId.ToString();
+                    properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                    properties.Type = @event.EventType;
 
-                _channel.BasicPublish(
-                    exchange: _exchangeName,
-                    routingKey: routingKey,
-                    basicProperties: properties,
-                    body: body);
+                    _channel.BasicPublish(
+                        exchange: _exchangeName,
+                        routingKey: routingKey,
+                        basicProperties: properties,
+                        body: body);
+                }
 
                 _logger.LogInformation(
                     "Published event {EventType} with ID {EventId} to exchange {Exchange}",

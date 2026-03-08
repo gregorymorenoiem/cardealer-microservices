@@ -1,4 +1,5 @@
 // AuthService v2.1 - Device fingerprinting + SessionId JWT claim
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using AuthService.Infrastructure.Extensions;
@@ -37,7 +38,14 @@ using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 
+const string ServiceName = "AuthService";
+const string ServiceVersion = "1.0.0";
+
+try
+{
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================================================================
@@ -115,6 +123,44 @@ builder.Services.AddRateLimiter(options =>
         limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         limiterOptions.QueueLimit = 0;
     });
+
+    // Tighter limits for auth-critical endpoints (brute-force protection)
+    options.AddFixedWindowLimiter("LoginPolicy", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 5;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+
+    options.AddFixedWindowLimiter("ForgotPasswordPolicy", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 3;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/problem+json";
+
+        var retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterValue)
+            ? retryAfterValue
+            : TimeSpan.FromSeconds(60);
+
+        context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            type = "https://httpstatuses.io/429",
+            title = "Too Many Requests",
+            status = 429,
+            detail = $"Rate limit exceeded. Retry after {(int)retryAfter.TotalSeconds} seconds.",
+            retryAfterSeconds = (int)retryAfter.TotalSeconds
+        }, cancellationToken);
+    };
 });
 
 // CORS 
@@ -122,10 +168,13 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new string[0];
-        var allowedMethods = builder.Configuration.GetSection("Cors:AllowedMethods").Get<string[]>() ?? new string[0];
-        var allowedHeaders = builder.Configuration.GetSection("Cors:AllowedHeaders").Get<string[]>() ?? new string[0];
-        var allowCredentials = builder.Configuration.GetValue<bool>("Cors:AllowCredentials");
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "https://okla.com.do", "https://www.okla.com.do" };
+        var allowedMethods = builder.Configuration.GetSection("Cors:AllowedMethods").Get<string[]>()
+            ?? new[] { "GET", "POST", "PUT", "DELETE", "OPTIONS" };
+        var allowedHeaders = builder.Configuration.GetSection("Cors:AllowedHeaders").Get<string[]>()
+            ?? new[] { "Authorization", "Content-Type", "X-Requested-With" };
+        var allowCredentials = builder.Configuration.GetValue<bool>("Cors:AllowCredentials", true);
 
         policy.WithOrigins(allowedOrigins)
               .WithMethods(allowedMethods)
@@ -255,6 +304,22 @@ builder.Services.AddHttpClient<AuthService.Application.Interfaces.IAuditServiceC
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/problem+json"
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
 // 🚨 CONSTRUIR LA APLICACIÓN
 var app = builder.Build();
 
@@ -313,6 +378,9 @@ app.UseRequestLogging();
 // Security Headers (OWASP) — before routing and auth
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
+// Response Compression — early, after error handling
+app.UseResponseCompression();
+
 // Swagger en desarrollo
 if (app.Environment.IsDevelopment())
 {
@@ -320,18 +388,28 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 app.UseCors(); // CORS debe ir primero
-app.UseHttpsRedirection();
+// HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 // NOTA: ErrorHandlingMiddleware local reemplazado por UseGlobalErrorHandling()
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// FASE 5: Audit Middleware — must run BEFORE Service Registration to audit all requests
+app.UseAuditMiddleware();
+
 // Service Discovery Auto-Registration
 app.UseMiddleware<ServiceRegistrationMiddleware>();
-
-// FASE 5: Audit Middleware
-app.UseAuditMiddleware();
 
 // Health Checks
 app.MapHealthChecks("/health", new HealthCheckOptions
@@ -344,12 +422,21 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 });
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
-    Predicate = check => check.Tags.Contains("live")
+    Predicate = _ => false // Liveness: always return healthy (no checks needed)
 });
 
 app.MapControllers();
 
 Log.Information("AuthService starting up...");
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "💀 {ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 public partial class Program { }

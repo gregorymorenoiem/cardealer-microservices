@@ -1,108 +1,35 @@
-using AuthService.Application.DTOs.ExternalAuth;
-using AuthService.Domain.Interfaces.Services;
-using MediatR;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using FluentValidation;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.ExternalLogin;
 
-public class ExternalLoginCommandHandler : IRequestHandler<ExternalLoginCommand, ExternalLoginResponse>
+/// <summary>
+/// Validator for ExternalLoginCommand.
+/// Validates provider and redirect URI with security checks.
+/// </summary>
+public class ExternalLoginCommandValidator : AbstractValidator<ExternalLoginCommand>
 {
-    private readonly IExternalAuthService _externalAuthService;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<ExternalLoginCommandHandler> _logger;
+    private static readonly string[] ValidProviders = { "Google", "Microsoft", "Facebook", "Apple" };
 
-    public ExternalLoginCommandHandler(
-        IExternalAuthService externalAuthService,
-        IConfiguration configuration,
-        ILogger<ExternalLoginCommandHandler> logger)
+    public ExternalLoginCommandValidator()
     {
-        _externalAuthService = externalAuthService;
-        _configuration = configuration;
-        _logger = logger;
+        RuleFor(x => x.Provider)
+            .NotEmpty().WithMessage("Provider is required.")
+            .Must(BeValidProvider)
+            .WithMessage("Invalid provider. Supported providers: Google, Microsoft, Facebook, Apple.")
+            .NoSqlInjection()
+            .NoXss();
+
+        RuleFor(x => x.RedirectUri)
+            .NotEmpty().WithMessage("Redirect URI is required.")
+            .MaximumLength(2048).WithMessage("Redirect URI is too long.")
+            .NoSqlInjection()
+            .NoXss();
     }
 
-    public Task<ExternalLoginResponse> Handle(ExternalLoginCommand request, CancellationToken cancellationToken)
+    private static bool BeValidProvider(string provider)
     {
-        try
-        {
-            // Generate authorization URL for the external provider
-            var authorizationUrl = GenerateAuthorizationUrl(request.Provider, request.RedirectUri);
-            var response = new ExternalLoginResponse(authorizationUrl);
-
-            _logger.LogInformation("Generated authorization URL for provider {Provider}", request.Provider);
-
-            return Task.FromResult(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating authorization URL for provider {Provider}", request.Provider);
-            throw;
-        }
-    }
-
-    private string GenerateAuthorizationUrl(string provider, string redirectUri)
-    {
-        var encodedRedirectUri = Uri.EscapeDataString(redirectUri);
-        
-        return provider.ToLower() switch
-        {
-            "google" => GenerateGoogleAuthUrl(encodedRedirectUri),
-            "microsoft" => GenerateMicrosoftAuthUrl(encodedRedirectUri),
-            "facebook" => GenerateFacebookAuthUrl(encodedRedirectUri),
-            "apple" => GenerateAppleAuthUrl(encodedRedirectUri),
-            _ => throw new ArgumentException($"Unsupported provider: {provider}")
-        };
-    }
-
-    private string GenerateGoogleAuthUrl(string redirectUri)
-    {
-        var clientId = _configuration["Authentication:Google:ClientId"] 
-            ?? throw new InvalidOperationException("Google Client ID is not configured");
-        
-        return $"https://accounts.google.com/o/oauth2/v2/auth?" +
-               $"client_id={clientId}&" +
-               $"redirect_uri={redirectUri}&" +
-               "response_type=code&" +
-               "scope=openid%20email%20profile&" +
-               "access_type=offline&" +
-               "prompt=consent";
-    }
-
-    private string GenerateMicrosoftAuthUrl(string redirectUri)
-    {
-        var clientId = _configuration["Authentication:Microsoft:ClientId"] 
-            ?? throw new InvalidOperationException("Microsoft Client ID is not configured");
-        
-        return $"https://login.microsoftonline.com/common/oauth2/v2.0/authorize?" +
-               $"client_id={clientId}&" +
-               $"redirect_uri={redirectUri}&" +
-               "response_type=code&" +
-               "scope=openid%20email%20profile";
-    }
-
-    private string GenerateFacebookAuthUrl(string redirectUri)
-    {
-        var clientId = _configuration["Authentication:Facebook:AppId"] 
-            ?? throw new InvalidOperationException("Facebook App ID is not configured");
-        
-        return $"https://www.facebook.com/v18.0/dialog/oauth?" +
-               $"client_id={clientId}&" +
-               $"redirect_uri={redirectUri}&" +
-               "response_type=code&" +
-               "scope=email,public_profile";
-    }
-
-    private string GenerateAppleAuthUrl(string redirectUri)
-    {
-        var clientId = _configuration["Authentication:Apple:ClientId"] 
-            ?? throw new InvalidOperationException("Apple Client ID is not configured");
-        
-        return $"https://appleid.apple.com/auth/authorize?" +
-               $"client_id={clientId}&" +
-               $"redirect_uri={redirectUri}&" +
-               "response_type=code%20id_token&" +
-               "scope=name%20email&" +
-               "response_mode=form_post";
+        return !string.IsNullOrEmpty(provider) &&
+               ValidProviders.Any(p => p.Equals(provider, StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -5,7 +5,7 @@ public class NotificationServiceRabbitMQSettings
 {
     public bool EnableRabbitMQ { get; set; } = true;
     public string QueueName { get; set; } = "notification-queue";
-    public string ExchangeName { get; set; } = "cardealer.events";
+    public string ExchangeName { get; set; } = "notification-exchange";
     public string RoutingKey { get; set; } = "notification.auth";
 
     // Opcional: Configuraciones espec�ficas para tipos de notificaci�n

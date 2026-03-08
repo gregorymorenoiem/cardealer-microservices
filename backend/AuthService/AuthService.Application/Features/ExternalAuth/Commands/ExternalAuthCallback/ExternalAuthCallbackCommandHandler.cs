@@ -162,7 +162,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError("Google token exchange failed: {Response}", json);
-            throw new Exception($"Google OAuth token exchange failed: {json}");
+            throw new InvalidOperationException($"Google OAuth token exchange failed with status {response.StatusCode}");
         }
 
         using var doc = JsonDocument.Parse(json);
@@ -202,7 +202,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError("Microsoft token exchange failed: {Response}", json);
-            throw new Exception($"Microsoft OAuth token exchange failed: {json}");
+            throw new InvalidOperationException($"Microsoft OAuth token exchange failed with status {response.StatusCode}");
         }
 
         using var doc = JsonDocument.Parse(json);
@@ -236,7 +236,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError("Facebook token exchange failed: {Response}", json);
-            throw new Exception($"Facebook OAuth token exchange failed: {json}");
+            throw new InvalidOperationException($"Facebook OAuth token exchange failed with status {response.StatusCode}");
         }
 
         using var doc = JsonDocument.Parse(json);
@@ -276,7 +276,7 @@ public class ExternalAuthCallbackCommandHandler : IRequestHandler<ExternalAuthCa
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError("Apple token exchange failed: {Response}", json);
-            throw new Exception($"Apple OAuth token exchange failed: {json}");
+            throw new InvalidOperationException($"Apple OAuth token exchange failed with status {response.StatusCode}");
         }
 
         using var doc = JsonDocument.Parse(json);

@@ -1,4 +1,5 @@
 using FluentValidation;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.Auth.Commands.RevokeSession;
 
@@ -13,15 +14,21 @@ public class RevokeSessionCommandValidator : AbstractValidator<RevokeSessionComm
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required.")
             .MaximumLength(50).WithMessage("Invalid user ID format.")
-            .Must(BeValidGuidOrId).WithMessage("Invalid user ID format.");
+            .Must(BeValidGuidOrId).WithMessage("Invalid user ID format.")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.SessionId)
             .NotEmpty().WithMessage("Session ID is required.")
-            .Must(BeValidGuid).WithMessage("Session ID must be a valid GUID format.");
+            .Must(BeValidGuid).WithMessage("Session ID must be a valid GUID format.")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.CurrentSessionId)
             .Must(id => string.IsNullOrEmpty(id) || BeValidGuid(id))
-            .WithMessage("Current session ID format is invalid.");
+            .WithMessage("Current session ID format is invalid.")
+            .NoSqlInjection()
+            .NoXss();
     }
 
     private static bool BeValidGuid(string? value)

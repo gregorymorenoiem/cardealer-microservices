@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace UserService.Domain.Entities
 {
@@ -66,6 +67,7 @@ namespace UserService.Domain.Entities
     {
         public Guid Id { get; set; }
         public string Email { get; set; } = string.Empty;
+        [JsonIgnore]
         public string PasswordHash { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;

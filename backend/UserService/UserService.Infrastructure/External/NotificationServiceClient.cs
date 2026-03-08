@@ -26,12 +26,12 @@ namespace UserService.Infrastructure.External
             try
             {
                 var instance = await _serviceDiscovery.FindServiceInstanceAsync("NotificationService");
-                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://notificationservice:80";
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://notificationservice:8080";
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Error resolving NotificationService from Consul, using fallback");
-                return "http://notificationservice:80";
+                return "http://notificationservice:8080";
             }
         }
 
@@ -92,7 +92,7 @@ namespace UserService.Infrastructure.External
                 {
                     To = email,
                     Subject = "Password Reset Request",
-                    Body = $"Click the following link to reset your password: https://cardealer.com/reset-password?token={resetToken}",
+                    Body = $"Click the following link to reset your password: https://okla.com.do/reset-password?token={resetToken}",
                     Type = "Email"
                 };
 

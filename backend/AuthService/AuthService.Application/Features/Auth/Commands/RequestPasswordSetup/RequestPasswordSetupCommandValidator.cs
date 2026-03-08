@@ -1,4 +1,5 @@
 using FluentValidation;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.Auth.Commands.RequestPasswordSetup;
 
@@ -11,12 +12,16 @@ public class RequestPasswordSetupCommandValidator : AbstractValidator<RequestPas
     {
         RuleFor(x => x.UserId)
             .NotEmpty()
-            .WithMessage("User ID is required.");
+            .WithMessage("User ID is required.")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Email)
             .NotEmpty()
             .WithMessage("Email is required.")
             .EmailAddress()
-            .WithMessage("Invalid email format.");
+            .WithMessage("Invalid email format.")
+            .NoSqlInjection()
+            .NoXss();
     }
 }

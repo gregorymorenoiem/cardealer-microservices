@@ -62,9 +62,10 @@ public class RabbitMQErrorProducer : IErrorEventProducer, IDisposable
             _channel = _connection.CreateModel();
 
             // Declarar exchange y queue
+            // ⚠️ MUST be Topic to match ErrorService consumer and CarDealer.Shared.ErrorHandling publisher
             _channel.ExchangeDeclare(
                 exchange: _settings.ExchangeName,
-                type: ExchangeType.Direct,
+                type: ExchangeType.Topic,
                 durable: true,
                 autoDelete: false);
 

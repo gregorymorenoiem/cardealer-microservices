@@ -1,4 +1,5 @@
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using CarDealer.Shared.Messaging;
 using UserService.Domain.Interfaces;
 using UserService.Infrastructure.Messaging;
@@ -28,6 +29,16 @@ using UserService.Api.Middleware;
 using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
+using CarDealer.Shared.Audit.Extensions;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
+
+const string ServiceName = "UserService";
+const string ServiceVersion = "1.0.1";
+
+try
+{
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,8 +80,9 @@ builder.Services.AddCors(options =>
             ?? new[] { "http://localhost:3000", "https://okla.com.do" };
 
         policy.WithOrigins(allowedOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader()
+              // Security: Restrict to specific HTTP methods and headers (OWASP)
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
               .AllowCredentials();
     });
 });
@@ -126,14 +138,14 @@ builder.Services.AddAuthentication(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = jwtSettings.GetValue<bool>("ValidateIssuer", true),
-        ValidateAudience = jwtSettings.GetValue<bool>("ValidateAudience", true),
-        ValidateLifetime = jwtSettings.GetValue<bool>("ValidateLifetime", true),
-        ValidateIssuerSigningKey = jwtSettings.GetValue<bool>("ValidateIssuerSigningKey", true),
+        ValidateIssuer = true,              // SECURITY: never config-driven
+        ValidateAudience = true,            // SECURITY: never config-driven
+        ValidateLifetime = true,            // SECURITY: never config-driven
+        ValidateIssuerSigningKey = true,    // SECURITY: never config-driven
         ValidIssuer = jwtIssuer ?? jwtSettings["Issuer"],
         ValidAudience = jwtAudience ?? jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-        ClockSkew = TimeSpan.FromMinutes(5)
+        ClockSkew = TimeSpan.Zero           // No tolerance — tokens expire exactly at exp claim
     };
 
     // Logging para debugging
@@ -243,7 +255,7 @@ builder.Services.AddHttpClient<UserService.Application.Interfaces.IAuditServiceC
     client.BaseAddress = new Uri(auditServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 builder.Services.AddHttpClient<UserService.Application.Interfaces.INotificationServiceClient, UserService.Infrastructure.External.NotificationServiceClient>(client =>
 {
@@ -251,7 +263,7 @@ builder.Services.AddHttpClient<UserService.Application.Interfaces.INotificationS
     client.BaseAddress = new Uri(notificationServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 builder.Services.AddHttpClient<UserService.Application.Interfaces.IErrorServiceClient, UserService.Infrastructure.External.ErrorServiceClient>(client =>
 {
@@ -259,25 +271,25 @@ builder.Services.AddHttpClient<UserService.Application.Interfaces.IErrorServiceC
     client.BaseAddress = new Uri(errorServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // VehiclesSaleService Client - Para obtener listings del vendedor
 builder.Services.AddHttpClient<UserService.Application.Interfaces.IVehiclesSaleServiceClient, UserService.Infrastructure.External.VehiclesSaleServiceClient>(client =>
 {
-    var vehiclesServiceUrl = builder.Configuration["ServiceUrls:VehiclesSaleService"] ?? "http://vehiclessaleservice:80";
+    var vehiclesServiceUrl = builder.Configuration["ServiceUrls:VehiclesSaleService"] ?? "http://vehiclessaleservice:8080";
     client.BaseAddress = new Uri(vehiclesServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // ReviewService Client - Para obtener reviews del vendedor
 builder.Services.AddHttpClient<UserService.Application.Interfaces.IReviewServiceClient, UserService.Infrastructure.External.ReviewServiceClient>(client =>
 {
-    var reviewServiceUrl = builder.Configuration["ServiceUrls:ReviewService"] ?? "http://reviewservice:80";
+    var reviewServiceUrl = builder.Configuration["ServiceUrls:ReviewService"] ?? "http://reviewservice:8080";
     client.BaseAddress = new Uri(reviewServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // Métricas personalizadas (Singleton para compartir estado)
 builder.Services.AddSingleton<UserService.Application.Metrics.UserServiceMetrics>();
@@ -360,6 +372,9 @@ var rateLimitingConfig = builder.Configuration.GetSection("RateLimiting").Get<Ra
     ?? new RateLimitingConfiguration();
 builder.Services.AddCustomRateLimiting(rateLimitingConfig);
 
+// Audit Publisher — sends audit events to AuditService via RabbitMQ
+builder.Services.AddAuditPublisher(builder.Configuration);
+
 // Configurar RabbitMQ
 builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("RabbitMQ"));
 builder.Services.Configure<UserServiceRabbitMQSettings>(builder.Configuration.GetSection("UserService"));
@@ -367,6 +382,22 @@ builder.Services.Configure<UserServiceRabbitMQSettings>(builder.Configuration.Ge
 // Registrar el consumidor RabbitMQ como hosted service
 // TEMPORARY: Commented out for testing without RabbitMQ
 // builder.Services.AddHostedService<RabbitMQErrorConsumer>();
+
+// ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/problem+json"
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
 
 var app = builder.Build();
 
@@ -384,6 +415,9 @@ app.UseRequestLogging();
 // OWASP Security Headers
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
+// Response Compression — early, after error handling
+app.UseResponseCompression();
+
 if (app.Environment.IsDevelopment())
 {
 
@@ -391,16 +425,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Middleware para bypass de Rate Limiting (debe estar antes del middleware de rate limiting)
-app.UseMiddleware<RateLimitBypassMiddleware>();
+if (!app.Environment.IsProduction())
+    app.UseHttpsRedirection();
 
-// Middleware para Rate Limiting (debe estar antes de otros middlewares)
-app.UseCustomRateLimiting(rateLimitingConfig);
+// Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
-app.UseHttpsRedirection();
-
-// CORS middleware (before auth)
+// CORS middleware — BEFORE rate limiting (so OPTIONS preflight isn't blocked)
 app.UseCors();
+
+// Rate Limiting — after CORS, before auth
+app.UseMiddleware<RateLimitBypassMiddleware>();
+app.UseCustomRateLimiting(rateLimitingConfig);
 
 // Agregar autenticación y autorización
 app.UseAuthentication();
@@ -418,10 +457,24 @@ app.UseMiddleware<ResponseCaptureMiddleware>();
 
 // NOTA: ErrorHandling local reemplazado por UseGlobalErrorHandling() de Fase 2
 
+// Audit middleware — after auth (has userId context)
+app.UseAuditMiddleware();
+
 app.MapControllers();
 
-// Health check endpoints - acceso anónimo
-app.MapHealthChecks("/health");
+// Health check endpoints - acceso anónimo (triple: liveness, readiness, startup)
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+});
 
 // Apply migrations on startup
 using (var scope = app.Services.CreateScope())
@@ -439,8 +492,18 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-Log.Information("UserService starting up...");
+Log.Information("{ServiceName} v{ServiceVersion} starting up...", ServiceName, ServiceVersion);
 app.Run();
+
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "{ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Make Program class accessible for integration testing
 public partial class Program { }

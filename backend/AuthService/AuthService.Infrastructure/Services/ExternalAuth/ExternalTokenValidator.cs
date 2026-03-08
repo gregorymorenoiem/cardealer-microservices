@@ -184,7 +184,9 @@ public class ExternalTokenValidator : IExternalTokenValidator
             {
                 ValidateIssuer = true,
                 ValidIssuer = "https://appleid.apple.com",
-                ValidateAudience = false, // We'll validate this in production with our client ID
+                ValidateAudience = false, // TODO(SECURITY): Enable audience validation once Apple ClientId is injected into this class.
+                                          // Without this, ANY Apple-issued token (from any app) is accepted.
+                                          // Fix: Inject IConfiguration, read "Authentication:Apple:ClientId", set ValidAudience.
                 ValidateLifetime = true,
                 IssuerSigningKey = securityKey
             };

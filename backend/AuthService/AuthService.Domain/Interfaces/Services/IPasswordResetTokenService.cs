@@ -4,6 +4,7 @@ public interface IPasswordResetTokenService
 {
     string GenerateResetToken(string email);
     bool ValidateResetToken(string token, out string email);
+    Task<(bool IsValid, string Email)> ValidateResetTokenAsync(string token);
     Task<bool> IsTokenValidAsync(string email, string token);
     Task InvalidateTokenAsync(string email);
 }

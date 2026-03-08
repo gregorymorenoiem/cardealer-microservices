@@ -18,11 +18,15 @@ public class ResetPasswordCommandValidator : AbstractValidator<ResetPasswordComm
             .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
             .Matches(@"[a-z]").WithMessage("Password must contain at least one lowercase letter.")
             .Matches(@"[0-9]").WithMessage("Password must contain at least one number.")
-            .Matches(@"[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.");
+            .Matches(@"[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.ConfirmPassword)
             .NotEmpty().WithMessage("Password confirmation is required.")
             .Equal(x => x.NewPassword).WithMessage("Passwords do not match.")
-            .When(x => !string.IsNullOrEmpty(x.ConfirmPassword));
+            .When(x => !string.IsNullOrEmpty(x.ConfirmPassword))
+            .NoSqlInjection()
+            .NoXss();
     }
 }

@@ -64,8 +64,10 @@ public class InMemoryDeadLetterQueue : IDeadLetterQueue
             if (failedEvent.RetryCount >= MaxRetries)
             {
                 _logger.LogError(
-                    "❌ Event {EventId} ({EventType}) exceeded max retries ({MaxRetries}). Keeping in DLQ for manual review. Last error: {Error}",
+                    "❌ Event {EventId} ({EventType}) exceeded max retries ({MaxRetries}). Last error: {Error}",
                     eventId, failedEvent.EventType, MaxRetries, error);
+                // RELIABILITY: Remove exhausted events to prevent unbounded memory growth
+                _events.TryRemove(eventId, out _);
             }
             else
             {

@@ -34,6 +34,8 @@ public class PasswordResetTokenService : IPasswordResetTokenService
     {
         email = string.Empty; // Inicializa con string.Empty en lugar de null
 
+        // NOTE: Prefer ValidateResetTokenAsync() for non-blocking async execution.
+        // This sync version is kept for backward compatibility only.
         var verificationToken = _verificationTokenRepository.GetByTokenAndTypeAsync(
             token, VerificationTokenType.PasswordReset).Result;
 
@@ -42,6 +44,17 @@ public class PasswordResetTokenService : IPasswordResetTokenService
 
         email = verificationToken.Email;
         return true;
+    }
+
+    public async Task<(bool IsValid, string Email)> ValidateResetTokenAsync(string token)
+    {
+        var verificationToken = await _verificationTokenRepository.GetByTokenAndTypeAsync(
+            token, VerificationTokenType.PasswordReset);
+
+        if (verificationToken == null || !verificationToken.IsValid())
+            return (false, string.Empty);
+
+        return (true, verificationToken.Email);
     }
 
     public async Task<bool> IsTokenValidAsync(string email, string token)

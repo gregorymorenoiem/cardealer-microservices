@@ -1,4 +1,5 @@
 using FluentValidation;
+using RoleService.Application.Validators;
 
 namespace RoleService.Application.UseCases.Roles.CreateRole;
 
@@ -22,7 +23,9 @@ public class CreateRoleCommandValidator : AbstractValidator<CreateRoleCommand>
                 .WithErrorCode("INVALID_ROLE_NAME")
             .Matches(@"^[a-zA-Z][a-zA-Z0-9_-]*$")
                 .WithMessage("Role name must start with a letter and contain only letters, numbers, underscores and hyphens")
-                .WithErrorCode("INVALID_ROLE_NAME");
+                .WithErrorCode("INVALID_ROLE_NAME")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Request.DisplayName)
             .NotEmpty()
@@ -33,12 +36,16 @@ public class CreateRoleCommandValidator : AbstractValidator<CreateRoleCommand>
                 .WithErrorCode("INVALID_DISPLAY_NAME")
             .MaximumLength(100)
                 .WithMessage("Display name cannot exceed 100 characters")
-                .WithErrorCode("INVALID_DISPLAY_NAME");
+                .WithErrorCode("INVALID_DISPLAY_NAME")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Request.Description)
             .MaximumLength(500)
                 .WithMessage("Description cannot exceed 500 characters")
                 .WithErrorCode("INVALID_DESCRIPTION")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.Request.Description));
 
         RuleFor(x => x.Request.PermissionIds)

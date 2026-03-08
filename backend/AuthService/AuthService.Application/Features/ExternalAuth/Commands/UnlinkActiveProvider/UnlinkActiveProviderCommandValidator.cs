@@ -1,4 +1,5 @@
 using FluentValidation;
+using AuthService.Application.Validators;
 
 namespace AuthService.Application.Features.ExternalAuth.Commands.UnlinkActiveProvider;
 
@@ -13,13 +14,17 @@ public class UnlinkActiveProviderCommandValidator : AbstractValidator<UnlinkActi
     {
         RuleFor(x => x.UserId)
             .NotEmpty()
-            .WithMessage("User ID is required.");
+            .WithMessage("User ID is required.")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.Provider)
             .NotEmpty()
             .WithMessage("Provider is required.")
             .Must(BeValidProvider)
-            .WithMessage("Invalid provider. Supported providers: Google, Microsoft, Facebook, Apple.");
+            .WithMessage("Invalid provider. Supported providers: Google, Microsoft, Facebook, Apple.")
+            .NoSqlInjection()
+            .NoXss();
 
         RuleFor(x => x.VerificationCode)
             .NotEmpty()
@@ -27,7 +32,9 @@ public class UnlinkActiveProviderCommandValidator : AbstractValidator<UnlinkActi
             .Length(6)
             .WithMessage("Verification code must be 6 digits.")
             .Matches("^[0-9]{6}$")
-            .WithMessage("Verification code must contain only digits.");
+            .WithMessage("Verification code must contain only digits.")
+            .NoSqlInjection()
+            .NoXss();
     }
 
     private static bool BeValidProvider(string provider)

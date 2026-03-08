@@ -43,7 +43,7 @@ namespace UserService.Application.UseCases.Users.CreateUser
             // Validar que el email no exista
             if (await _userRepository.EmailExistsAsync(request.Email))
             {
-                throw new BadRequestException($"Email {request.Email} already exists");
+                throw new BadRequestException("An account with this email already exists");
             }
 
             // Hash del password
@@ -65,15 +65,31 @@ namespace UserService.Application.UseCases.Users.CreateUser
 
             await _userRepository.AddAsync(user);
 
-            // Auditoría (fire-and-forget, no bloquea)
-            _ = _auditClient.LogUserCreatedAsync(user.Id, user.Email, "system");
+            // Auditoría (fire-and-forget with error logging)
+            _ = SafeFireAndForgetAsync(
+                _auditClient.LogUserCreatedAsync(user.Id, user.Email, "system"),
+                "audit log user creation", user.Id);
 
-            // Notificación de bienvenida (fire-and-forget)
-            _ = _notificationClient.SendWelcomeEmailAsync(user.Email, user.FirstName, user.LastName);
+            // Notificación de bienvenida (fire-and-forget with error logging)
+            _ = SafeFireAndForgetAsync(
+                _notificationClient.SendWelcomeEmailAsync(user.Email, user.FirstName, user.LastName),
+                "send welcome email", user.Id);
 
             _logger.LogInformation("User created successfully: {UserId}", user.Id);
 
             return user.Id;
+        }
+
+        private async Task SafeFireAndForgetAsync(Task task, string operation, Guid userId)
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to {Operation} for user {UserId}", operation, userId);
+            }
         }
     }
 }

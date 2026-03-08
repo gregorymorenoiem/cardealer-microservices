@@ -1,4 +1,5 @@
 using FluentValidation;
+using RoleService.Application.Validators;
 using RoleService.Domain.Entities;
 using RoleService.Domain.Enums;
 
@@ -22,11 +23,15 @@ public class CreatePermissionCommandValidator : AbstractValidator<CreatePermissi
         // Validación de DisplayName
         RuleFor(x => x.Request.DisplayName)
             .NotEmpty().WithMessage("Display name is required")
-            .MaximumLength(150).WithMessage("Display name cannot exceed 150 characters");
+            .MaximumLength(150).WithMessage("Display name cannot exceed 150 characters")
+            .NoSqlInjection()
+            .NoXss();
 
         // Validación de Description (opcional pero con límite)
         RuleFor(x => x.Request.Description)
-            .MaximumLength(500).WithMessage("Description cannot exceed 500 characters");
+            .MaximumLength(500).WithMessage("Description cannot exceed 500 characters")
+            .NoSqlInjection()
+            .NoXss();
 
         // Validación de Resource
         RuleFor(x => x.Request.Resource)
@@ -46,7 +51,9 @@ public class CreatePermissionCommandValidator : AbstractValidator<CreatePermissi
             .NotEmpty().WithMessage("Module is required")
             .MaximumLength(100).WithMessage("Module cannot exceed 100 characters")
             .Must(BeValidModule)
-            .WithMessage($"Module must be one of: {string.Join(", ", Permission.AllowedModules)}");
+            .WithMessage($"Module must be one of: {string.Join(", ", Permission.AllowedModules)}")
+            .NoSqlInjection()
+            .NoXss();
 
         // Validación de consistencia: Name debe coincidir con Resource:Action
         RuleFor(x => x.Request)

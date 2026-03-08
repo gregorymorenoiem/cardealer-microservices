@@ -19,35 +19,54 @@ public class CreateSellerProfileRequestValidator : AbstractValidator<CreateSelle
             .NotEmpty()
             .WithMessage("FullName es requerido")
             .MaximumLength(255)
-            .WithMessage("FullName no puede exceder 255 caracteres");
+            .WithMessage("FullName no puede exceder 255 caracteres")
+            .NoSqlInjection()
+            .NoXss();
 
         // FASE 3: Phone and Email removed - use User entity properties instead
         
         RuleFor(x => x.Address)
             .MaximumLength(500)
-            .WithMessage("Address no puede exceder 500 caracteres");
+            .WithMessage("Address no puede exceder 500 caracteres")
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.Address));
 
         RuleFor(x => x.City)
             .MaximumLength(100)
-            .WithMessage("City no puede exceder 100 caracteres");
+            .WithMessage("City no puede exceder 100 caracteres")
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.City));
 
         RuleFor(x => x.State)
             .MaximumLength(100)
-            .WithMessage("State no puede exceder 100 caracteres");
+            .WithMessage("State no puede exceder 100 caracteres")
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.State));
 
         RuleFor(x => x.ZipCode)
             .MaximumLength(20)
-            .WithMessage("ZipCode no puede exceder 20 caracteres");
+            .WithMessage("ZipCode no puede exceder 20 caracteres")
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.ZipCode));
 
         RuleFor(x => x.Nationality)
             .MaximumLength(100)
-            .WithMessage("Nationality no puede exceder 100 caracteres");
+            .WithMessage("Nationality no puede exceder 100 caracteres")
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.Nationality));
 
         // FASE 3: AlternatePhone removed - use User entity properties instead
 
         RuleFor(x => x.WhatsApp)
             .Matches(@"^\+?[\d\s\-\(\)]{10,}$")
             .WithMessage("WhatsApp debe ser un número válido (mínimo 10 dígitos)")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.WhatsApp));
 
         // Validación de especialidades
@@ -100,6 +119,8 @@ public class UpdateSellerProfileRequestValidator : AbstractValidator<UpdateSelle
         RuleFor(x => x.FullName)
             .MaximumLength(255)
             .WithMessage("FullName no puede exceder 255 caracteres")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.FullName));
 
         // FASE 3: Phone and Email removed - use User entity properties instead
@@ -107,26 +128,36 @@ public class UpdateSellerProfileRequestValidator : AbstractValidator<UpdateSelle
         RuleFor(x => x.Address)
             .MaximumLength(500)
             .WithMessage("Address no puede exceder 500 caracteres")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.Address));
 
         RuleFor(x => x.City)
             .MaximumLength(100)
             .WithMessage("City no puede exceder 100 caracteres")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.City));
 
         RuleFor(x => x.State)
             .MaximumLength(100)
             .WithMessage("State no puede exceder 100 caracteres")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.State));
 
         RuleFor(x => x.ZipCode)
             .MaximumLength(20)
             .WithMessage("ZipCode no puede exceder 20 caracteres")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.ZipCode));
 
         RuleFor(x => x.Nationality)
             .MaximumLength(100)
             .WithMessage("Nationality no puede exceder 100 caracteres")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.Nationality));
 
         // FASE 3: AlternatePhone removed - use User entity properties instead
@@ -134,11 +165,15 @@ public class UpdateSellerProfileRequestValidator : AbstractValidator<UpdateSelle
         RuleFor(x => x.WhatsApp)
             .Matches(@"^\+?[\d\s\-\(\)]{10,}$")
             .WithMessage("WhatsApp debe ser un número válido (mínimo 10 dígitos)")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.WhatsApp));
 
         RuleFor(x => x.Bio)
             .MaximumLength(1000)
             .WithMessage("Bio no puede exceder 1000 caracteres")
+            .NoSqlInjection()
+            .NoXss()
             .When(x => !string.IsNullOrEmpty(x.Bio));
 
         // Validación de especialidades
