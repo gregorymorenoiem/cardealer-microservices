@@ -248,52 +248,77 @@ public static class StripePriceMapping
 
     private static readonly Dictionary<SubscriptionPlan, (int Users, int Vehicles)> Limits = new()
     {
-        { SubscriptionPlan.Free, (1, 3) },
-        { SubscriptionPlan.Basic, (5, 50) },
-        { SubscriptionPlan.Professional, (20, 500) },
-        { SubscriptionPlan.Enterprise, (-1, -1) } // -1 = ilimitado
+        // OKLA Plan Table: ALL plans have ∞ UNLIMITED vehicle listings
+        // Differentiation is via premium features (photos, search priority, ChatAgent, etc.)
+        { SubscriptionPlan.Free, (1, -1) },          // ∞ listings, 1 user
+        { SubscriptionPlan.Basic, (5, -1) },          // ∞ listings, 5 users
+        { SubscriptionPlan.Professional, (20, -1) },  // ∞ listings, 20 users
+        { SubscriptionPlan.Enterprise, (-1, -1) }     // ∞ listings, ∞ users
     };
 
     private static readonly Dictionary<SubscriptionPlan, List<string>> Features = new()
     {
         { SubscriptionPlan.Free, new List<string>
             {
-                "3 vehículos en listados",
-                "1 usuario",
-                "Soporte por email"
+                "Publicaciones ilimitadas de vehículos",
+                "Hasta 10 fotos por vehículo",
+                "Posición estándar en búsquedas",
+                "1 valoración IA gratis",
+                "Perfil público básico",
+                "Soporte FAQ"
             }
         },
         { SubscriptionPlan.Basic, new List<string>
             {
-                "50 vehículos en listados",
+                "Publicaciones ilimitadas de vehículos",
+                "Hasta 20 fotos por vehículo",
+                "Prioridad media en búsquedas",
+                "3 vehículos destacados/mes",
+                "$15 créditos publicitarios/mes",
+                "Badge 'Dealer Verificado OKLA'",
+                "Dashboard Analytics básico",
+                "5 valoraciones IA/mes",
+                "Perfil público mejorado",
                 "5 usuarios",
-                "CRM básico",
-                "Reportes básicos",
-                "Soporte por email y chat"
+                "Soporte email 48h"
             }
         },
         { SubscriptionPlan.Professional, new List<string>
             {
-                "500 vehículos en listados",
+                "Publicaciones ilimitadas de vehículos",
+                "Hasta 30 fotos por vehículo",
+                "Alta prioridad en búsquedas",
+                "10 vehículos destacados/mes",
+                "$45 créditos publicitarios/mes",
+                "Badge 'Dealer Verificado OKLA'",
+                "ChatAgent Web 500 conv/mes",
+                "ChatAgent WhatsApp 500 conv/mes",
+                "Agendamiento de citas automático",
+                "Human handoff email alert",
+                "Valoración IA ilimitada",
+                "Dashboard Analytics avanzado",
+                "Perfil público premium",
                 "20 usuarios",
-                "CRM completo",
-                "Reportes avanzados",
-                "Analíticas",
-                "API access",
-                "Soporte prioritario"
+                "Soporte chat 12h"
             }
         },
         { SubscriptionPlan.Enterprise, new List<string>
             {
-                "Vehículos ilimitados",
+                "Publicaciones ilimitadas de vehículos",
+                "Hasta 40 fotos + video tour",
+                "Top prioridad en búsquedas",
+                "25 vehículos destacados/mes",
+                "$120 créditos publicitarios/mes",
+                "Badge Premium dorado",
+                "ChatAgent Web ILIMITADO",
+                "ChatAgent WhatsApp ILIMITADO",
+                "Agendamiento + recordatorios WA",
+                "Live chat + CRM handoff",
+                "Valoración IA ilimitada + informe PDF",
+                "Dashboard Analytics completo + exportar",
+                "Perfil premium + showcase homepage",
                 "Usuarios ilimitados",
-                "CRM enterprise",
-                "Reportes personalizados",
-                "Analíticas avanzadas",
-                "API access",
-                "Integraciones personalizadas",
-                "Account manager dedicado",
-                "SLA garantizado"
+                "Soporte dedicado 4h"
             }
         }
     };

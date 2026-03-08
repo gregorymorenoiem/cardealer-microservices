@@ -42,11 +42,16 @@ public class DealerStatsDto
     public DealerPlanBreakdown ByPlan { get; set; } = new();
 }
 
+/// <summary>
+/// Dealer count per v2 plan tier (matches frontend plan-config.ts).
+/// Libre=$0, Visible=$29, Pro=$89, Elite=$199.
+/// </summary>
 public class DealerPlanBreakdown
 {
-    public int Starter { get; set; }
+    public int Libre { get; set; }
+    public int Visible { get; set; }
     public int Pro { get; set; }
-    public int Enterprise { get; set; }
+    public int Elite { get; set; }
 }
 
 /// <summary>

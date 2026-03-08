@@ -15,10 +15,28 @@ public class DashboardStatsResponse
     public int TotalReports { get; set; }
     public int OpenSupportTickets { get; set; }
     public decimal Mrr { get; set; }
+    /// <summary>Percentage change in MRR vs previous snapshot (week-over-week)</summary>
     public decimal MrrChange { get; set; }
+    /// <summary>Percentage change in total users vs previous snapshot</summary>
     public decimal UsersChange { get; set; }
+    /// <summary>Percentage change in total vehicles vs previous snapshot</summary>
     public decimal VehiclesChange { get; set; }
+    /// <summary>Percentage change in total dealers vs previous snapshot</summary>
     public decimal DealersChange { get; set; }
+}
+
+/// <summary>
+/// Internal snapshot used for computing period-over-period deltas.
+/// Stored in IMemoryCache with date-based keys.
+/// KPI AUDIT: Replaces hardcoded 0% changes.
+/// </summary>
+public class DashboardSnapshot
+{
+    public decimal Mrr { get; set; }
+    public int TotalUsers { get; set; }
+    public int TotalVehicles { get; set; }
+    public int TotalDealers { get; set; }
+    public DateTime CapturedAt { get; set; }
 }
 
 /// <summary>

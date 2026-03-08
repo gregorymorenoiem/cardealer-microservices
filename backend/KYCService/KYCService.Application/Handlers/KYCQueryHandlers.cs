@@ -4,6 +4,7 @@ using KYCService.Domain.Interfaces;
 using KYCService.Application.Queries;
 using KYCService.Application.DTOs;
 using KYCService.Application.Clients;
+using KYCService.Application.Services;
 using Microsoft.Extensions.Logging;
 
 namespace KYCService.Application.Handlers;
@@ -60,7 +61,8 @@ public class GetKYCProfileByIdHandler : IRequestHandler<GetKYCProfileByIdQuery, 
         PlaceOfBirth = p.PlaceOfBirth,
         Nationality = p.Nationality,
         PrimaryDocumentType = p.PrimaryDocumentType,
-        PrimaryDocumentNumber = p.PrimaryDocumentNumber,
+        // Ley 172-13 Art. 31 — Mask document number in API responses
+        PrimaryDocumentNumber = PiiMaskingHelper.MaskDocumentNumber(p.PrimaryDocumentNumber),
         PrimaryDocumentExpiry = p.PrimaryDocumentExpiry,
         Email = p.Email,
         Phone = p.Phone,
@@ -156,7 +158,8 @@ public class GetKYCProfileByUserIdHandler : IRequestHandler<GetKYCProfileByUserI
         Nationality = p.Nationality,
         Gender = p.Gender,
         PrimaryDocumentType = p.PrimaryDocumentType,
-        PrimaryDocumentNumber = p.PrimaryDocumentNumber,
+        // Ley 172-13 Art. 31 — Mask document number in API responses
+        PrimaryDocumentNumber = PiiMaskingHelper.MaskDocumentNumber(p.PrimaryDocumentNumber),
         PrimaryDocumentExpiry = p.PrimaryDocumentExpiry,
         Email = p.Email,
         Phone = p.Phone,
@@ -213,7 +216,8 @@ public class GetKYCProfileByDocumentHandler : IRequestHandler<GetKYCProfileByDoc
         RiskScore = p.RiskScore,
         FullName = p.FullName,
         PrimaryDocumentType = p.PrimaryDocumentType,
-        PrimaryDocumentNumber = p.PrimaryDocumentNumber,
+        // Ley 172-13 Art. 31 — Mask document number in API responses
+        PrimaryDocumentNumber = PiiMaskingHelper.MaskDocumentNumber(p.PrimaryDocumentNumber),
         IsPEP = p.IsPEP,
         CreatedAt = p.CreatedAt
     };

@@ -6,10 +6,33 @@ using BillingService.Domain.Interfaces;
 
 namespace BillingService.Api.Controllers;
 
+// Plan enforcement DTOs — used by other microservices
+public record PlanEnforcementResponse(
+    bool CanPublish,
+    int CurrentCount,
+    int MaxAllowed,
+    int Remaining,
+    string Plan,
+    string Message
+);
+
+public record PlanFeaturesResponse(
+    string Plan,
+    int MaxVehicles,
+    int MaxUsers,
+    int MaxPhotosPerListing,
+    int FeaturedListingsPerMonth,
+    int OklaCoinsMonthly,
+    int ChatAgentConversations,
+    bool VideoTourEnabled,
+    bool VerifiedBadge,
+    bool WhatsAppIntegration
+);
+
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class SubscriptionsController : ControllerBase
+public class SubscriptionsController : BillingBaseController
 {
     private readonly ISubscriptionRepository _subscriptionRepository;
     private readonly ILogger<SubscriptionsController> _logger;
@@ -23,6 +46,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<IEnumerable<SubscriptionDto>>> GetAll(CancellationToken cancellationToken)
     {
         var subscriptions = await _subscriptionRepository.GetAllAsync(cancellationToken);
@@ -42,6 +66,7 @@ public class SubscriptionsController : ControllerBase
     [HttpGet("dealer/{dealerId:guid}")]
     public async Task<ActionResult<SubscriptionDto>> GetByDealerId(Guid dealerId, CancellationToken cancellationToken)
     {
+        dealerId = GetDealerIdOrOverride(dealerId);
         var subscription = await _subscriptionRepository.GetByDealerIdAsync(dealerId, cancellationToken);
         if (subscription == null)
             return NotFound();
@@ -50,6 +75,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpGet("status/{status}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<IEnumerable<SubscriptionDto>>> GetByStatus(SubscriptionStatus status, CancellationToken cancellationToken)
     {
         var subscriptions = await _subscriptionRepository.GetByStatusAsync(status, cancellationToken);
@@ -57,6 +83,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpGet("plan/{plan}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<IEnumerable<SubscriptionDto>>> GetByPlan(SubscriptionPlan plan, CancellationToken cancellationToken)
     {
         var subscriptions = await _subscriptionRepository.GetByPlanAsync(plan, cancellationToken);
@@ -64,6 +91,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpGet("expiring-trials/{days:int}")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<IEnumerable<SubscriptionDto>>> GetExpiringTrials(int days, CancellationToken cancellationToken)
     {
         var subscriptions = await _subscriptionRepository.GetExpiringTrialsAsync(days, cancellationToken);
@@ -71,6 +99,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpGet("due-billings")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<IEnumerable<SubscriptionDto>>> GetDueBillings(CancellationToken cancellationToken)
     {
         var subscriptions = await _subscriptionRepository.GetDueBillingsAsync(cancellationToken);
@@ -80,9 +109,9 @@ public class SubscriptionsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<SubscriptionDto>> Create(
         [FromBody] CreateSubscriptionRequest request,
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken)
     {
+        var dealerId = GetDealerIdFromJwt();
         if (!Enum.TryParse<SubscriptionPlan>(request.Plan, true, out var plan))
             return BadRequest("Invalid subscription plan");
 
@@ -113,6 +142,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/activate")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<SubscriptionDto>> Activate(Guid id, CancellationToken cancellationToken)
     {
         var subscription = await _subscriptionRepository.GetByIdAsync(id, cancellationToken);
@@ -127,6 +157,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/suspend")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<SubscriptionDto>> Suspend(Guid id, CancellationToken cancellationToken)
     {
         var subscription = await _subscriptionRepository.GetByIdAsync(id, cancellationToken);
@@ -141,6 +172,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/cancel")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<SubscriptionDto>> Cancel(Guid id, [FromBody] string reason, CancellationToken cancellationToken)
     {
         var subscription = await _subscriptionRepository.GetByIdAsync(id, cancellationToken);
@@ -155,6 +187,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/upgrade")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<SubscriptionDto>> Upgrade(Guid id, [FromBody] UpgradeSubscriptionRequest request, CancellationToken cancellationToken)
     {
         var subscription = await _subscriptionRepository.GetByIdAsync(id, cancellationToken);
@@ -172,6 +205,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/change-billing-cycle")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<SubscriptionDto>> ChangeBillingCycle(Guid id, [FromBody] ChangeBillingCycleRequest request, CancellationToken cancellationToken)
     {
         var subscription = await _subscriptionRepository.GetByIdAsync(id, cancellationToken);
@@ -189,6 +223,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/renew")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<SubscriptionDto>> Renew(Guid id, CancellationToken cancellationToken)
     {
         var subscription = await _subscriptionRepository.GetByIdAsync(id, cancellationToken);
@@ -203,6 +238,7 @@ public class SubscriptionsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var exists = await _subscriptionRepository.ExistsAsync(id, cancellationToken);
@@ -213,6 +249,121 @@ public class SubscriptionsController : ControllerBase
         _logger.LogInformation("Subscription {SubscriptionId} deleted", id);
 
         return NoContent();
+    }
+
+    // ========================================
+    // PLAN ENFORCEMENT API
+    // Used by VehiclesSaleService to check if a dealer can publish more vehicles
+    // ========================================
+
+    /// <summary>
+    /// Checks if a dealer can perform an action based on their current plan limits.
+    /// Called by other microservices before allowing resource creation.
+    /// </summary>
+    [HttpGet("dealer/{dealerId:guid}/can-publish")]
+    [AllowAnonymous] // Internal service-to-service call (protected by network policy)
+    public async Task<ActionResult<PlanEnforcementResponse>> CanPublish(
+        Guid dealerId,
+        [FromQuery] int currentVehicleCount,
+        CancellationToken cancellationToken)
+    {
+        var subscription = await _subscriptionRepository.GetByDealerIdAsync(dealerId, cancellationToken);
+
+        // OKLA Plan Table: ALL plans have ∞ UNLIMITED vehicle listings
+        // The differentiation is via premium features (photos, search priority, ChatAgent, etc.)
+        var maxVehicles = -1; // All plans = unlimited
+        var planName = "Free";
+
+        if (subscription != null && subscription.Status == SubscriptionStatus.Active)
+        {
+            maxVehicles = subscription.MaxVehicles; // Should be -1 for all plans
+            planName = subscription.Plan.ToString();
+        }
+
+        // -1 = unlimited — with the OKLA Freemium model, everyone can publish
+        var canPublish = maxVehicles == -1 || currentVehicleCount < maxVehicles;
+        var remaining = maxVehicles == -1 ? -1 : Math.Max(0, maxVehicles - currentVehicleCount);
+
+        return Ok(new PlanEnforcementResponse(
+            CanPublish: canPublish,
+            CurrentCount: currentVehicleCount,
+            MaxAllowed: maxVehicles,
+            Remaining: remaining,
+            Plan: planName,
+            Message: canPublish
+                ? "Puedes publicar. Las publicaciones son ilimitadas en todos los planes OKLA."
+                : $"Has alcanzado el límite de {maxVehicles} publicaciones de tu plan {planName}. Contacta soporte."
+        ));
+    }
+
+    /// <summary>
+    /// Returns the plan features for a dealer (used by other services for feature gating).
+    /// </summary>
+    [HttpGet("dealer/{dealerId:guid}/plan-features")]
+    [AllowAnonymous] // Internal service-to-service call
+    public async Task<ActionResult<PlanFeaturesResponse>> GetPlanFeatures(
+        Guid dealerId,
+        CancellationToken cancellationToken)
+    {
+        var subscription = await _subscriptionRepository.GetByDealerIdAsync(dealerId, cancellationToken);
+
+        if (subscription == null || subscription.Status != SubscriptionStatus.Active)
+        {
+            return Ok(new PlanFeaturesResponse(
+                Plan: "Free",
+                MaxVehicles: -1, // ALL plans have unlimited listings
+                MaxUsers: 1,
+                MaxPhotosPerListing: 10,
+                FeaturedListingsPerMonth: 0,
+                OklaCoinsMonthly: 0,
+                ChatAgentConversations: 0,
+                VideoTourEnabled: false,
+                VerifiedBadge: false,
+                WhatsAppIntegration: false
+            ));
+        }
+
+        var limits = StripePriceMapping.GetLimits(subscription.Plan);
+        return Ok(new PlanFeaturesResponse(
+            Plan: subscription.Plan.ToString(),
+            MaxVehicles: limits.MaxVehicles,
+            MaxUsers: limits.MaxUsers,
+            MaxPhotosPerListing: subscription.Plan switch
+            {
+                SubscriptionPlan.Free => 10,
+                SubscriptionPlan.Basic => 20,
+                SubscriptionPlan.Professional => 30,
+                SubscriptionPlan.Enterprise => 40,
+                _ => 10
+            },
+            FeaturedListingsPerMonth: subscription.Plan switch
+            {
+                SubscriptionPlan.Free => 0,
+                SubscriptionPlan.Basic => 3,
+                SubscriptionPlan.Professional => 10,
+                SubscriptionPlan.Enterprise => 25,
+                _ => 0
+            },
+            OklaCoinsMonthly: subscription.Plan switch
+            {
+                SubscriptionPlan.Free => 0,
+                SubscriptionPlan.Basic => 15,
+                SubscriptionPlan.Professional => 45,
+                SubscriptionPlan.Enterprise => 120,
+                _ => 0
+            },
+            ChatAgentConversations: subscription.Plan switch
+            {
+                SubscriptionPlan.Free => 0,
+                SubscriptionPlan.Basic => 0,
+                SubscriptionPlan.Professional => 500,
+                SubscriptionPlan.Enterprise => -1,
+                _ => 0
+            },
+            VideoTourEnabled: subscription.Plan == SubscriptionPlan.Enterprise,
+            VerifiedBadge: subscription.Plan >= SubscriptionPlan.Basic,
+            WhatsAppIntegration: subscription.Plan >= SubscriptionPlan.Professional
+        ));
     }
 
     private static SubscriptionDto MapToDto(Subscription subscription) => new(

@@ -26,12 +26,12 @@ namespace AdminService.Infrastructure.External
             try
             {
                 var instance = await _serviceDiscovery.FindServiceInstanceAsync("NotificationService");
-                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://notificationservice:80";
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://notificationservice:8080";
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to discover NotificationService via Consul, using fallback URL");
-                return "http://notificationservice:80";
+                return "http://notificationservice:8080";
             }
         }
 

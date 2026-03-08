@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using BillingService.Domain.Interfaces;
+using BillingService.Domain.Entities;
 using BillingService.Infrastructure.Services;
 using BillingService.Infrastructure.External;
 using BillingService.Infrastructure.Messaging;
+using BillingService.Infrastructure.Persistence;
 using CarDealer.Contracts.Events.Billing;
 using Stripe;
 using DomainEntities = BillingService.Domain.Entities;
@@ -28,6 +30,7 @@ public class StripeWebhooksController : ControllerBase
     private readonly IUserServiceClient _userServiceClient;
     private readonly IEventPublisher _eventPublisher;
     private readonly StripeSettings _stripeSettings;
+    private readonly BillingDbContext _dbContext;
 
     public StripeWebhooksController(
         ILogger<StripeWebhooksController> logger,
@@ -38,7 +41,8 @@ public class StripeWebhooksController : ControllerBase
         IStripeCustomerRepository customerRepository,
         IUserServiceClient userServiceClient,
         IEventPublisher eventPublisher,
-        IOptions<StripeSettings> stripeSettings)
+        IOptions<StripeSettings> stripeSettings,
+        BillingDbContext dbContext)
     {
         _logger = logger;
         _stripeService = stripeService;
@@ -49,6 +53,7 @@ public class StripeWebhooksController : ControllerBase
         _userServiceClient = userServiceClient;
         _eventPublisher = eventPublisher;
         _stripeSettings = stripeSettings.Value;
+        _dbContext = dbContext;
     }
 
     /// <summary>
@@ -323,6 +328,10 @@ public class StripeWebhooksController : ControllerBase
             return;
         }
 
+        var previousPlan = existingSubscription.Plan;
+        var previousPrice = existingSubscription.PricePerCycle;
+        var previousStatus = existingSubscription.Status;
+
         // Actualizar estado según Stripe
         switch (subscription.Status)
         {
@@ -343,10 +352,13 @@ public class StripeWebhooksController : ControllerBase
 
         // Si cambió el plan (upgrade/downgrade)
         var currentPriceId = subscription.Items.Data.FirstOrDefault()?.Price?.Id;
+        DomainEntities.SubscriptionPlan newPlan = previousPlan;
+        decimal newPrice = previousPrice;
+
         if (!string.IsNullOrEmpty(currentPriceId))
         {
-            var newPlan = MapStripePriceToSubscriptionPlan(currentPriceId);
-            var newPrice = (subscription.Items.Data.FirstOrDefault()?.Price?.UnitAmountDecimal ?? 0) / 100m;
+            newPlan = MapStripePriceToSubscriptionPlan(currentPriceId);
+            newPrice = (subscription.Items.Data.FirstOrDefault()?.Price?.UnitAmountDecimal ?? 0) / 100m;
 
             existingSubscription.Upgrade(
                 newPlan,
@@ -358,6 +370,59 @@ public class StripeWebhooksController : ControllerBase
 
         await _subscriptionRepository.UpdateAsync(existingSubscription);
         _logger.LogInformation("Updated subscription {SubscriptionId}", subscription.Id);
+
+        // RETENTION FIX: Track plan changes and publish events
+        if (newPlan != previousPlan)
+        {
+            var isUpgrade = newPrice > previousPrice;
+            var direction = isUpgrade ? PlanChangeDirection.Upgrade : PlanChangeDirection.Downgrade;
+
+            // Record change history
+            var changeHistory = new SubscriptionChangeHistory(
+                subscriptionId: existingSubscription.Id,
+                dealerId: existingSubscription.DealerId,
+                oldPlan: previousPlan,
+                newPlan: newPlan,
+                oldStatus: previousStatus,
+                newStatus: existingSubscription.Status,
+                direction: direction,
+                oldPrice: previousPrice,
+                newPrice: newPrice,
+                stripeEventId: stripeEvent.Id);
+            _dbContext.SubscriptionChangeHistory.Add(changeHistory);
+            await _dbContext.SaveChangesAsync();
+
+            // Publish upgrade or downgrade event
+            var customer = await _customerRepository.GetByStripeCustomerIdAsync(subscription.CustomerId);
+            if (isUpgrade)
+            {
+                await _eventPublisher.PublishAsync(new SubscriptionUpgradedEvent
+                {
+                    DealerId = existingSubscription.DealerId,
+                    DealerEmail = customer?.Email ?? "",
+                    DealerName = customer?.FullName ?? "",
+                    OldPlan = previousPlan.ToString(),
+                    NewPlan = newPlan.ToString(),
+                    PriceDifference = newPrice - previousPrice,
+                    EffectiveAt = DateTime.UtcNow,
+                });
+                _logger.LogInformation("Published SubscriptionUpgradedEvent: {OldPlan} → {NewPlan}", previousPlan, newPlan);
+            }
+            else
+            {
+                await _eventPublisher.PublishAsync(new SubscriptionDowngradedEvent
+                {
+                    DealerId = existingSubscription.DealerId,
+                    DealerEmail = customer?.Email ?? "",
+                    DealerName = customer?.FullName ?? "",
+                    OldPlan = previousPlan.ToString(),
+                    NewPlan = newPlan.ToString(),
+                    PriceDifference = newPrice - previousPrice,
+                    EffectiveAt = DateTime.UtcNow,
+                });
+                _logger.LogWarning("Published SubscriptionDowngradedEvent: {OldPlan} → {NewPlan}", previousPlan, newPlan);
+            }
+        }
 
         // Sincronizar con UserService
         var plan = MapStripePriceToSubscriptionPlan(subscription.Items.Data.FirstOrDefault()?.Price?.Id);
@@ -378,10 +443,45 @@ public class StripeWebhooksController : ControllerBase
         var existingSubscription = await _subscriptionRepository.GetByStripeSubscriptionIdAsync(subscription.Id);
         if (existingSubscription == null) return;
 
+        var previousPlan = existingSubscription.Plan;
+        var previousPrice = existingSubscription.PricePerCycle;
+
         existingSubscription.Cancel("Subscription deleted in Stripe");
         await _subscriptionRepository.UpdateAsync(existingSubscription);
 
-        _logger.LogInformation("Cancelled subscription {SubscriptionId}", subscription.Id);
+        // RETENTION FIX: Record change history for churn analytics
+        var changeHistory = new SubscriptionChangeHistory(
+            subscriptionId: existingSubscription.Id,
+            dealerId: existingSubscription.DealerId,
+            oldPlan: previousPlan,
+            newPlan: DomainEntities.SubscriptionPlan.Free,
+            oldStatus: DomainEntities.SubscriptionStatus.Active,
+            newStatus: DomainEntities.SubscriptionStatus.Cancelled,
+            direction: PlanChangeDirection.Cancel,
+            oldPrice: previousPrice,
+            newPrice: 0,
+            reasonDetails: "Subscription deleted in Stripe",
+            stripeEventId: stripeEvent.Id);
+        _dbContext.SubscriptionChangeHistory.Add(changeHistory);
+        await _dbContext.SaveChangesAsync();
+
+        // RETENTION FIX: Publish SubscriptionCancelledEvent for NotificationService + DealerAnalytics
+        var customer = await _customerRepository.GetByStripeCustomerIdAsync(subscription.CustomerId);
+        await _eventPublisher.PublishAsync(new SubscriptionCancelledEvent
+        {
+            DealerId = existingSubscription.DealerId,
+            DealerEmail = customer?.Email ?? "",
+            DealerName = customer?.FullName ?? "",
+            PreviousPlan = previousPlan.ToString(),
+            CancellationReasonType = "Other",
+            CancellationReasonDetails = "Subscription deleted in Stripe",
+            CancelAtPeriodEnd = false,
+            EffectiveAt = DateTime.UtcNow,
+            DaysOnPlan = (int)(DateTime.UtcNow - existingSubscription.StartDate).TotalDays,
+            MonthlyAmount = previousPrice,
+        });
+
+        _logger.LogInformation("Cancelled subscription {SubscriptionId} — event published", subscription.Id);
 
         // Sincronizar cancelación con UserService
         await _userServiceClient.UpdateStripeSubscriptionAsync(
@@ -398,14 +498,34 @@ public class StripeWebhooksController : ControllerBase
         var subscription = stripeEvent.Data.Object as Stripe.Subscription;
         if (subscription == null) return;
 
-        // Notificar al dealer que su trial está por terminar
+        var existingSubscription = await _subscriptionRepository.GetByStripeSubscriptionIdAsync(subscription.Id);
+
         _logger.LogInformation(
             "Trial will end for subscription {SubscriptionId} on {TrialEnd}",
             subscription.Id, subscription.TrialEnd);
 
-        // TODO: Enviar notificación al dealer
-        // await _notificationService.SendTrialEndingNotificationAsync(dealerId);
-        await Task.CompletedTask;
+        // RETENTION FIX: Publish SubscriptionTrialEndingEvent → NotificationService sends email
+        var daysRemaining = subscription.TrialEnd.HasValue
+            ? (int)(subscription.TrialEnd.Value - DateTime.UtcNow).TotalDays
+            : 0;
+
+        var customer = await _customerRepository.GetByStripeCustomerIdAsync(subscription.CustomerId);
+        var plan = MapStripePriceToSubscriptionPlan(subscription.Items.Data.FirstOrDefault()?.Price?.Id);
+        var monthlyPrice = (subscription.Items.Data.FirstOrDefault()?.Price?.UnitAmountDecimal ?? 0) / 100m;
+
+        await _eventPublisher.PublishAsync(new SubscriptionTrialEndingEvent
+        {
+            DealerId = existingSubscription?.DealerId ?? Guid.Empty,
+            DealerEmail = customer?.Email ?? "",
+            DealerName = customer?.FullName ?? "",
+            TrialPlan = plan.ToString(),
+            TrialEndsAt = subscription.TrialEnd ?? DateTime.UtcNow.AddDays(3),
+            DaysRemaining = daysRemaining,
+            MonthlyPrice = monthlyPrice,
+        });
+
+        _logger.LogInformation("Published TrialEndingEvent for {SubscriptionId} — {Days} days remaining",
+            subscription.Id, daysRemaining);
     }
 
     // ========================================
@@ -533,10 +653,12 @@ public class StripeWebhooksController : ControllerBase
             "Payment failed for invoice {InvoiceId}, customer {CustomerId}",
             invoice.Id, invoice.CustomerId);
 
+        DomainEntities.Subscription? subscription = null;
+
         // Marcar suscripción como past_due
         if (!string.IsNullOrEmpty(invoice.SubscriptionId))
         {
-            var subscription = await _subscriptionRepository.GetByStripeSubscriptionIdAsync(invoice.SubscriptionId);
+            subscription = await _subscriptionRepository.GetByStripeSubscriptionIdAsync(invoice.SubscriptionId);
             if (subscription != null)
             {
                 subscription.MarkPastDue();
@@ -544,7 +666,24 @@ public class StripeWebhooksController : ControllerBase
             }
         }
 
-        // TODO: Enviar notificación al dealer
+        // RETENTION FIX: Publish SubscriptionPaymentFailedEvent → NotificationService sends urgent email
+        var customer = await _customerRepository.GetByStripeCustomerIdAsync(invoice.CustomerId);
+        await _eventPublisher.PublishAsync(new SubscriptionPaymentFailedEvent
+        {
+            DealerId = subscription?.DealerId ?? Guid.Empty,
+            DealerEmail = customer?.Email ?? "",
+            DealerName = customer?.FullName ?? "",
+            Plan = subscription?.Plan.ToString() ?? "Unknown",
+            Amount = (invoice.AmountDue ?? 0) / 100m,
+            Currency = invoice.Currency?.ToUpper() ?? "USD",
+            AttemptNumber = invoice.AttemptCount ?? 1,
+            NextRetryAt = invoice.NextPaymentAttempt,
+            FailureReason = invoice.LastFinalizationError?.Message ?? "Payment method declined",
+            StripeInvoiceId = invoice.Id,
+        });
+
+        _logger.LogWarning("Published PaymentFailedEvent for dealer {DealerId} — attempt #{Attempt}",
+            subscription?.DealerId, invoice.AttemptCount);
     }
 
     private async Task HandleInvoiceUpcoming(Event stripeEvent)
@@ -556,8 +695,26 @@ public class StripeWebhooksController : ControllerBase
             "Upcoming invoice for customer {CustomerId}: {Amount}",
             invoice.CustomerId, invoice.AmountDue / 100m);
 
-        // TODO: Enviar notificación de factura próxima
-        await Task.CompletedTask;
+        // RETENTION FIX: Publish event for upcoming renewal notification
+        var customer = await _customerRepository.GetByStripeCustomerIdAsync(invoice.CustomerId);
+        DomainEntities.Subscription? subscription = null;
+        if (!string.IsNullOrEmpty(invoice.SubscriptionId))
+            subscription = await _subscriptionRepository.GetByStripeSubscriptionIdAsync(invoice.SubscriptionId);
+
+        await _eventPublisher.PublishAsync(new InvoiceGeneratedEvent
+        {
+            InvoiceId = Guid.NewGuid(),
+            UserId = subscription?.DealerId ?? Guid.Empty,
+            UserEmail = customer?.Email ?? "",
+            UserName = customer?.FullName ?? "",
+            Amount = (invoice.AmountDue ?? 0) / 100m,
+            Currency = invoice.Currency?.ToUpper() ?? "USD",
+            Description = $"Renovación de suscripción {subscription?.Plan.ToString() ?? ""} — próxima factura",
+            DueDate = invoice.DueDate ?? DateTime.UtcNow.AddDays(7),
+            StripeInvoiceId = invoice.Id,
+        });
+
+        _logger.LogInformation("Published InvoiceUpcoming event for customer {CustomerId}", invoice.CustomerId);
     }
 
     // ========================================

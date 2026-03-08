@@ -18,7 +18,7 @@ public class PaymentCompletedEventPublisher : IDisposable
     private readonly IModel _channel;
     private readonly ILogger<PaymentCompletedEventPublisher> _logger;
     private const string ExchangeName = "cardealer.events";
-    private const string RoutingKey = "payment.completed";
+    private const string RoutingKey = "billing.payment.completed"; // Fixed: must match EventType and consumer binding
 
     public PaymentCompletedEventPublisher(
         IConnection connection,

@@ -120,18 +120,7 @@ public class IdentityVerificationController : ControllerBase
         await headerStream.ReadAsync(header, 0, Math.Min(8, (int)headerStream.Length));
         headerStream.Position = 0;
 
-        bool isValidMagicBytes = false;
-        // JPEG: FF D8 FF
-        if (header.Length >= 3 && header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
-            isValidMagicBytes = true;
-        // PNG: 89 50 4E 47
-        else if (header.Length >= 4 && header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47)
-            isValidMagicBytes = true;
-        // HEIC: starts with ftyp after 4 bytes
-        else if (header.Length >= 8 && header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70)
-            isValidMagicBytes = true;
-
-        if (!isValidMagicBytes)
+        if (!IsValidImageMagicBytes(header))
             return BadRequest("El archivo no es una imagen válida");
 
         if (!Enum.TryParse<DocumentSide>(side, true, out var documentSide))
@@ -143,7 +132,8 @@ public class IdentityVerificationController : ControllerBase
             UserId = userId,
             Side = documentSide,
             ImageData = headerStream.ToArray(),
-            FileName = image.FileName,
+            // SECURITY: Sanitize filename to prevent path traversal (strip directory components)
+            FileName = Path.GetFileName(image.FileName) ?? "document",
             ContentType = image.ContentType
         };
 
@@ -154,12 +144,13 @@ public class IdentityVerificationController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { error = "SessionError", message = ex.Message });
+            _logger.LogWarning(ex, "Session error during document upload for session {SessionId}", sessionId);
+            return BadRequest(new { error = "SessionError", message = "No se pudo procesar la solicitud. Verifique el estado de la sesión." });
         }
     }
 
     /// <summary>
-    /// Subir selfie con datos de liveness
+    /// Subir selfie para verificación facial.
     /// </summary>
     /// <remarks>
     /// Procesa la selfie y compara con la foto del documento.
@@ -187,6 +178,22 @@ public class IdentityVerificationController : ControllerBase
         if (selfie.Length > 10 * 1024 * 1024)
             return BadRequest("La imagen excede el tamaño máximo de 10MB");
 
+        // SECURITY: Validate Content-Type
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/heic" };
+        if (!allowedTypes.Contains(selfie.ContentType.ToLower()))
+            return BadRequest("Tipo de archivo no permitido. Use JPG, PNG o HEIC");
+
+        // SECURITY: Validate file magic bytes to prevent spoofed content types
+        using var headerCheckStream = new MemoryStream();
+        await selfie.CopyToAsync(headerCheckStream);
+        headerCheckStream.Position = 0;
+        var header = new byte[8];
+        await headerCheckStream.ReadAsync(header, 0, Math.Min(8, (int)headerCheckStream.Length));
+        headerCheckStream.Position = 0;
+
+        if (!IsValidImageMagicBytes(header))
+            return BadRequest("El archivo no es una imagen válida");
+
         LivenessDataDto? livenessData = null;
         if (!string.IsNullOrEmpty(livenessDataJson))
         {
@@ -202,15 +209,13 @@ public class IdentityVerificationController : ControllerBase
             }
         }
 
-        using var memoryStream = new MemoryStream();
-        await selfie.CopyToAsync(memoryStream);
-
         var command = new ProcessSelfieCommand
         {
             SessionId = sessionId,
             UserId = userId,
-            SelfieImageData = memoryStream.ToArray(),
-            FileName = selfie.FileName,
+            SelfieImageData = headerCheckStream.ToArray(),
+            // SECURITY: Sanitize filename to prevent path traversal
+            FileName = Path.GetFileName(selfie.FileName) ?? "selfie",
             ContentType = selfie.ContentType,
             LivenessData = livenessData
         };
@@ -226,7 +231,8 @@ public class IdentityVerificationController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { error = "SessionError", message = ex.Message });
+            _logger.LogWarning(ex, "Session error during selfie upload for session {SessionId}", sessionId);
+            return BadRequest(new { error = "SessionError", message = "No se pudo procesar la solicitud. Verifique el estado de la sesión." });
         }
     }
 
@@ -262,12 +268,9 @@ public class IdentityVerificationController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { error = "SessionError", message = ex.Message });
+            _logger.LogWarning(ex, "Session error during verification completion");
+            return BadRequest(new { error = "SessionError", message = "No se pudo completar la verificación. Verifique el estado de la sesión." });
         }
-    }
-
-    /// <summary>
-    /// Obtener estado de una sesión de verificación
     /// </summary>
     [HttpGet("{sessionId}")]
     [ProducesResponseType(typeof(VerificationSessionStatusDto), StatusCodes.Status200OK)]
@@ -329,7 +332,8 @@ public class IdentityVerificationController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { error = "CannotRetry", message = ex.Message });
+            _logger.LogWarning(ex, "Cannot retry verification for session {SessionId}", sessionId);
+            return BadRequest(new { error = "CannotRetry", message = "No se puede reintentar la verificación en este momento." });
         }
     }
 
@@ -419,6 +423,22 @@ public class IdentityVerificationController : ControllerBase
         if (selfie.Length > 10 * 1024 * 1024)
             return BadRequest(new { error = "ValidationError", message = "La imagen excede el tamaño máximo de 10MB" });
 
+        // SECURITY: Validate Content-Type
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/heic" };
+        if (!allowedTypes.Contains(selfie.ContentType.ToLower()))
+            return BadRequest(new { error = "ValidationError", message = "Tipo de archivo no permitido. Use JPG, PNG o HEIC" });
+
+        // SECURITY: Validate file magic bytes to prevent spoofed content types
+        using var headerCheckStream = new MemoryStream();
+        await selfie.CopyToAsync(headerCheckStream);
+        headerCheckStream.Position = 0;
+        var header = new byte[8];
+        await headerCheckStream.ReadAsync(header, 0, Math.Min(8, (int)headerCheckStream.Length));
+        headerCheckStream.Position = 0;
+
+        if (!IsValidImageMagicBytes(header))
+            return BadRequest(new { error = "ValidationError", message = "El archivo no es una imagen válida" });
+
         LivenessDataDto? livenessDto = null;
         if (!string.IsNullOrEmpty(livenessData))
         {
@@ -434,15 +454,13 @@ public class IdentityVerificationController : ControllerBase
             }
         }
 
-        using var memoryStream = new MemoryStream();
-        await selfie.CopyToAsync(memoryStream);
-
         var command = new VerifyIdentityByProfileCommand
         {
             ProfileId = profileId,
             UserId = userId,
-            SelfieImageData = memoryStream.ToArray(),
-            FileName = selfie.FileName,
+            SelfieImageData = headerCheckStream.ToArray(),
+            // SECURITY: Sanitize filename to prevent path traversal
+            FileName = Path.GetFileName(selfie.FileName) ?? "selfie",
             ContentType = selfie.ContentType,
             LivenessData = livenessDto
         };
@@ -482,6 +500,27 @@ public class IdentityVerificationController : ControllerBase
         }
 
         return HttpContext.Connection.RemoteIpAddress?.ToString();
+    }
+
+    /// <summary>
+    /// SECURITY: Validates image magic bytes to detect spoofed Content-Type headers.
+    /// Supports JPEG, PNG, and HEIC formats.
+    /// </summary>
+    private static bool IsValidImageMagicBytes(byte[] header)
+    {
+        if (header.Length < 3) return false;
+
+        // JPEG: FF D8 FF
+        if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
+            return true;
+        // PNG: 89 50 4E 47
+        if (header.Length >= 4 && header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47)
+            return true;
+        // HEIC: starts with ftyp after 4 bytes
+        if (header.Length >= 8 && header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70)
+            return true;
+
+        return false;
     }
 
     #endregion

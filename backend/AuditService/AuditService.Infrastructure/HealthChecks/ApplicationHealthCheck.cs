@@ -4,31 +4,12 @@ namespace AuditService.Infrastructure.HealthChecks;
 
 public class ApplicationHealthCheck : IHealthCheck
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public ApplicationHealthCheck(IHttpClientFactory httpClientFactory)
+    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            // Verificar que la aplicación puede hacer requests HTTP básicos
-            var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync("http://google.com", cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return HealthCheckResult.Healthy("Application is healthy and can make external requests");
-            }
-
-            return HealthCheckResult.Degraded($"External request failed with status: {response.StatusCode}");
-        }
-        catch (Exception ex)
-        {
-            return HealthCheckResult.Unhealthy("Application cannot make external requests", ex);
-        }
+        // Simple liveness check â€” verifies the application process is running and can respond.
+        // Does NOT call external services (e.g., google.com) to avoid false negatives when
+        // egress is blocked in K8s or network is partitioned. External connectivity checks
+        // should be registered with tag "external" and excluded from /health endpoint.
+        return Task.FromResult(HealthCheckResult.Healthy("Application process is running"));
     }
 }

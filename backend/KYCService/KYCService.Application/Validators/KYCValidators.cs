@@ -70,6 +70,25 @@ public class CreateKYCProfileValidator : AbstractValidator<CreateKYCProfileComma
             .WithMessage("PEP position is required when IsPEP is true")
             .NoSqlInjection()
             .NoXss();
+
+        // ══════════════════════════════════════════════════════════════
+        // Ley 172-13 Art. 5 — Consentimiento obligatorio
+        // Sin consentimiento explícito, no se puede procesar datos personales.
+        // ══════════════════════════════════════════════════════════════
+        RuleFor(x => x.DataProcessingConsent)
+            .Equal(true)
+            .WithMessage("Debe aceptar el procesamiento de datos personales (Ley 172-13 Art. 5).");
+
+        RuleFor(x => x.BiometricProcessingConsent)
+            .Equal(true)
+            .WithMessage("Debe aceptar el procesamiento de datos biométricos para verificación de identidad.");
+
+        RuleFor(x => x.ConsentVersion)
+            .NotEmpty()
+            .WithMessage("La versión del aviso de privacidad es requerida.")
+            .MaximumLength(50)
+            .NoSqlInjection()
+            .NoXss();
     }
 }
 

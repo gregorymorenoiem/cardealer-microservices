@@ -1,12 +1,16 @@
 using BillingService.Application.DTOs.Azul;
 using BillingService.Application.Services;
 using CarDealer.Shared.Idempotency.Attributes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BillingService.Api.Controllers;
 
 [ApiController]
 [Route("api/payment/azul")]
+[Authorize]
+[EnableRateLimiting("BillingPolicy")]
 public class AzulPaymentController : ControllerBase
 {
     private readonly IAzulPaymentService _azulService;

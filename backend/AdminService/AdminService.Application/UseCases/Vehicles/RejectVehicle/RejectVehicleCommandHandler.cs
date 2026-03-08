@@ -42,34 +42,28 @@ namespace AdminService.Application.UseCases.Vehicles.RejectVehicle
 
             try
             {
-                // Record audit log asynchronously (fire-and-forget with error handling)
-                _ = Task.Run(async () =>
+                // Record audit log — awaited safely (non-critical, errors logged but not propagated)
+                try
+                {
+                    await _auditClient.LogVehicleRejectedAsync(request.VehicleId, request.RejectedBy, request.Reason);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to log audit for vehicle rejection {VehicleId}", request.VehicleId);
+                }
+
+                // Send notification to owner with rejection reason (non-critical, errors logged but not propagated)
+                if (!string.IsNullOrWhiteSpace(request.OwnerEmail))
                 {
                     try
                     {
-                        await _auditClient.LogVehicleRejectedAsync(request.VehicleId, request.RejectedBy, request.Reason);
+                        await _notificationClient.SendVehicleRejectedNotificationAsync(
+                            request.OwnerEmail, request.VehicleTitle, request.Reason);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed to log audit for vehicle rejection {VehicleId}", request.VehicleId);
+                        _logger.LogError(ex, "Failed to send notification for vehicle rejection {VehicleId}", request.VehicleId);
                     }
-                }, cancellationToken);
-
-                // Send notification to owner with rejection reason (fire-and-forget with error handling)
-                if (!string.IsNullOrWhiteSpace(request.OwnerEmail))
-                {
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await _notificationClient.SendVehicleRejectedNotificationAsync(
-                                request.OwnerEmail, request.VehicleTitle, request.Reason);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Failed to send notification for vehicle rejection {VehicleId}", request.VehicleId);
-                        }
-                    }, cancellationToken);
                 }
 
                 _logger.LogInformation("Vehicle {VehicleId} rejected successfully", request.VehicleId);

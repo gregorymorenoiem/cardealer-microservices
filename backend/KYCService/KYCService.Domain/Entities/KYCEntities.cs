@@ -154,6 +154,26 @@ public class KYCProfile
     public DateTime? LastReviewAt { get; set; }
     public DateTime? NextReviewAt { get; set; }
     
+    // Consentimiento (Ley 172-13 Art. 5 — Protección de Datos Personales RD)
+    /// <summary>
+    /// Fecha en que el usuario otorgó consentimiento explícito para
+    /// el procesamiento de sus datos personales y biométricos.
+    /// Requerido por Ley 172-13 Art. 5 antes de recopilar PII.
+    /// </summary>
+    public DateTime? ConsentGivenAt { get; set; }
+    
+    /// <summary>
+    /// Versión del aviso de privacidad/términos aceptados.
+    /// Permite rastrear qué términos aceptó el usuario.
+    /// </summary>
+    public string? ConsentVersion { get; set; }
+    
+    /// <summary>
+    /// Fecha en que el usuario aceptó el procesamiento de datos biométricos
+    /// (selfie, face matching). Consentimiento separado según Ley 172-13.
+    /// </summary>
+    public DateTime? BiometricConsentGivenAt { get; set; }
+    
     // Navegación
     public List<KYCDocument> Documents { get; set; } = new();
     public List<KYCVerification> Verifications { get; set; } = new();

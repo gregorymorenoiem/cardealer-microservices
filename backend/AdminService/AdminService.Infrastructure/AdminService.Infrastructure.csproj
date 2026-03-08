@@ -22,6 +22,7 @@
     <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj" />
     <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj" />
     <ProjectReference Include="../../_Shared/ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

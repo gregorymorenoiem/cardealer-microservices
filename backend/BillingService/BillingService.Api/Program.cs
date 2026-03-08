@@ -1,4 +1,5 @@
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using BillingService.Application.Services;
 using BillingService.Application.Configuration;
@@ -17,13 +18,22 @@ using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
 using FluentValidation;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Serilog;
+using System.IO.Compression;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
+const string ServiceName = "BillingService";
+const string ServiceVersion = "1.1.0";
+
+try
+{
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -97,36 +107,25 @@ builder.Services.AddStandardErrorHandling(options =>
 // ============================================================================
 builder.Services.AddAuditPublisher(builder.Configuration);
 
-// Add CORS
+// CORS — configurable origins from appsettings
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? (builder.Environment.IsDevelopment()
+        ? new[] { "http://localhost:3000", "http://localhost:5173" }
+        : new[] { "https://okla.com.do", "https://www.okla.com.do" });
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        var isDev = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
-        if (isDev)
-        {
-            policy.SetIsOriginAllowed(_ => true)
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
-        }
-        else
-        {
-            policy.WithOrigins(
-                    "https://okla.com.do",
-                    "https://www.okla.com.do",
-                    "https://api.okla.com.do")
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
-        }
+        policy.WithOrigins(allowedOrigins)
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
+              .AllowCredentials();
     });
 });
 
-// JWT Authentication - Use same config as other services (Jwt:Key, Jwt:Issuer, Jwt:Audience)
-var jwtSecret = builder.Configuration["Jwt:Key"] ?? builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Key must be configured via environment/settings. Do NOT use hardcoded keys.");
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AuthService-Dev";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "OKLA-Dev";
+// ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
+var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -139,8 +138,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes clock skew
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -185,7 +184,7 @@ builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
 {
     client.BaseAddress = new Uri(userServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
-});
+}).AddStandardResilience(builder.Configuration);
 
 // ========================================
 // RATE LIMITING
@@ -200,6 +199,26 @@ builder.Services.AddRateLimiter(options =>
         limiterOptions.QueueLimit = 0;
     });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/problem+json";
+
+        var retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterValue)
+            ? retryAfterValue
+            : TimeSpan.FromSeconds(60);
+
+        context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+
+        await context.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            type = "https://httpstatuses.io/429",
+            title = "Too Many Requests",
+            status = 429,
+            detail = $"Rate limit exceeded. Retry after {(int)retryAfter.TotalSeconds} seconds.",
+            retryAfterSeconds = (int)retryAfter.TotalSeconds
+        }, cancellationToken);
+    };
 });
 
 // Add Health Checks
@@ -232,7 +251,7 @@ builder.Services.AddHttpClient<BillingService.Application.Interfaces.IAuditServi
     client.BaseAddress = new Uri(auditServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 builder.Services.AddHttpClient<BillingService.Application.Interfaces.IErrorServiceClient, BillingService.Infrastructure.External.ErrorServiceClient>(client =>
 {
@@ -240,7 +259,27 @@ builder.Services.AddHttpClient<BillingService.Application.Interfaces.IErrorServi
     client.BaseAddress = new Uri(errorServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(builder.Configuration);
+
+// ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/problem+json"
+    });
 });
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
+// RETENTION FIX: Background worker for proactive subscription lifecycle management
+// Handles: trial expiring warnings, payment failure escalation, auto-suspend, auto-expire
+builder.Services.AddHostedService<BillingService.Api.BackgroundServices.SubscriptionRenewalWorker>();
 
 var app = builder.Build();
 
@@ -258,6 +297,9 @@ app.UseRequestLogging();
 // OWASP Security Headers
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
+// Response Compression — early, after error handling
+app.UseResponseCompression();
+
 if (app.Environment.IsDevelopment())
 {
 
@@ -265,24 +307,45 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 app.UseCors();
 app.UseRateLimiter();
-app.UseHttpsRedirection();
 
-// Idempotency middleware - before auth and controllers
+if (!app.Environment.IsProduction())
+    app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Idempotency middleware — AFTER auth (scoped to authenticated user to prevent key pollution)
 if (idempotencyEnabled)
 {
     app.UseIdempotency();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
-
 // FASE 5: Audit Middleware
 app.UseAuditMiddleware();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+
+// ============= HEALTH CHECKS (Triple Pattern) =============
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+});
 
 // Apply migrations on startup in development OR when explicitly enabled via Database__AutoMigrate=true
 // BUG-D005 fix: was only running in Development, missing production migrations
@@ -292,11 +355,29 @@ if (autoMigrate)
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<BillingDbContext>();
-    db.Database.Migrate();
-    Log.Information("BillingService database migrations applied successfully");
+    try
+    {
+        db.Database.Migrate();
+        Log.Information("Database migration completed for {ServiceName}", ServiceName);
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Database migration error for {ServiceName}", ServiceName);
+    }
 }
 
+Log.Information("Starting {ServiceName} v{ServiceVersion} — Payment & Billing Platform", ServiceName, ServiceVersion);
 app.Run();
+
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application {ServiceName} terminated unexpectedly", "BillingService");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Make the implicit Program class public so it can be accessed by tests
 public partial class Program { }

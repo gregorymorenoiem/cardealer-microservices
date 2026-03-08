@@ -117,7 +117,8 @@ public class TesseractOCRService : IOCRService, IDisposable
                 var validation = CedulaValidator.ValidateDetailed(result.CedulaNumber);
                 if (!validation.IsValid)
                 {
-                    _logger.LogWarning("Extracted cedula number failed validation: {Cedula}", result.CedulaNumber);
+                    _logger.LogWarning("Extracted cedula number failed validation: {CedulaMasked}",
+                        MaskCedula(result.CedulaNumber));
                 }
                 result.CedulaNumber = validation.FormattedNumber;
             }
@@ -527,6 +528,17 @@ public class TesseractOCRService : IOCRService, IDisposable
             }
             _disposed = true;
         }
+    }
+
+    /// <summary>
+    /// Masks a cédula number for secure logging (shows only last 4 characters).
+    /// Ley 172-13 Art. 31 — Data minimization in logs.
+    /// </summary>
+    private static string MaskCedula(string? cedula)
+    {
+        if (string.IsNullOrEmpty(cedula) || cedula.Length <= 4)
+            return "****";
+        return new string('*', cedula.Length - 4) + cedula[^4..];
     }
 }
 

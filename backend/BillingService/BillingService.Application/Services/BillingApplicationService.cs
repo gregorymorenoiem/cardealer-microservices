@@ -262,6 +262,10 @@ public class BillingApplicationService
         CreateCheckoutSessionRequest request,
         CancellationToken cancellationToken = default)
     {
+        // SECURITY: Validate redirect URLs to prevent open redirect (OWASP A01:2021)
+        ValidateRedirectUrl(request.SuccessUrl, nameof(request.SuccessUrl));
+        ValidateRedirectUrl(request.CancelUrl, nameof(request.CancelUrl));
+
         // Obtener o crear cliente
         var customer = await _customerRepository.GetByDealerIdAsync(request.DealerId, cancellationToken);
         if (customer == null)
@@ -356,7 +360,7 @@ public class BillingApplicationService
     /// <summary>
     /// Obtiene los precios de todos los planes
     /// </summary>
-    public Task<List<PlanPricingInfo>> GetPlanPricingAsync(
+    public async Task<List<PlanPricingInfo>> GetPlanPricingAsync(
         Guid? dealerId = null,
         CancellationToken cancellationToken = default)
     {
@@ -364,11 +368,11 @@ public class BillingApplicationService
 
         if (dealerId.HasValue)
         {
-            var subscription = _subscriptionRepository.GetByDealerIdAsync(dealerId.Value, cancellationToken).Result;
+            var subscription = await _subscriptionRepository.GetByDealerIdAsync(dealerId.Value, cancellationToken);
             currentPlan = subscription?.Plan;
         }
 
-        return Task.FromResult(StripePriceMapping.GetAllPricing(currentPlan));
+        return StripePriceMapping.GetAllPricing(currentPlan);
     }
 
     // ========================================
@@ -481,5 +485,52 @@ public class BillingApplicationService
             payment.ProcessedAt,
             payment.CreatedAt
         );
+    }
+
+    // ========================================
+    // SECURITY: URL VALIDATION (Open Redirect Prevention — OWASP A01:2021)
+    // ========================================
+
+    /// <summary>
+    /// Allowed domains for redirect URLs (success/cancel/return).
+    /// Prevents open redirect attacks via unvalidated user-supplied URLs.
+    /// </summary>
+    private static readonly HashSet<string> AllowedRedirectDomains = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "okla.do",
+        "www.okla.do",
+        "app.okla.do",
+        "localhost"
+    };
+
+    /// <summary>
+    /// Validates that a URL is safe for redirection (belongs to an allowed domain).
+    /// </summary>
+    internal static bool IsAllowedRedirectUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return false;
+
+        if (uri.Scheme != "https" && uri.Scheme != "http")
+            return false;
+
+        // Allow localhost for development (any port)
+        if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
+            return true;
+
+        return AllowedRedirectDomains.Contains(uri.Host);
+    }
+
+    /// <summary>
+    /// Validates redirect URL, throwing if invalid.
+    /// </summary>
+    internal static void ValidateRedirectUrl(string url, string paramName)
+    {
+        if (!IsAllowedRedirectUrl(url))
+            throw new ArgumentException(
+                $"Invalid redirect URL. Only OKLA domains are allowed.", paramName);
     }
 }

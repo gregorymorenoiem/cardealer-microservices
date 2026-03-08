@@ -14,8 +14,9 @@ namespace AuditService.Infrastructure.Services.Messaging;
 
 public class RabbitMQAuditConsumer : BackgroundService
 {
-    private readonly IConnection _connection;
-    private readonly IModel _channel;
+    private IConnection? _connection;
+    private IModel? _channel;
+    private readonly IOptions<RabbitMQSettings> _rabbitMqSettings;
     private readonly AuditServiceRabbitMQSettings _settings;
     private readonly ILogger<RabbitMQAuditConsumer> _logger;
     private readonly IServiceProvider _serviceProvider;
@@ -27,6 +28,7 @@ public class RabbitMQAuditConsumer : BackgroundService
         ILogger<RabbitMQAuditConsumer> logger,
         IServiceProvider serviceProvider)
     {
+        _rabbitMqSettings = rabbitMqSettings;
         _settings = auditSettings.Value;
         _logger = logger;
         _serviceProvider = serviceProvider;
@@ -36,13 +38,21 @@ public class RabbitMQAuditConsumer : BackgroundService
             PropertyNameCaseInsensitive = true
         };
 
+        // RELIABILITY: Connection moved to ExecuteAsync with retry loop.
+        // Creating connections in the constructor crashes DI if RabbitMQ is unavailable
+        // during K8s pod startup races (CrashLoopBackOff).
+    }
+
+    private void InitializeConnection()
+    {
+        var settings = _rabbitMqSettings.Value;
         var factory = new ConnectionFactory
         {
-            HostName = rabbitMqSettings.Value.Host,
-            Port = rabbitMqSettings.Value.Port,
-            UserName = rabbitMqSettings.Value.Username,
-            Password = rabbitMqSettings.Value.Password,
-            VirtualHost = rabbitMqSettings.Value.VirtualHost,
+            HostName = settings.Host,
+            Port = settings.Port,
+            UserName = settings.Username,
+            Password = settings.Password,
+            VirtualHost = settings.VirtualHost,
             DispatchConsumersAsync = true
         };
 
@@ -75,37 +85,68 @@ public class RabbitMQAuditConsumer : BackgroundService
         _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        stoppingToken.ThrowIfCancellationRequested();
-
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-
-        consumer.Received += async (model, ea) =>
+        // RELIABILITY: Retry loop for RabbitMQ connection (handles K8s startup races)
+        const int maxRetries = 10;
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
         {
-            var body = ea.Body.ToArray();
-            var message = Encoding.UTF8.GetString(body);
-
             try
             {
-                await ProcessMessageAsync(message, ea, stoppingToken);
-                _channel.BasicAck(ea.DeliveryTag, multiple: false);
+                stoppingToken.ThrowIfCancellationRequested();
+
+                InitializeConnection();
+
+                var consumer = new AsyncEventingBasicConsumer(_channel!);
+
+                consumer.Received += async (model, ea) =>
+                {
+                    var body = ea.Body.ToArray();
+                    var message = Encoding.UTF8.GetString(body);
+
+                    try
+                    {
+                        await ProcessMessageAsync(message, ea, stoppingToken);
+                        _channel!.BasicAck(ea.DeliveryTag, multiple: false);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing audit event message");
+                        _channel!.BasicNack(ea.DeliveryTag, multiple: false, requeue: false);
+                    }
+                };
+
+                _channel!.BasicConsume(
+                    queue: _settings.QueueName,
+                    autoAck: false,
+                    consumer: consumer);
+
+                _logger.LogInformation("RabbitMQ Audit Consumer started listening on queue: {QueueName}", _settings.QueueName);
+
+                // Keep ExecuteAsync alive for proper BackgroundService lifecycle
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+                return;
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return; // Graceful shutdown
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing audit event message");
-                _channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: false);
+                _logger.LogWarning(ex,
+                    "RabbitMQ Audit Consumer: connection attempt {Attempt}/{Max} failed. Retrying...",
+                    attempt, maxRetries);
+
+                if (attempt == maxRetries)
+                {
+                    _logger.LogError("RabbitMQ Audit Consumer: All {Max} connection attempts exhausted.", maxRetries);
+                    return;
+                }
+
+                var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt));
+                await Task.Delay(delay, stoppingToken);
             }
-        };
-
-        _channel.BasicConsume(
-            queue: _settings.QueueName,
-            autoAck: false,
-            consumer: consumer);
-
-        _logger.LogInformation("RabbitMQ Audit Consumer started listening on queue: {QueueName}", _settings.QueueName);
-
-        return Task.CompletedTask;
+        }
     }
 
     private async Task ProcessMessageAsync(string message, BasicDeliverEventArgs ea, CancellationToken cancellationToken)

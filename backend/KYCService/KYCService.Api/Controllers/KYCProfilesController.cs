@@ -104,6 +104,13 @@ public class KYCProfilesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<KYCProfileDto>> GetByUserId(Guid userId)
     {
+        // IDOR Protection (Ley 172-13 Art. 31): Non-admin users can only access their own profile
+        var requestingUserId = GetUserIdFromClaims();
+        if (!IsAdminOrCompliance() && requestingUserId != userId)
+        {
+            return Forbid();
+        }
+
         var result = await _mediator.Send(new GetKYCProfileByUserIdQuery(userId));
         if (result == null) return NotFound();
         return Ok(result);

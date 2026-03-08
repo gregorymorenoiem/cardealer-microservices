@@ -10,7 +10,7 @@ namespace BillingService.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class PaymentsController : ControllerBase
+public class PaymentsController : BillingBaseController
 {
     private readonly IPaymentRepository _paymentRepository;
     private readonly ILogger<PaymentsController> _logger;
@@ -25,9 +25,9 @@ public class PaymentsController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PaymentDto>>> GetAll(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken)
     {
+        var dealerId = GetDealerIdFromJwt();
         var payments = await _paymentRepository.GetByDealerIdAsync(dealerId, cancellationToken);
         return Ok(payments.Select(MapToDto));
     }
@@ -38,6 +38,11 @@ public class PaymentsController : ControllerBase
         var payment = await _paymentRepository.GetByIdAsync(id, cancellationToken);
         if (payment == null)
             return NotFound();
+
+        // Security: Validate ownership (IDOR prevention)
+        var dealerId = GetDealerIdFromJwt();
+        if (payment.DealerId != dealerId && !IsAdmin())
+            return StatusCode(403, new { error = "Access denied: this payment belongs to another dealer" });
 
         return Ok(MapToDto(payment));
     }
@@ -52,9 +57,9 @@ public class PaymentsController : ControllerBase
     [HttpGet("status/{status}")]
     public async Task<ActionResult<IEnumerable<PaymentDto>>> GetByStatus(
         PaymentStatus status,
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken)
     {
+        var dealerId = GetDealerIdFromJwt();
         var payments = await _paymentRepository.GetByStatusAsync(status, cancellationToken);
         return Ok(payments.Where(p => p.DealerId == dealerId).Select(MapToDto));
     }
@@ -63,14 +68,15 @@ public class PaymentsController : ControllerBase
     public async Task<ActionResult<IEnumerable<PaymentDto>>> GetByDateRange(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken)
     {
+        var dealerId = GetDealerIdFromJwt();
         var payments = await _paymentRepository.GetByDateRangeAsync(startDate, endDate, cancellationToken);
         return Ok(payments.Where(p => p.DealerId == dealerId).Select(MapToDto));
     }
 
     [HttpGet("pending")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<IEnumerable<PaymentDto>>> GetPending(CancellationToken cancellationToken)
     {
         var payments = await _paymentRepository.GetPendingPaymentsAsync(cancellationToken);
@@ -78,6 +84,7 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpGet("failed")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<IEnumerable<PaymentDto>>> GetFailed(CancellationToken cancellationToken)
     {
         var payments = await _paymentRepository.GetFailedPaymentsAsync(cancellationToken);
@@ -97,6 +104,7 @@ public class PaymentsController : ControllerBase
     [HttpGet("total/{dealerId:guid}")]
     public async Task<ActionResult<decimal>> GetTotalByDealer(Guid dealerId, CancellationToken cancellationToken)
     {
+        dealerId = GetDealerIdOrOverride(dealerId);
         var total = await _paymentRepository.GetTotalAmountByDealerAsync(dealerId, cancellationToken);
         return Ok(total);
     }
@@ -105,9 +113,9 @@ public class PaymentsController : ControllerBase
     [Idempotent(RequireKey = true, KeyPrefix = "payment-create")]
     public async Task<ActionResult<PaymentDto>> Create(
         [FromBody] CreatePaymentRequest request,
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken)
     {
+        var dealerId = GetDealerIdFromJwt();
         if (!Enum.TryParse<PaymentMethod>(request.Method, true, out var method))
             return BadRequest("Invalid payment method");
 
@@ -127,6 +135,7 @@ public class PaymentsController : ControllerBase
 
     [Idempotent(RequireKey = true, KeyPrefix = "payment-process")]
     [HttpPost("{id:guid}/process")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<PaymentDto>> Process(Guid id, CancellationToken cancellationToken)
     {
         var payment = await _paymentRepository.GetByIdAsync(id, cancellationToken);
@@ -142,6 +151,7 @@ public class PaymentsController : ControllerBase
 
     [Idempotent(RequireKey = true, KeyPrefix = "payment-succeed")]
     [HttpPost("{id:guid}/succeed")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<PaymentDto>> Succeed(
         Guid id,
         [FromBody] SucceedPaymentRequest? request,
@@ -159,6 +169,7 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/fail")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<PaymentDto>> Fail(
         Guid id,
         [FromBody] FailPaymentRequest request,
@@ -176,6 +187,7 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/refund")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<PaymentDto>> Refund(
         Guid id,
         [FromBody] RefundPaymentRequest request,
@@ -193,6 +205,7 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/dispute")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<PaymentDto>> Dispute(Guid id, CancellationToken cancellationToken)
     {
         var payment = await _paymentRepository.GetByIdAsync(id, cancellationToken);
@@ -207,6 +220,7 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var exists = await _paymentRepository.ExistsAsync(id, cancellationToken);

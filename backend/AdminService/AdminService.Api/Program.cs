@@ -9,6 +9,7 @@ using AdminService.Api.Middleware;
 using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
@@ -19,8 +20,10 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
+using System.IO.Compression;
 using System.Text;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 
 const string ServiceName = "AdminService";
 const string ServiceVersion = "1.0.1"; // fix: valid appsettings.Production.json
@@ -62,6 +65,9 @@ try
 
     // ============= HEALTH CHECKS =============
     builder.Services.AddHealthChecks();
+
+    // ============= IN-MEMORY CACHE (for dashboard snapshots & KPI deltas) =============
+    builder.Services.AddMemoryCache();
 
     // Add secret provider for secure configuration
     builder.Services.AddSecretProvider();
@@ -151,7 +157,12 @@ builder.Services.AddRateLimiter(options =>
 
 // Add services to the container.
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -277,6 +288,22 @@ builder.Services.AddHttpClient<IReviewServiceClient, ReviewServiceClient>(client
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 }).AddStandardResilience(configuration);
 
+    // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+        {
+            "application/json",
+            "text/json",
+            "application/problem+json"
+        });
+    });
+    builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+    builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
     var app = builder.Build();
 
     // ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
@@ -286,39 +313,48 @@ builder.Services.AddHttpClient<IReviewServiceClient, ReviewServiceClient>(client
     // 2. Security Headers (OWASP) — early in pipeline
     app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
-    // 3. CORS — before routing
+    // 3. Response Compression — early, after error handling
+    app.UseResponseCompression();
+
+    // 3.5. Forwarded Headers — required for correct client IP behind K8s/LB
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
+
+    // 4. CORS — before routing
     app.UseCors();
 
-    // 4. Request Logging
+    // 5. Request Logging
     app.UseRequestLogging();
 
-    // 3. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+    // 6. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
     if (!app.Environment.IsProduction())
     {
         app.UseHttpsRedirection();
     }
 
-    // 4. Swagger — development only
+    // 7. Swagger — development only
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI();
     }
 
-    // 5. Rate Limiting (defense-in-depth)
+    // 8. Rate Limiting (defense-in-depth)
     app.UseRateLimiter();
 
-    // 6. Authentication & Authorization
+    // 9. Authentication & Authorization
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // 7. Audit middleware — after auth (has userId context)
+    // 10. Audit middleware — after auth (has userId context)
     app.UseAuditMiddleware();
 
-    // 8. Service Discovery Auto-Registration
+    // 11. Service Discovery Auto-Registration
     app.UseMiddleware<ServiceRegistrationMiddleware>();
 
-    // 9. Endpoints
+    // 12. Endpoints
     app.MapControllers();
     app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
     {

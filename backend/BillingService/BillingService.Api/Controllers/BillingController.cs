@@ -11,7 +11,7 @@ namespace BillingService.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class BillingController : ControllerBase
+public class BillingController : BillingBaseController
 {
     private readonly BillingApplicationService _billingService;
     private readonly ILogger<BillingController> _logger;
@@ -55,6 +55,11 @@ public class BillingController : ControllerBase
     {
         try
         {
+            // Security: Validate DealerId matches JWT (IDOR prevention — OWASP A01:2021)
+            var jwtDealerId = GetDealerIdFromJwt();
+            if (request.DealerId != jwtDealerId && !IsAdmin())
+                return StatusCode(403, new { error = "Access denied: cannot perform operations for another dealer" });
+
             var result = await _billingService.CreateCustomerAsync(request, cancellationToken);
             return Ok(result);
         }
@@ -73,6 +78,7 @@ public class BillingController : ControllerBase
         Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        dealerId = GetDealerIdOrOverride(dealerId);
         var customer = await _billingService.GetCustomerByDealerIdAsync(dealerId, cancellationToken);
         if (customer == null)
             return NotFound(new { error = $"Customer not found for dealer {dealerId}" });
@@ -102,6 +108,7 @@ public class BillingController : ControllerBase
     {
         try
         {
+            dealerId = GetDealerIdOrOverride(dealerId);
             var request = new AttachPaymentMethodRequest(
                 dealerId,
                 body.PaymentMethodId,
@@ -150,6 +157,7 @@ public class BillingController : ControllerBase
         Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        dealerId = GetDealerIdOrOverride(dealerId);
         var subscription = await _billingService.GetSubscriptionByDealerIdAsync(dealerId, cancellationToken);
         if (subscription == null)
             return NotFound(new { error = $"Subscription not found for dealer {dealerId}" });
@@ -178,6 +186,11 @@ public class BillingController : ControllerBase
     {
         try
         {
+            // Security: Validate DealerId matches JWT (IDOR prevention — OWASP A01:2021)
+            var jwtDealerId = GetDealerIdFromJwt();
+            if (request.DealerId != jwtDealerId && !IsAdmin())
+                return StatusCode(403, new { error = "Access denied: cannot perform operations for another dealer" });
+
             var result = await _billingService.CreateSubscriptionAsync(request, cancellationToken);
             return CreatedAtAction(
                 nameof(GetSubscription),
@@ -261,6 +274,11 @@ public class BillingController : ControllerBase
     {
         try
         {
+            // Security: Validate DealerId matches JWT (IDOR prevention — OWASP A01:2021)
+            var jwtDealerId = GetDealerIdFromJwt();
+            if (request.DealerId != jwtDealerId && !IsAdmin())
+                return StatusCode(403, new { error = "Access denied: cannot perform operations for another dealer" });
+
             var result = await _billingService.CreateCheckoutSessionAsync(request, cancellationToken);
             return Ok(result);
         }
@@ -281,6 +299,11 @@ public class BillingController : ControllerBase
     {
         try
         {
+            // Security: Validate DealerId matches JWT (IDOR prevention — OWASP A01:2021)
+            var jwtDealerId = GetDealerIdFromJwt();
+            if (request.DealerId != jwtDealerId && !IsAdmin())
+                return StatusCode(403, new { error = "Access denied: cannot perform operations for another dealer" });
+
             var result = await _billingService.CreateBillingPortalSessionAsync(request, cancellationToken);
             return Ok(result);
         }
@@ -303,6 +326,7 @@ public class BillingController : ControllerBase
         Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        dealerId = GetDealerIdOrOverride(dealerId);
         var summary = await _billingService.GetBillingSummaryAsync(dealerId, cancellationToken);
         return Ok(summary);
     }

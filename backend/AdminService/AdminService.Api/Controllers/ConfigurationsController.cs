@@ -8,7 +8,7 @@ namespace AdminService.Api.Controllers;
 /// TODO: Implement full CQRS handlers with MediatR when ConfigurationService logic is migrated.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/admin/[controller]")]
 [Produces("application/json")]
 [Authorize(Roles = "Admin,SuperAdmin")]
 public class ConfigurationsController : ControllerBase

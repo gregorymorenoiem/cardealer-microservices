@@ -26,12 +26,12 @@ namespace AdminService.Infrastructure.External
             try
             {
                 var instance = await _serviceDiscovery.FindServiceInstanceAsync("ErrorService");
-                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://errorservice:80";
+                return instance != null ? $"http://{instance.Host}:{instance.Port}" : "http://errorservice:8080";
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to discover ErrorService via Consul, using fallback URL");
-                return "http://errorservice:80";
+                return "http://errorservice:8080";
             }
         }
 

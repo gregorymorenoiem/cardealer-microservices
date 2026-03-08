@@ -12,6 +12,7 @@ namespace AdminService.Api.Controllers;
 [ApiController]
 [Route("api/admin/dealers")]
 [Produces("application/json")]
+[Authorize(Roles = "Admin,SuperAdmin")]
 public class DealersController : ControllerBase
 {
     private readonly IMediator _mediator;

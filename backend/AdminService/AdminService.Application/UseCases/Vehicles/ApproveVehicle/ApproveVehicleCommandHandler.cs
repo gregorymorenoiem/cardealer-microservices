@@ -41,34 +41,28 @@ namespace AdminService.Application.UseCases.Vehicles.ApproveVehicle
 
             try
             {
-                // Record audit log asynchronously (fire-and-forget with error handling)
-                _ = Task.Run(async () =>
+                // Record audit log — awaited safely (non-critical, errors logged but not propagated)
+                try
+                {
+                    await _auditClient.LogVehicleApprovedAsync(request.VehicleId, request.ApprovedBy, request.Reason);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to log audit for vehicle approval {VehicleId}", request.VehicleId);
+                }
+
+                // Send notification to owner (non-critical, errors logged but not propagated)
+                if (!string.IsNullOrWhiteSpace(request.OwnerEmail))
                 {
                     try
                     {
-                        await _auditClient.LogVehicleApprovedAsync(request.VehicleId, request.ApprovedBy, request.Reason);
+                        await _notificationClient.SendVehicleApprovedNotificationAsync(
+                            request.OwnerEmail, request.VehicleTitle);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed to log audit for vehicle approval {VehicleId}", request.VehicleId);
+                        _logger.LogError(ex, "Failed to send notification for vehicle approval {VehicleId}", request.VehicleId);
                     }
-                }, cancellationToken);
-
-                // Send notification to owner (fire-and-forget with error handling)
-                if (!string.IsNullOrWhiteSpace(request.OwnerEmail))
-                {
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await _notificationClient.SendVehicleApprovedNotificationAsync(
-                                request.OwnerEmail, request.VehicleTitle);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Failed to send notification for vehicle approval {VehicleId}", request.VehicleId);
-                        }
-                    }, cancellationToken);
                 }
 
                 _logger.LogInformation("Vehicle {VehicleId} approved successfully", request.VehicleId);

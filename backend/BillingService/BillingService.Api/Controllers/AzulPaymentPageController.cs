@@ -1,6 +1,8 @@
 using BillingService.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Cryptography;
 
 namespace BillingService.Api.Controllers;
 
@@ -10,7 +12,7 @@ namespace BillingService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/azul")]
-public class AzulPaymentPageController : ControllerBase
+public class AzulPaymentPageController : BillingBaseController
 {
     private readonly IAzulPaymentService _azulService;
     private readonly ILogger<AzulPaymentPageController> _logger;
@@ -29,14 +31,26 @@ public class AzulPaymentPageController : ControllerBase
     /// <param name="request">Request containing dealer info and return URLs</param>
     /// <returns>Redirect URL and session ID for Azul payment page</returns>
     [HttpPost("payment-page/init")]
-    [AllowAnonymous]
+    [Authorize]
+    [EnableRateLimiting("BillingPolicy")]
     public async Task<ActionResult<PaymentPageInitResponse>> InitPaymentPage(
         [FromBody] PaymentPageInitRequest request)
     {
         try
         {
+            // Security: Validate DealerId matches JWT (IDOR prevention — OWASP A01:2021)
+            var jwtDealerId = GetDealerIdFromJwt();
+            if (request.DealerId != jwtDealerId && !IsAdmin())
+                return StatusCode(403, new { error = "Access denied: cannot perform operations for another dealer" });
+
             _logger.LogInformation("Initializing Azul payment page for dealer {DealerId}, purpose: {Purpose}",
                 request.DealerId, request.Purpose);
+
+            // SECURITY: Validate redirect URLs to prevent open redirect (OWASP A01:2021)
+            if (!BillingApplicationService.IsAllowedRedirectUrl(request.ReturnUrl))
+                return BadRequest(new { Error = "ReturnUrl inválida. Solo se permiten dominios de OKLA." });
+            if (!BillingApplicationService.IsAllowedRedirectUrl(request.CancelUrl))
+                return BadRequest(new { Error = "CancelUrl inválida. Solo se permiten dominios de OKLA." });
 
             // Generate unique session ID for this payment page session
             var sessionId = Guid.NewGuid().ToString("N");
@@ -172,9 +186,27 @@ public class AzulPaymentPageController : ControllerBase
 
     private bool VerifyAzulSignature(AzulCallbackData data)
     {
-        // TODO: Implement actual signature verification using Azul's auth key
-        // For now, return true for development
-        return true;
+        // SECURITY: Verify Azul callback signature using HMAC-SHA512
+        // The AuthHash must match the computed hash of the response fields
+        var authKey = Environment.GetEnvironmentVariable("AZUL_AUTH_KEY");
+        if (string.IsNullOrEmpty(authKey))
+        {
+            _logger.LogError("AZUL_AUTH_KEY environment variable is not configured. Cannot verify Azul signatures.");
+            return false; // FAIL CLOSED — reject if no key configured
+        }
+
+        // Azul computes hash over: OrderNumber + ResponseCode + DataVaultToken + AuthorizationCode
+        var dataToSign = string.Concat(
+            data.OrderNumber ?? "",
+            data.ResponseCode ?? "",
+            data.DataVaultToken ?? "",
+            data.AuthorizationCode ?? "");
+
+        using var hmac = new HMACSHA512(System.Text.Encoding.UTF8.GetBytes(authKey));
+        var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(dataToSign));
+        var computedHashHex = Convert.ToHexString(computedHash).ToLowerInvariant();
+
+        return string.Equals(computedHashHex, data.AuthHash, StringComparison.OrdinalIgnoreCase);
     }
 }
 

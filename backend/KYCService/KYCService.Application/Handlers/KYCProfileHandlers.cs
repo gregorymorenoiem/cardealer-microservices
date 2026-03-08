@@ -100,6 +100,10 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
                 existingProfile.IncorporationDate = ToUtc(request.IncorporationDate);
                 existingProfile.LegalRepresentative = request.LegalRepresentative;
                 existingProfile.UpdatedAt = DateTime.UtcNow;
+                // Ley 172-13 Art. 5 — Consent tracking (re-consent on resubmission)
+                existingProfile.ConsentGivenAt = request.DataProcessingConsent ? DateTime.UtcNow : existingProfile.ConsentGivenAt;
+                existingProfile.ConsentVersion = request.ConsentVersion ?? existingProfile.ConsentVersion;
+                existingProfile.BiometricConsentGivenAt = request.BiometricProcessingConsent ? DateTime.UtcNow : existingProfile.BiometricConsentGivenAt;
                 // Clear previous rejection data
                 existingProfile.RejectionReason = null;
                 existingProfile.RejectedAt = null;
@@ -173,7 +177,11 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
             BusinessType = request.BusinessType,
             IncorporationDate = ToUtc(request.IncorporationDate),
             LegalRepresentative = request.LegalRepresentative,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            // Ley 172-13 Art. 5 — Consent tracking
+            ConsentGivenAt = request.DataProcessingConsent ? DateTime.UtcNow : null,
+            ConsentVersion = request.ConsentVersion,
+            BiometricConsentGivenAt = request.BiometricProcessingConsent ? DateTime.UtcNow : null
         };
 
         // Si es PEP, incrementar nivel de riesgo inicial
@@ -209,12 +217,8 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
     /// <summary>
     /// Masks a document number for secure logging (shows only last 4 characters)
     /// </summary>
-    private static string MaskDocumentNumber(string documentNumber)
-    {
-        if (string.IsNullOrEmpty(documentNumber) || documentNumber.Length <= 4)
-            return "****";
-        return new string('*', documentNumber.Length - 4) + documentNumber[^4..];
-    }
+    private static string MaskDocumentNumber(string? documentNumber) =>
+        Services.PiiMaskingHelper.MaskDocumentNumber(documentNumber);
 
     private static KYCProfileDto MapToDto(KYCProfile p) => new()
     {
@@ -232,7 +236,8 @@ public class CreateKYCProfileHandler : IRequestHandler<CreateKYCProfileCommand, 
         PlaceOfBirth = p.PlaceOfBirth,
         Nationality = p.Nationality,
         PrimaryDocumentType = p.PrimaryDocumentType,
-        PrimaryDocumentNumber = p.PrimaryDocumentNumber,
+        // Ley 172-13 Art. 31 — Mask document number in API responses
+        PrimaryDocumentNumber = MaskDocumentNumber(p.PrimaryDocumentNumber ?? ""),
         PrimaryDocumentExpiry = p.PrimaryDocumentExpiry,
         Email = p.Email,
         Phone = p.Phone,
@@ -411,12 +416,12 @@ public class ApproveKYCProfileHandler : IRequestHandler<ApproveKYCProfileCommand
         var updated = await _repository.UpdateAsync(profile, cancellationToken);
 
         // Publish RabbitMQ event (NotificationService consumes it)
+        // NOTE: Email/FullName removed per Ley 172-13 Art. 27 (Data Minimization).
+        // Consumers should fetch user data from their own stores using UserId.
         await _eventPublisher.PublishStatusChangedAsync(new KYCProfileStatusChangedEvent
         {
             ProfileId    = profile.Id,
             UserId       = profile.UserId,
-            Email        = profile.Email ?? string.Empty,
-            FullName     = profile.FullName,
             PreviousStatus = previousStatus,
             NewStatus    = "Approved",
             Reason       = request.Notes,
@@ -480,12 +485,11 @@ public class RejectKYCProfileHandler : IRequestHandler<RejectKYCProfileCommand, 
         var updated = await _repository.UpdateAsync(profile, cancellationToken);
 
         // Publish RabbitMQ event (NotificationService consumes it)
+        // NOTE: Email/FullName removed per Ley 172-13 Art. 27 (Data Minimization).
         await _eventPublisher.PublishStatusChangedAsync(new KYCProfileStatusChangedEvent
         {
             ProfileId      = profile.Id,
             UserId         = profile.UserId,
-            Email          = profile.Email ?? string.Empty,
-            FullName       = profile.FullName,
             PreviousStatus = previousStatus,
             NewStatus      = "Rejected",
             Reason         = request.RejectionReason,
@@ -541,7 +545,7 @@ public class UploadKYCDocumentHandler : IRequestHandler<UploadKYCDocumentCommand
             throw new InvalidOperationException($"KYC Profile with ID {request.KYCProfileId} not found");
         }
 
-        _logger.LogInformation("Profile found: Status={Status}, FullName={FullName}", profile.Status, profile.FullName);
+        _logger.LogInformation("Profile found: Status={Status}, UserId={UserId}", profile.Status, profile.UserId);
 
         var documentId = Guid.NewGuid();
         var document = new KYCDocument

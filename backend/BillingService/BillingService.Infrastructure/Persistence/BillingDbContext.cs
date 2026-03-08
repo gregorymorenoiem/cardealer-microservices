@@ -11,6 +11,14 @@ public class BillingDbContext : DbContext
     public DbSet<StripeCustomer> StripeCustomers => Set<StripeCustomer>();
     public DbSet<EarlyBirdMember> EarlyBirdMembers => Set<EarlyBirdMember>();
     public DbSet<AzulTransaction> AzulTransactions => Set<AzulTransaction>();
+    // AUDIT FIX: OklaCoins entities were missing from DbContext — wallet and transactions
+    // were defined as domain entities but never registered, making the entire OKLA Coins
+    // feature non-functional (controller returned hardcoded mock data)
+    public DbSet<OklaCoinsWallet> OklaCoinsWallets => Set<OklaCoinsWallet>();
+    public DbSet<OklaCoinsTransaction> OklaCoinsTransactions => Set<OklaCoinsTransaction>();
+
+    // RETENTION FIX: Track every subscription plan change for churn analytics
+    public DbSet<SubscriptionChangeHistory> SubscriptionChangeHistory => Set<SubscriptionChangeHistory>();
 
     public BillingDbContext(DbContextOptions<BillingDbContext> options) : base(options)
     {
@@ -170,6 +178,53 @@ public class BillingDbContext : DbContext
 
         // Apply AzulTransaction configuration
         modelBuilder.ApplyConfiguration(new Configurations.AzulTransactionConfiguration());
+
+        // ========================================
+        // OKLA Coins — Wallet & Transactions
+        // AUDIT FIX: These entities were domain-only with no persistence.
+        // ========================================
+        modelBuilder.Entity<OklaCoinsWallet>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DealerId).IsUnique();
+
+            entity.Property(e => e.Currency).HasMaxLength(10).HasDefaultValue("USD");
+        });
+
+        modelBuilder.Entity<OklaCoinsTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.WalletId);
+            entity.HasIndex(e => e.DealerId);
+            entity.HasIndex(e => e.CreatedAt);
+
+            entity.Property(e => e.AmountUsd).HasPrecision(18, 2);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.PackageSlug).HasMaxLength(100);
+        });
+
+        // RETENTION FIX: Subscription Change History for churn analytics
+        modelBuilder.Entity<SubscriptionChangeHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DealerId);
+            entity.HasIndex(e => e.SubscriptionId);
+            entity.HasIndex(e => e.Direction);
+            entity.HasIndex(e => e.ChangedAt);
+            entity.HasIndex(e => new { e.DealerId, e.ChangedAt });
+
+            entity.Property(e => e.OldPrice).HasPrecision(18, 2);
+            entity.Property(e => e.NewPrice).HasPrecision(18, 2);
+            entity.Property(e => e.Currency).HasMaxLength(3);
+            entity.Property(e => e.ReasonDetails).HasMaxLength(1000);
+            entity.Property(e => e.ChangedBy).HasMaxLength(100);
+            entity.Property(e => e.StripeEventId).HasMaxLength(100);
+
+            entity.HasOne(e => e.Subscription)
+                .WithMany()
+                .HasForeignKey(e => e.SubscriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 
     // ✅ AUDIT FIX: Auto-update timestamps and concurrency stamps

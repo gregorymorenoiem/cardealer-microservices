@@ -167,7 +167,7 @@ namespace AdminService.Api.Controllers
                 var vehicle = await _vehicleServiceClient.GetVehicleByIdAsync(vehicleId, ct);
 
                 if (vehicle == null)
-                    return NotFound(new { Error = $"Vehicle {vehicleId} not found" });
+                    return NotFound(new { error = $"Vehicle {vehicleId} not found" });
 
                 return Ok(new
                 {
@@ -197,7 +197,7 @@ namespace AdminService.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting vehicle {VehicleId}", vehicleId);
-                return StatusCode(500, new { Error = "Failed to get vehicle" });
+                return StatusCode(500, new { error = "Failed to get vehicle" });
             }
         }
 
@@ -227,12 +227,12 @@ namespace AdminService.Api.Controllers
 
                 var result = await _mediator.Send(command);
 
-                return Ok(new { Success = result && approved, Message = "Vehicle approved successfully" });
+                return Ok(new { success = result && approved, message = "Vehicle approved successfully" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error approving vehicle {VehicleId}", vehicleId);
-                return StatusCode(500, new { Error = "Failed to approve vehicle" });
+                return StatusCode(500, new { error = "Failed to approve vehicle" });
             }
         }
 
@@ -245,7 +245,7 @@ namespace AdminService.Api.Controllers
             [FromBody] RejectVehicleRequest? request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Reason))
-                return BadRequest(new { Error = "A rejection reason is required" });
+                return BadRequest(new { error = "A rejection reason is required" });
 
             try
             {
@@ -266,12 +266,12 @@ namespace AdminService.Api.Controllers
 
                 var result = await _mediator.Send(command);
 
-                return Ok(new { Success = result && unpublished, Message = "Vehicle rejected successfully" });
+                return Ok(new { success = result && unpublished, message = "Vehicle rejected successfully" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error rejecting vehicle {VehicleId}", vehicleId);
-                return StatusCode(500, new { Error = "Failed to reject vehicle" });
+                return StatusCode(500, new { error = "Failed to reject vehicle" });
             }
         }
 
@@ -289,14 +289,14 @@ namespace AdminService.Api.Controllers
                 var result = await _vehicleServiceClient.FeatureVehicleAsync(vehicleId, request.Featured, ct);
 
                 if (!result)
-                    return StatusCode(500, new { Error = "Failed to update featured status" });
+                    return StatusCode(502, new { error = "Downstream service failed to update featured status" });
 
-                return Ok(new { Success = true, Message = $"Vehicle featured status set to {request.Featured}" });
+                return Ok(new { success = true, message = $"Vehicle featured status set to {request.Featured}" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error toggling featured for vehicle {VehicleId}", vehicleId);
-                return StatusCode(500, new { Error = "Failed to toggle featured status" });
+                return StatusCode(500, new { error = "Failed to toggle featured status" });
             }
         }
 
@@ -311,14 +311,14 @@ namespace AdminService.Api.Controllers
                 var result = await _vehicleServiceClient.DeleteVehicleAsync(vehicleId, ct);
 
                 if (!result)
-                    return StatusCode(500, new { Error = "Failed to delete vehicle" });
+                    return NotFound(new { error = $"Vehicle {vehicleId} not found or could not be deleted" });
 
-                return Ok(new { Success = true, Message = "Vehicle deleted successfully" });
+                return Ok(new { success = true, message = "Vehicle deleted successfully" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting vehicle {VehicleId}", vehicleId);
-                return StatusCode(500, new { Error = "Failed to delete vehicle" });
+                return StatusCode(500, new { error = "Failed to delete vehicle" });
             }
         }
     }

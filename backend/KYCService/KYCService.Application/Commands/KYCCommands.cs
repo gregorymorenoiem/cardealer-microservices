@@ -58,6 +58,24 @@ public record CreateKYCProfileCommand : IRequest<KYCProfileDto>
     public string? BusinessType { get; init; }
     public DateTime? IncorporationDate { get; init; }
     public string? LegalRepresentative { get; init; }
+    
+    // Consentimiento (Ley 172-13 Art. 5)
+    /// <summary>
+    /// El usuario debe aceptar explícitamente el procesamiento de datos personales.
+    /// Obligatorio por Ley 172-13 Art. 5. Sin consentimiento, no se puede crear el perfil.
+    /// </summary>
+    public bool DataProcessingConsent { get; init; }
+    
+    /// <summary>
+    /// Consentimiento separado para procesamiento de datos biométricos
+    /// (foto de cédula, selfie, face matching).
+    /// </summary>
+    public bool BiometricProcessingConsent { get; init; }
+    
+    /// <summary>
+    /// Versión del aviso de privacidad aceptado (e.g., "v2.0-2026-01")
+    /// </summary>
+    public string? ConsentVersion { get; init; }
 }
 
 /// <summary>

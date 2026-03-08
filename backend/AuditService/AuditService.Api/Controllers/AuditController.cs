@@ -5,12 +5,14 @@ using AuditService.Application.Features.Audit.Queries.GetAuditLogs;
 using AuditService.Application.Features.Audit.Queries.GetAuditStats;
 using AuditService.Shared;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuditService.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class AuditController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -29,6 +29,11 @@ public record KYCProfileDto
     
     // Documentos
     public DocumentType PrimaryDocumentType { get; init; }
+    /// <summary>
+    /// Masked document number (shows only last 4 characters).
+    /// Full number is NOT returned in API responses per Ley 172-13 Art. 31.
+    /// Admin endpoints should use a separate DTO with the full number if needed.
+    /// </summary>
     public string? PrimaryDocumentNumber { get; init; }
     public DateTime? PrimaryDocumentExpiry { get; init; }
     

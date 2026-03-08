@@ -108,20 +108,27 @@ public class DealerService : IDealerService
                 var stats = await response.Content.ReadFromJsonAsync<DealerMgmtStatsResponse>(JsonOptions, cancellationToken);
                 if (stats != null)
                 {
+                    // Map DealerManagementService plan counts to v2 tier names using PlanConfiguration
+                    var libre = 0; // Free tier not tracked in stats.ByPlan
+                    var visible = stats.ByPlan?.Starter ?? 0; // v1 Starter → v2 Visible
+                    var pro = stats.ByPlan?.Pro ?? 0;
+                    var elite = stats.ByPlan?.Enterprise ?? 0;
+
                     return new DealerStatsDto
                     {
                         Total = stats.TotalDealers,
                         Active = stats.ActiveDealers,
                         Pending = stats.PendingVerification,
                         Suspended = Math.Max(0, stats.TotalDealers - stats.ActiveDealers - stats.PendingVerification),
-                        TotalMrr = (stats.ByPlan?.Enterprise ?? 0) * 299
-                                 + (stats.ByPlan?.Pro ?? 0) * 149
-                                 + (stats.ByPlan?.Starter ?? 0) * 49,
+                        TotalMrr = elite * CarDealer.Contracts.Enums.PlanConfiguration.PriceElite
+                                 + pro * CarDealer.Contracts.Enums.PlanConfiguration.PricePro
+                                 + visible * CarDealer.Contracts.Enums.PlanConfiguration.PriceVisible,
                         ByPlan = new DealerPlanBreakdown
                         {
-                            Starter = stats.ByPlan?.Starter ?? 0,
-                            Pro = stats.ByPlan?.Pro ?? 0,
-                            Enterprise = stats.ByPlan?.Enterprise ?? 0
+                            Libre = libre,
+                            Visible = visible,
+                            Pro = pro,
+                            Elite = elite
                         }
                     };
                 }
@@ -346,6 +353,7 @@ public class DealerService : IDealerService
             var result = await GetDealersAsync(page: 1, pageSize: 500, cancellationToken: cancellationToken);
             var dealers = result.Items;
 
+            // Use v2 display names from PlanConfiguration for consistent breakdown
             return new DealerStatsDto
             {
                 Total = result.Total,
@@ -355,9 +363,10 @@ public class DealerService : IDealerService
                 TotalMrr = dealers.Sum(d => d.Mrr),
                 ByPlan = new DealerPlanBreakdown
                 {
-                    Starter = dealers.Count(d => string.Equals(d.Plan, "starter", StringComparison.OrdinalIgnoreCase)),
+                    Libre = dealers.Count(d => string.Equals(d.Plan, "libre", StringComparison.OrdinalIgnoreCase)),
+                    Visible = dealers.Count(d => string.Equals(d.Plan, "visible", StringComparison.OrdinalIgnoreCase)),
                     Pro = dealers.Count(d => string.Equals(d.Plan, "pro", StringComparison.OrdinalIgnoreCase)),
-                    Enterprise = dealers.Count(d => string.Equals(d.Plan, "enterprise", StringComparison.OrdinalIgnoreCase))
+                    Elite = dealers.Count(d => string.Equals(d.Plan, "elite", StringComparison.OrdinalIgnoreCase))
                 }
             };
         }
@@ -374,13 +383,8 @@ public class DealerService : IDealerService
 
     private static AdminDealerDto MapToDealerDto(DealerMgmtDto dealer)
     {
-        var plan = (dealer.CurrentPlan ?? "Free").ToLowerInvariant() switch
-        {
-            "enterprise" or "premium" => "enterprise",
-            "professional" or "pro" => "pro",
-            "starter" or "basic" => "starter",
-            _ => "none"
-        };
+        // Use PlanConfiguration to map any internal name to v2 frontend key
+        var plan = CarDealer.Contracts.Enums.PlanConfiguration.GetFrontendKey(dealer.CurrentPlan);
 
         // Map DealerManagementService status → frontend-compatible status
         var status = (dealer.Status ?? "Pending").ToLowerInvariant() switch
@@ -397,13 +401,8 @@ public class DealerService : IDealerService
             _ => false
         };
 
-        var mrr = plan switch
-        {
-            "enterprise" => 299m,
-            "pro" => 149m,
-            "starter" => 49m,
-            _ => 0m
-        };
+        // Use v2 prices from PlanConfiguration (instead of hardcoded old v1 prices)
+        var mrr = CarDealer.Contracts.Enums.PlanConfiguration.GetMonthlyPrice(dealer.CurrentPlan);
 
         return new AdminDealerDto
         {

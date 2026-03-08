@@ -39,53 +39,98 @@ public class RabbitMqEventConsumer : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        try
+        // RELIABILITY: Retry loop for RabbitMQ connection (handles K8s startup races)
+        const int maxRetries = 10;
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
         {
-            InitializeRabbitMq();
-
-            if (_channel == null)
+            try
             {
-                _logger.LogError("Failed to initialize RabbitMQ channel");
+                InitializeRabbitMq();
+
+                if (_channel == null)
+                {
+                    _logger.LogError("Failed to initialize RabbitMQ channel");
+                    return;
+                }
+
+                // DispatchConsumersAsync=true requires AsyncEventingBasicConsumer
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+
+                consumer.Received += async (model, ea) =>
+                {
+                    try
+                    {
+                        var body = ea.Body.ToArray();
+                        var message = Encoding.UTF8.GetString(body);
+                        var routingKey = ea.RoutingKey;
+
+                        _logger.LogInformation("Received event with routing key: {RoutingKey}", routingKey);
+
+                        await ProcessEventAsync(message, routingKey, stoppingToken);
+
+                        // Acknowledge the message
+                        _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing event");
+
+                        // RELIABILITY: Track retry count to prevent infinite poison message loop
+                        var retryCount = GetRetryCount(ea.BasicProperties);
+                        if (retryCount >= 3)
+                        {
+                            _logger.LogError("Poison message detected after {Retries} retries. Sending to DLX.", retryCount);
+                            _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
+                        }
+                        else
+                        {
+                            _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
+                        }
+                    }
+                };
+
+                _channel.BasicConsume(queue: QueueName, autoAck: false, consumer: consumer);
+
+                _logger.LogInformation("AuditService consumer started. Listening for ALL events on queue: {QueueName}", QueueName);
+
+                // Keep the service running
+                await Task.Delay(Timeout.Infinite, stoppingToken);
                 return;
             }
-
-            // DispatchConsumersAsync=true requires AsyncEventingBasicConsumer
-            var consumer = new AsyncEventingBasicConsumer(_channel);
-
-            consumer.Received += async (model, ea) =>
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                try
+                return; // Graceful shutdown
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "AuditService RabbitMQ consumer: connection attempt {Attempt}/{Max} failed. Retrying...",
+                    attempt, maxRetries);
+
+                if (attempt == maxRetries)
                 {
-                    var body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
-                    var routingKey = ea.RoutingKey;
-
-                    _logger.LogInformation("Received event with routing key: {RoutingKey}", routingKey);
-
-                    await ProcessEventAsync(message, routingKey, stoppingToken);
-
-                    // Acknowledge the message
-                    _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                    _logger.LogError("AuditService RabbitMQ consumer: All {Max} connection attempts exhausted.", maxRetries);
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing event");
-                    // Negative acknowledgment - requeue the message
-                    _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
-                }
-            };
 
-            _channel.BasicConsume(queue: QueueName, autoAck: false, consumer: consumer);
-
-            _logger.LogInformation("AuditService consumer started. Listening for ALL events on queue: {QueueName}", QueueName);
-
-            // Keep the service running
-            await Task.Delay(Timeout.Infinite, stoppingToken);
+                var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt));
+                await Task.Delay(delay, stoppingToken);
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error in RabbitMQ consumer");
-        }
+    }
+
+    /// <summary>
+    /// RELIABILITY: Extract retry count from RabbitMQ x-death headers.
+    /// </summary>
+    private static int GetRetryCount(RabbitMQ.Client.IBasicProperties? properties)
+    {
+        if (properties?.Headers == null) return 0;
+        if (!properties.Headers.TryGetValue("x-death", out var xDeath)) return 0;
+        if (xDeath is IList<object> entries && entries.Count > 0 &&
+            entries[0] is IDictionary<string, object> first &&
+            first.TryGetValue("count", out var countObj))
+            return Convert.ToInt32(countObj);
+        return 0;
     }
 
     private void InitializeRabbitMq()
@@ -204,8 +249,10 @@ public class RabbitMqEventConsumer : BackgroundService
 
     public override void Dispose()
     {
-        _channel?.Close();
-        _connection?.Close();
+        try { _channel?.Close(); } catch { /* ignore */ }
+        try { _connection?.Close(); } catch { /* ignore */ }
+        _channel?.Dispose();
+        _connection?.Dispose();
         base.Dispose();
     }
 

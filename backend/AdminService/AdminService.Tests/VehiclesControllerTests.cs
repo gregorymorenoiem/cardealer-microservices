@@ -1,5 +1,7 @@
 using AdminService.Api.Controllers;
+using AdminService.Application.Interfaces;
 using AdminService.Application.UseCases.Vehicles.ApproveVehicle;
+using AdminService.Infrastructure.External;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -18,12 +20,13 @@ public class VehiclesControllerTests
     {
         // Arrange
         var mediatorMock = new Mock<IMediator>();
+        var vehicleServiceMock = new Mock<IVehicleServiceClient>();
         var loggerMock = new Mock<ILogger<VehiclesController>>();
         
         mediatorMock.Setup(x => x.Send(It.IsAny<ApproveVehicleCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var controller = new VehiclesController(mediatorMock.Object, loggerMock.Object);
+        var controller = new VehiclesController(mediatorMock.Object, vehicleServiceMock.Object, loggerMock.Object);
         var vehicleId = Guid.NewGuid();
         var request = new ApproveVehicleRequest(
             ApprovedBy: "admin@test.com",
@@ -46,12 +49,13 @@ public class VehiclesControllerTests
     {
         // Arrange
         var mediatorMock = new Mock<IMediator>();
+        var vehicleServiceMock = new Mock<IVehicleServiceClient>();
         var loggerMock = new Mock<ILogger<VehiclesController>>();
         
         mediatorMock.Setup(x => x.Send(It.IsAny<ApproveVehicleCommand>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Database error"));
 
-        var controller = new VehiclesController(mediatorMock.Object, loggerMock.Object);
+        var controller = new VehiclesController(mediatorMock.Object, vehicleServiceMock.Object, loggerMock.Object);
         var vehicleId = Guid.NewGuid();
         var request = new ApproveVehicleRequest(
             "admin@test.com",

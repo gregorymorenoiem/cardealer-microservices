@@ -9,7 +9,7 @@ namespace BillingService.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class InvoicesController : ControllerBase
+public class InvoicesController : BillingBaseController
 {
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly ILogger<InvoicesController> _logger;
@@ -24,9 +24,9 @@ public class InvoicesController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetAll(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken)
     {
+        var dealerId = GetDealerIdFromJwt();
         var invoices = await _invoiceRepository.GetByDealerIdAsync(dealerId, cancellationToken);
         return Ok(invoices.Select(MapToDto));
     }
@@ -38,6 +38,11 @@ public class InvoicesController : ControllerBase
         if (invoice == null)
             return NotFound();
 
+        // Security: Validate ownership (IDOR prevention)
+        var dealerId = GetDealerIdFromJwt();
+        if (invoice.DealerId != dealerId && !IsAdmin())
+            return StatusCode(403, new { error = "Access denied: this invoice belongs to another dealer" });
+
         return Ok(MapToDto(invoice));
     }
 
@@ -47,6 +52,11 @@ public class InvoicesController : ControllerBase
         var invoice = await _invoiceRepository.GetByInvoiceNumberAsync(invoiceNumber, cancellationToken);
         if (invoice == null)
             return NotFound();
+
+        // Security: Validate ownership (IDOR prevention)
+        var dealerId = GetDealerIdFromJwt();
+        if (invoice.DealerId != dealerId && !IsAdmin())
+            return StatusCode(403, new { error = "Access denied: this invoice belongs to another dealer" });
 
         return Ok(MapToDto(invoice));
     }
@@ -61,9 +71,9 @@ public class InvoicesController : ControllerBase
     [HttpGet("status/{status}")]
     public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetByStatus(
         InvoiceStatus status,
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken)
     {
+        var dealerId = GetDealerIdFromJwt();
         var invoices = await _invoiceRepository.GetByStatusAsync(status, cancellationToken);
         return Ok(invoices.Where(i => i.DealerId == dealerId).Select(MapToDto));
     }
@@ -72,14 +82,15 @@ public class InvoicesController : ControllerBase
     public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetByDateRange(
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken)
     {
+        var dealerId = GetDealerIdFromJwt();
         var invoices = await _invoiceRepository.GetByDateRangeAsync(startDate, endDate, cancellationToken);
         return Ok(invoices.Where(i => i.DealerId == dealerId).Select(MapToDto));
     }
 
     [HttpGet("overdue")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetOverdue(CancellationToken cancellationToken)
     {
         var invoices = await _invoiceRepository.GetOverdueInvoicesAsync(cancellationToken);
@@ -87,6 +98,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpGet("unpaid")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetUnpaid(CancellationToken cancellationToken)
     {
         var invoices = await _invoiceRepository.GetUnpaidInvoicesAsync(cancellationToken);
@@ -96,6 +108,7 @@ public class InvoicesController : ControllerBase
     [HttpGet("total/{dealerId:guid}")]
     public async Task<ActionResult<decimal>> GetTotalByDealer(Guid dealerId, CancellationToken cancellationToken)
     {
+        dealerId = GetDealerIdOrOverride(dealerId);
         var total = await _invoiceRepository.GetTotalAmountByDealerAsync(dealerId, cancellationToken);
         return Ok(total);
     }
@@ -103,9 +116,9 @@ public class InvoicesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<InvoiceDto>> Create(
         [FromBody] CreateInvoiceRequest request,
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken)
     {
+        var dealerId = GetDealerIdFromJwt();
         var invoiceNumber = await GenerateInvoiceNumber(cancellationToken);
 
         var invoice = new Invoice(
@@ -129,6 +142,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpPost("{id:guid}/issue")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<InvoiceDto>> Issue(Guid id, CancellationToken cancellationToken)
     {
         var invoice = await _invoiceRepository.GetByIdAsync(id, cancellationToken);
@@ -143,6 +157,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpPost("{id:guid}/send")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<InvoiceDto>> Send(Guid id, CancellationToken cancellationToken)
     {
         var invoice = await _invoiceRepository.GetByIdAsync(id, cancellationToken);
@@ -157,6 +172,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpPost("{id:guid}/record-payment")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<InvoiceDto>> RecordPayment(
         Guid id,
         [FromBody] RecordPaymentRequest request,
@@ -174,6 +190,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpPost("{id:guid}/mark-overdue")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<InvoiceDto>> MarkOverdue(Guid id, CancellationToken cancellationToken)
     {
         var invoice = await _invoiceRepository.GetByIdAsync(id, cancellationToken);
@@ -188,6 +205,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpPost("{id:guid}/cancel")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<InvoiceDto>> Cancel(Guid id, CancellationToken cancellationToken)
     {
         var invoice = await _invoiceRepository.GetByIdAsync(id, cancellationToken);
@@ -202,6 +220,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpPost("{id:guid}/void")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<InvoiceDto>> VoidInvoice(Guid id, CancellationToken cancellationToken)
     {
         var invoice = await _invoiceRepository.GetByIdAsync(id, cancellationToken);
@@ -216,6 +235,7 @@ public class InvoicesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var exists = await _invoiceRepository.ExistsAsync(id, cancellationToken);

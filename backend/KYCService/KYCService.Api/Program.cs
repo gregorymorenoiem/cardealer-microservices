@@ -1,4 +1,5 @@
 using CarDealer.Shared.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.OpenApi.Models;
@@ -16,9 +17,28 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Secrets;
 using KYCService.Domain.Entities;
+using CarDealer.Shared.Logging.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
+using CarDealer.Shared.Audit.Extensions;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
+using Serilog;
+
+const string ServiceName = "KYCService";
+const string ServiceVersion = "1.2.0";
+
+try
+{
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ============= STRUCTURED LOGGING =============
+builder.UseStandardSerilog(ServiceName);
+
+// ============= SECRETS PROVIDER =============
+builder.Services.AddSecretProvider();
 
 // Add services to the container
 builder.Services.AddControllers()
@@ -100,7 +120,7 @@ builder.Services.AddHttpClient<IAuditServiceClient, AuditServiceClient>(client =
     client.BaseAddress = new Uri(auditServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(5); // Short timeout to not block main operations
     client.DefaultRequestHeaders.Add("X-Service-Name", "KYCService");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // IdempotencyService Client - Centralized idempotency management
 var idempotencyServiceUrl = builder.Configuration["Services:IdempotencyService:Url"] ?? "http://idempotencyservice:8080";
@@ -109,7 +129,7 @@ builder.Services.AddHttpClient<IIdempotencyServiceClient, IdempotencyServiceClie
     client.BaseAddress = new Uri(idempotencyServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(3); // Very short timeout - fallback if unavailable
     client.DefaultRequestHeaders.Add("X-Service-Name", "KYCService");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // MediaService Client - For generating fresh pre-signed URLs
 // Default URL for Docker: mediaservice:8080 (container-to-container, matches K8s)
@@ -119,7 +139,7 @@ builder.Services.AddHttpClient<IMediaServiceClient, MediaServiceClient>(client =
     client.BaseAddress = new Uri(mediaServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(10);
     client.DefaultRequestHeaders.Add("X-Service-Name", "KYCService");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // KYC Event Publisher — publishes RabbitMQ events consumed by NotificationService
 builder.Services.AddSingleton<IKYCEventPublisher, KYCEventPublisher>();
@@ -202,10 +222,11 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("account_type", "4", "5"));
 });
 
-// Health Checks
+// Health Checks — single DbContext check (covers both EF Core + underlying PostgreSQL)
 builder.Services.AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection") ?? "", tags: new[] { "ready", "external" })
-    .AddDbContextCheck<KYCDbContext>(tags: new[] { "ready", "external" });
+    .AddDbContextCheck<KYCDbContext>(
+        name: "database",
+        tags: new[] { "ready", "external" });
 
 // CORS - Restricted to known origins (defense-in-depth)
 builder.Services.AddCors(options =>
@@ -216,8 +237,8 @@ builder.Services.AddCors(options =>
             ?? new[] { "http://localhost:3000", "https://okla.com.do", "https://www.okla.com.do", "https://api.okla.com.do" };
         
         policy.WithOrigins(allowedOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader()
+              .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With", "X-Idempotency-Key")
               .AllowCredentials();
     });
 });
@@ -229,7 +250,26 @@ builder.Services.AddHttpClient<KYCService.Domain.Interfaces.IErrorServiceClient,
     client.BaseAddress = new Uri(errorServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(builder.Configuration);
+
+// ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/problem+json"
+    });
 });
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
+// Audit Publisher — sends audit events to AuditService via RabbitMQ
+builder.Services.AddAuditPublisher(builder.Configuration);
 
 var app = builder.Build();
 
@@ -240,12 +280,15 @@ var app = builder.Build();
 // 1. Global exception handler - must be first to catch all exceptions
 app.UseKYCExceptionHandler();
 
-// 2. Rate limiting - before authentication to block abusive requests early
-app.UseKYCRateLimit();
+// 2. Request Logging — structured with TraceId, UserId, CorrelationId
+app.UseRequestLogging();
 
 // Configure the HTTP request pipeline
 // OWASP Security Headers
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
+
+// Response Compression — early, after error handling
+app.UseResponseCompression();
 
 if (app.Environment.IsDevelopment())
 {
@@ -254,29 +297,44 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsProduction())
+    app.UseHttpsRedirection();
 
-// SECURITY: Add security headers
-app.Use(async (context, next) =>
+// Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-    context.Response.Headers["X-Frame-Options"] = "DENY";
-    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
-    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'";
-    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
-    await next();
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
 app.UseCors();
+
+// 2. Rate limiting - AFTER CORS so OPTIONS preflight isn't blocked
+app.UseKYCRateLimit();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+// 2.5. Audit middleware — after auth (has userId context)
+app.UseAuditMiddleware();
 
 // 3. Idempotency - after auth so we have user context
 app.UseIdempotency();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+
+// ============= HEALTH CHECKS (Triple Pattern) =============
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => !check.Tags.Contains("external")
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+});
 
 // Apply migrations on startup (all environments)
 using (var scope = app.Services.CreateScope())
@@ -286,20 +344,34 @@ using (var scope = app.Services.CreateScope())
     try
     {
         dbContext.Database.Migrate();
-        logger.LogInformation("KYCService database migrations applied successfully");
+        Log.Information("Database migration completed for {ServiceName}", ServiceName);
     }
     catch (Exception ex)
     {
-        logger.LogWarning(ex, "KYCService migration failed, trying EnsureCreated");
+        Log.Warning(ex, "Migration failed for {ServiceName}, trying EnsureCreated", ServiceName);
         try
         {
             dbContext.Database.EnsureCreated();
         }
         catch (Exception ex2)
         {
-            logger.LogError(ex2, "KYCService DB init failed — continuing startup");
+            Log.Error(ex2, "DB init failed for {ServiceName} — continuing startup", ServiceName);
         }
     }
 }
 
+Log.Information("Starting {ServiceName} v{ServiceVersion} — KYC Compliance Platform", ServiceName, ServiceVersion);
 app.Run();
+
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application {ServiceName} terminated unexpectedly", "KYCService");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+// Make the implicit Program class public so it can be accessed by tests
+public partial class Program { }

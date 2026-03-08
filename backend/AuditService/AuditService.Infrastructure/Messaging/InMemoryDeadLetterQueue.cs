@@ -77,6 +77,8 @@ public class InMemoryDeadLetterQueue : IDeadLetterQueue
                 _logger.LogError(
                     "❌ Evento alcanzó máximo de reintentos ({MaxRetries}): {EventType} | ID: {EventId}",
                     _maxRetries, failedEvent.EventType, eventId);
+                // RELIABILITY: Remove exhausted events to prevent unbounded memory growth
+                _failedEvents.TryRemove(eventId, out _);
             }
             else
             {

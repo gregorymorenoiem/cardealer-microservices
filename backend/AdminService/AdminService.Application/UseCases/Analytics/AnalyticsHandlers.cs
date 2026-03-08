@@ -33,8 +33,8 @@ public class GetAnalyticsOverviewQueryHandler : IRequestHandler<GetAnalyticsOver
 
         await Task.WhenAll(userStatsTask, dealerStatsTask);
 
-        var userStats = userStatsTask.Result;
-        var dealerStats = dealerStatsTask.Result;
+        var userStats = await userStatsTask;
+        var dealerStats = await dealerStatsTask;
 
         // Estimate vehicles from dealer stats (each dealer has ~5 vehicles avg)
         var estimatedListings = (dealerStats?.Active ?? 0) * 5;
@@ -166,13 +166,13 @@ public class GetPlatformAnalyticsQueryHandler : IRequestHandler<GetPlatformAnaly
         await Task.WhenAll(overviewTask, weeklyTask, topVehiclesTask, trafficTask, devicesTask, conversionsTask, revenueTask);
 
         return new PlatformAnalyticsResponse(
-            overviewTask.Result,
-            weeklyTask.Result,
-            topVehiclesTask.Result,
-            trafficTask.Result,
-            devicesTask.Result,
-            conversionsTask.Result,
-            revenueTask.Result
+            await overviewTask,
+            await weeklyTask,
+            await topVehiclesTask,
+            await trafficTask,
+            await devicesTask,
+            await conversionsTask,
+            await revenueTask
         );
     }
 }

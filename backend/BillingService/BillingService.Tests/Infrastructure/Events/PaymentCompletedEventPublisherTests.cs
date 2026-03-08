@@ -82,13 +82,13 @@ public class PaymentCompletedEventPublisherTests
         _channelMock.Verify(
             ch => ch.BasicPublish(
                 "cardealer.events",
-                "payment.completed",
+                "billing.payment.completed",
                 false,
                 It.IsAny<IBasicProperties>(),
                 It.IsAny<ReadOnlyMemory<byte>>()),
             Times.Once);
 
-        publishedRoutingKey.Should().Be("payment.completed");
+        publishedRoutingKey.Should().Be("billing.payment.completed");
         publishedBody.Should().NotBeNull();
 
         var bodyString = Encoding.UTF8.GetString(publishedBody!);

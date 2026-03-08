@@ -14,7 +14,7 @@ namespace BillingService.Api.Controllers;
 [ApiController]
 [Route("api/dealer-billing")]
 [Authorize]
-public class DealerBillingController : ControllerBase
+public class DealerBillingController : BillingBaseController
 {
     private readonly BillingApplicationService _billingService;
     private readonly ISubscriptionRepository _subscriptionRepository;
@@ -48,6 +48,8 @@ public class DealerBillingController : ControllerBase
         Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        // Security: Validate dealerId matches JWT claim (admin can override)
+        dealerId = GetDealerIdOrOverride(dealerId);
         try
         {
             var summary = await _billingService.GetBillingSummaryAsync(dealerId, cancellationToken);
@@ -77,9 +79,9 @@ public class DealerBillingController : ControllerBase
     /// </summary>
     [HttpGet("subscription")]
     public async Task<ActionResult<DealerSubscriptionDto>> GetSubscription(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        var dealerId = GetDealerIdFromJwt();
         var subscription = await _subscriptionRepository.GetByDealerIdAsync(dealerId, cancellationToken);
         if (subscription == null)
         {
@@ -108,9 +110,9 @@ public class DealerBillingController : ControllerBase
     /// </summary>
     [HttpGet("invoices")]
     public async Task<ActionResult<List<DealerInvoiceDto>>> GetInvoices(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        var dealerId = GetDealerIdFromJwt();
         var invoices = await _invoiceRepository.GetByDealerIdAsync(dealerId, cancellationToken);
         return Ok(invoices.Select(MapToInvoiceDto).ToList());
     }
@@ -120,9 +122,9 @@ public class DealerBillingController : ControllerBase
     /// </summary>
     [HttpGet("payments")]
     public async Task<ActionResult<List<DealerPaymentDto>>> GetPayments(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        var dealerId = GetDealerIdFromJwt();
         var payments = await _paymentRepository.GetByDealerIdAsync(dealerId, cancellationToken);
         return Ok(payments.Select(MapToPaymentDto).ToList());
     }
@@ -132,9 +134,9 @@ public class DealerBillingController : ControllerBase
     /// </summary>
     [HttpGet("usage")]
     public async Task<ActionResult<UsageMetricsDto>> GetUsage(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        var dealerId = GetDealerIdFromJwt();
         var subscription = await _subscriptionRepository.GetByDealerIdAsync(dealerId, cancellationToken);
         var usage = await CalculateUsageMetrics(dealerId, subscription, cancellationToken);
         return Ok(usage);
@@ -145,9 +147,9 @@ public class DealerBillingController : ControllerBase
     /// </summary>
     [HttpGet("stats")]
     public async Task<ActionResult<BillingStatsDto>> GetStats(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        var dealerId = GetDealerIdFromJwt();
         var subscription = await _subscriptionRepository.GetByDealerIdAsync(dealerId, cancellationToken);
         var stats = await CalculateBillingStats(dealerId, subscription, cancellationToken);
         return Ok(stats);
@@ -171,9 +173,9 @@ public class DealerBillingController : ControllerBase
     /// </summary>
     [HttpGet("payment-methods")]
     public async Task<ActionResult<List<PaymentMethodDto>>> GetPaymentMethods(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         CancellationToken cancellationToken = default)
     {
+        var dealerId = GetDealerIdFromJwt();
         // For now, return mock data - in production, this would come from Stripe
         var customer = await _billingService.GetCustomerByDealerIdAsync(dealerId, cancellationToken);
         
@@ -203,10 +205,10 @@ public class DealerBillingController : ControllerBase
     /// </summary>
     [HttpPost("payment-methods")]
     public async Task<ActionResult<PaymentMethodDto>> AddPaymentMethod(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         [FromBody] AddPaymentMethodRequest request,
         CancellationToken cancellationToken = default)
     {
+        var dealerId = GetDealerIdFromJwt();
         _logger.LogInformation("Adding payment method for dealer {DealerId}", dealerId);
         
         // In production, this would:
@@ -236,10 +238,10 @@ public class DealerBillingController : ControllerBase
     /// </summary>
     [HttpPut("payment-methods/{paymentMethodId}/default")]
     public async Task<ActionResult> SetDefaultPaymentMethod(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         [FromRoute] string paymentMethodId,
         CancellationToken cancellationToken = default)
     {
+        var dealerId = GetDealerIdFromJwt();
         _logger.LogInformation("Setting default payment method {PaymentMethodId} for dealer {DealerId}",
             paymentMethodId, dealerId);
         
@@ -255,10 +257,10 @@ public class DealerBillingController : ControllerBase
     /// </summary>
     [HttpDelete("payment-methods/{paymentMethodId}")]
     public async Task<ActionResult> RemovePaymentMethod(
-        [FromHeader(Name = "X-Dealer-Id")] Guid dealerId,
         [FromRoute] string paymentMethodId,
         CancellationToken cancellationToken = default)
     {
+        var dealerId = GetDealerIdFromJwt();
         _logger.LogInformation("Removing payment method {PaymentMethodId} for dealer {DealerId}",
             paymentMethodId, dealerId);
         
@@ -443,24 +445,64 @@ public class DealerBillingController : ControllerBase
 
     private string GetPlanDescription(SubscriptionPlan plan) => plan switch
     {
-        SubscriptionPlan.Free => "Libre — Acceso básico gratuito. Publicaciones ilimitadas, 10 fotos.",
-        SubscriptionPlan.Basic => "Visible — Prioridad media, 3 destacados/mes, $15 OKLA Coins, badge Verificado.",
-        SubscriptionPlan.Professional => "Pro — Alta prioridad, 10 destacados, ChatAgent IA 500 conv/mes, $45 OKLA Coins.",
-        SubscriptionPlan.Enterprise => "Elite — Top prioridad, 25 destacados, ChatAgent ilimitado, $120 OKLA Coins, video tour.",
+        SubscriptionPlan.Free => "Libre — Publicaciones ilimitadas, hasta 10 fotos, posición estándar, 1 valoración IA gratis, perfil básico, soporte FAQ.",
+        SubscriptionPlan.Basic => "Visible $29/mes — Publicaciones ilimitadas, hasta 20 fotos, prioridad media, 3 destacados/mes, $15 créditos, badge Verificado, analytics básico, 5 valoraciones IA/mes, perfil mejorado, soporte email 48h.",
+        SubscriptionPlan.Professional => "Pro $89/mes — Publicaciones ilimitadas, hasta 30 fotos, alta prioridad, 10 destacados/mes, $45 créditos, ChatAgent Web+WhatsApp 500 conv/mes, agendamiento automático, human handoff email, valoración IA ilimitada, perfil premium, soporte chat 12h.",
+        SubscriptionPlan.Enterprise => "Elite $199/mes — Publicaciones ilimitadas, hasta 40 fotos + video tour, top prioridad, 25 destacados/mes, $120 créditos, badge Premium dorado, ChatAgent ilimitado + WhatsApp, recordatorios WA, live chat + CRM handoff, valoración IA ilimitada + informe PDF, perfil premium + showcase homepage, soporte dedicado 4h.",
         _ => "Plan personalizado"
     };
 
     private FeaturesDto GetDefaultFeatures(string plan) => plan.ToLower() switch
     {
-        // Libre: Publicaciones ilimitadas, 10 fotos, sin extras
-        "free" => new FeaturesDto(-1, 1, "1 GB", false, false, false, false, false, false, false, false, false, false),
-        // Visible $29: Ilimitadas, 20 fotos, analytics básico, lead mgmt
-        "basic" => new FeaturesDto(-1, 5, "5 GB", true, false, false, false, false, true, true, false, true, true),
-        // Pro $89: Ilimitadas, 30 fotos, ChatAgent, WhatsApp, analytics avanzado
-        "professional" => new FeaturesDto(-1, 20, "20 GB", true, false, true, true, false, true, true, true, true, true),
-        // Elite $199: Ilimitadas, 40 fotos + video, todo incluido
-        "enterprise" => new FeaturesDto(-1, -1, "unlimited", true, true, true, true, true, true, true, true, true, true),
-        _ => new FeaturesDto(-1, 1, "1 GB", false, false, false, false, false, false, false, false, false, false)
+        // LIBRE: Publicaciones ∞ ILIMITADAS, 10 fotos, posición estándar, 1 valoración IA gratis
+        "free" => new FeaturesDto(
+            Listings: -1, Users: 1, Storage: "1 GB",
+            Analytics: false, Api: false, CustomBranding: false, PrioritySupport: false,
+            DedicatedManager: false, BulkUpload: false, Marketplace: false, RealEstate: false,
+            Crm: false, Reporting: false,
+            MaxPhotosPerListing: 10, FeaturedListingsPerMonth: 0, OklaCoinsMonthly: 0,
+            ChatAgentConversations: 0, VideoTourEnabled: false, VerifiedBadge: false, WhatsAppIntegration: false,
+            SearchPriority: "standard", PricingAgentValuations: 1, DealerProfileType: "basic",
+            SupportLevel: "faq", AutoScheduling: false, HumanHandoff: "none"),
+        // VISIBLE $29/mes: ∞ ILIMITADAS, 20 fotos, prioridad media, 3 destacados, $15 créditos
+        "basic" => new FeaturesDto(
+            Listings: -1, Users: 5, Storage: "5 GB",
+            Analytics: true, Api: false, CustomBranding: false, PrioritySupport: false,
+            DedicatedManager: false, BulkUpload: true, Marketplace: true, RealEstate: false,
+            Crm: true, Reporting: true,
+            MaxPhotosPerListing: 20, FeaturedListingsPerMonth: 3, OklaCoinsMonthly: 15,
+            ChatAgentConversations: 0, VideoTourEnabled: false, VerifiedBadge: true, WhatsAppIntegration: false,
+            SearchPriority: "medium", PricingAgentValuations: 5, DealerProfileType: "enhanced",
+            SupportLevel: "email_48h", AutoScheduling: false, HumanHandoff: "none"),
+        // PRO $89/mes: ∞ ILIMITADAS, 30 fotos, alta prioridad, 10 destacados, $45 créditos, ChatAgent 500 conv
+        "professional" => new FeaturesDto(
+            Listings: -1, Users: 20, Storage: "20 GB",
+            Analytics: true, Api: false, CustomBranding: true, PrioritySupport: true,
+            DedicatedManager: false, BulkUpload: true, Marketplace: true, RealEstate: true,
+            Crm: true, Reporting: true,
+            MaxPhotosPerListing: 30, FeaturedListingsPerMonth: 10, OklaCoinsMonthly: 45,
+            ChatAgentConversations: 500, VideoTourEnabled: false, VerifiedBadge: true, WhatsAppIntegration: true,
+            SearchPriority: "high", PricingAgentValuations: -1, DealerProfileType: "premium",
+            SupportLevel: "chat_12h", AutoScheduling: true, HumanHandoff: "email_alert"),
+        // ÉLITE $199/mes: ∞ ILIMITADAS, 40 fotos + video tour, top prioridad, 25 destacados, $120 créditos
+        "enterprise" => new FeaturesDto(
+            Listings: -1, Users: -1, Storage: "unlimited",
+            Analytics: true, Api: true, CustomBranding: true, PrioritySupport: true,
+            DedicatedManager: true, BulkUpload: true, Marketplace: true, RealEstate: true,
+            Crm: true, Reporting: true,
+            MaxPhotosPerListing: 40, FeaturedListingsPerMonth: 25, OklaCoinsMonthly: 120,
+            ChatAgentConversations: -1, VideoTourEnabled: true, VerifiedBadge: true, WhatsAppIntegration: true,
+            SearchPriority: "top", PricingAgentValuations: -1, DealerProfileType: "premium_showcase",
+            SupportLevel: "dedicated_4h", AutoScheduling: true, HumanHandoff: "live_chat_crm"),
+        _ => new FeaturesDto(
+            Listings: -1, Users: 1, Storage: "1 GB",
+            Analytics: false, Api: false, CustomBranding: false, PrioritySupport: false,
+            DedicatedManager: false, BulkUpload: false, Marketplace: false, RealEstate: false,
+            Crm: false, Reporting: false,
+            MaxPhotosPerListing: 10, FeaturedListingsPerMonth: 0, OklaCoinsMonthly: 0,
+            ChatAgentConversations: 0, VideoTourEnabled: false, VerifiedBadge: false, WhatsAppIntegration: false,
+            SearchPriority: "standard", PricingAgentValuations: 1, DealerProfileType: "basic",
+            SupportLevel: "faq", AutoScheduling: false, HumanHandoff: "none")
     };
 }
 
@@ -576,7 +618,22 @@ public record FeaturesDto(
     bool Marketplace,
     bool RealEstate,
     bool Crm,
-    bool Reporting
+    bool Reporting,
+    // Plan-differentiating features (OKLA v2 — matches plan table)
+    int MaxPhotosPerListing = 10,
+    int FeaturedListingsPerMonth = 0,
+    int OklaCoinsMonthly = 0,
+    int ChatAgentConversations = 0,           // -1 = unlimited (Elite)
+    bool VideoTourEnabled = false,
+    bool VerifiedBadge = false,
+    bool WhatsAppIntegration = false,
+    // New features from OKLA plan table
+    string SearchPriority = "standard",       // standard | medium | high | top
+    int PricingAgentValuations = 1,           // -1 = unlimited
+    string DealerProfileType = "basic",       // basic | enhanced | premium | premium_showcase
+    string SupportLevel = "faq",              // faq | email_48h | chat_12h | dedicated_4h
+    bool AutoScheduling = false,              // Agendamiento de citas automático
+    string HumanHandoff = "none"              // none | email_alert | live_chat_crm
 );
 
 public record PaymentMethodDto(
