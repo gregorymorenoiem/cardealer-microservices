@@ -32,7 +32,7 @@ metadata:
     app: frontend-web
     tier: frontend
 spec:
-  replicas: 1
+  replicas: 2 # HA: Match HPA minReplicas to avoid SPOF during metrics-server outage
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -80,6 +80,8 @@ spec:
               cpu: "500m"
           securityContext:
             allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
             readOnlyRootFilesystem: false
             capabilities:
               drop:
@@ -125,7 +127,7 @@ metadata:
     app: gateway
     tier: backend
 spec:
-  replicas: 1
+  replicas: 2 # HA: Match HPA minReplicas to avoid SPOF during metrics-server outage
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -227,7 +229,7 @@ metadata:
     app: authservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 2 # HA: Match HPA minReplicas to avoid SPOF during metrics-server outage
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -517,7 +519,7 @@ metadata:
     app: vehiclessaleservice
     tier: backend
 spec:
-  replicas: 1
+  replicas: 2 # HA: Match HPA minReplicas to avoid SPOF during metrics-server outage
   strategy:
     type: RollingUpdate
     rollingUpdate:

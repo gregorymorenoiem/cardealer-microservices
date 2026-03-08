@@ -380,6 +380,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # VehiclesSaleService - Puerto 5010 (CRUD vehículos)
   vehiclessaleservice:
@@ -536,6 +537,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🟠 MICROSERVICIOS IMPORTANTES
@@ -607,6 +609,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ContactService - Puerto 5003 (Mensajería entre usuarios)
   contactservice:
@@ -706,6 +709,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # AdminService - Puerto 5007 (Panel de administración)
   adminservice:
@@ -758,6 +762,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # StaffService - Puerto 15200 (Gestión de empleados/staff)
   errorservice:
@@ -863,6 +868,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # BillingService - Puerto 15107 (Facturación y Pagos)
   billingservice:
@@ -940,6 +946,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🎬 SERVICIOS DE PROCESAMIENTO 360
@@ -991,6 +998,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # CRMService - Puerto 15106 (CRM y Leads)
   crmservice:
@@ -1038,6 +1046,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # SearchService - Puerto 15093 (Búsqueda)
   comparisonservice:
@@ -1091,6 +1100,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ReviewService - Puerto 5059 (Reseñas)
   reviewservice:
@@ -1145,6 +1155,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # FinanceService - Puerto 15108 (Financiamiento)
   reportsservice:
@@ -1198,6 +1209,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # SchedulerService - Puerto 15111 (Tareas Programadas)
   auditservice:
@@ -1251,6 +1263,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🗄️ CACHE SERVICE (Redis wrapper)
@@ -1298,6 +1311,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🏥 HEALTH CHECK SERVICE
@@ -1346,6 +1360,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ──────────────────────────────────────────────────────────────────────
   # 👤 USER BEHAVIOR SERVICE
@@ -1395,6 +1410,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ──────────────────────────────────────────────────────────────────────
   # 💳 PAYMENT SERVICE (Multi-Provider: Azul, CardNET, PixelPay, Fygaro, PayPal)
@@ -1446,6 +1462,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ──────────────────────────────────────────────────────────────────────
   # 📚 API DOCS SERVICE
@@ -1526,6 +1543,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🔒 COMPLIANCE & LEGAL SERVICES
@@ -1585,6 +1603,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ComplianceService - Puerto 15151 (Cumplimiento Regulatorio General)
   spyneintegrationservice:
@@ -1633,6 +1652,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # ────────────────────────────────────────────────────────────────────
   # 📦 FASE 4 CONSOLIDADOS: RegulatoryAlertService, ComplianceIntegrationService

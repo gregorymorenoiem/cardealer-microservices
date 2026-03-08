@@ -108,13 +108,13 @@ services:
     secrets:
       - jwt_secret_key
     ports:
-      - "8080:80"
+      - "8080:8080"
     depends_on:
       - consul
     networks:
       - cardealer-net
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -150,7 +150,7 @@ services:
       - microsoft_client_id
       - microsoft_client_secret
     ports:
-      - "15085:80"
+      - "15085:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -161,7 +161,7 @@ services:
     networks:
       - cardealer-net
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -186,14 +186,14 @@ services:
       - jwt_secret_key
       - rabbitmq_password
     ports:
-      - "15086:80"
+      - "15086:8080"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - cardealer-net
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -218,14 +218,14 @@ services:
       - jwt_secret_key
       - rabbitmq_password
     ports:
-      - "15087:80"
+      - "15087:8080"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - cardealer-net
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -246,14 +246,14 @@ services:
       - db_password
       - jwt_secret_key
     ports:
-      - "15083:80"
+      - "15083:8080"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - cardealer-net
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -278,14 +278,14 @@ services:
       - jwt_secret_key
       - rabbitmq_password
     ports:
-      - "15088:80"
+      - "15088:8080"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - cardealer-net
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -317,7 +317,7 @@ services:
       - twilio_auth_token
       - firebase_service_account
     ports:
-      - "15084:80"
+      - "15084:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -326,7 +326,7 @@ services:
     networks:
       - cardealer-net
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -351,7 +351,7 @@ services:
       - db_password
       - jwt_secret_key
     ports:
-      - "15089:80"
+      - "15089:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -374,7 +374,7 @@ services:
       - db_password
       - jwt_secret_key
     ports:
-      - "15090:80"
+      - "15090:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -398,7 +398,7 @@ services:
       - aws_access_key
       - aws_secret_key
     ports:
-      - "15091:80"
+      - "15091:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -424,7 +424,7 @@ services:
       - db_password
       - rabbitmq_password
     ports:
-      - "15092:80"
+      - "15092:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -456,7 +456,7 @@ services:
       RUNTIME_API_URL: http://gateway:8080
       RUNTIME_APP_VERSION: "1.0.0"
     ports:
-      - "80:80"
+      - "80:8080"
       - "443:443"
     depends_on:
       - gateway

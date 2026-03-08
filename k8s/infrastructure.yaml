@@ -57,6 +57,13 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "100m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999 # redis user in alpine image
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: redis-data
               mountPath: /data
@@ -160,6 +167,13 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999 # rabbitmq user in alpine image
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           livenessProbe:
             exec:
               command:

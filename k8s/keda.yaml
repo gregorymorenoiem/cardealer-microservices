@@ -19,6 +19,25 @@
 # =============================================================================
 
 ---
+# Dedicated secret for KEDA RabbitMQ connection
+# Must be created separately with the full AMQP connection string:
+#   kubectl create secret generic rabbitmq-keda-secret -n okla \
+#     --from-literal=connection-string="amqp://user:password@rabbitmq:5672/"
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-keda-secret
+  namespace: okla
+  labels:
+    app: rabbitmq
+    component: keda-auth
+type: Opaque
+stringData:
+  # This value will be overridden by the deploy workflow with actual credentials.
+  # Format: amqp://<user>:<password>@rabbitmq:5672/
+  connection-string: "amqp://guest:guest@rabbitmq:5672/"
+
+---
 # Conexión a RabbitMQ para KEDA
 apiVersion: keda.sh/v1alpha1
 kind: TriggerAuthentication
@@ -28,9 +47,8 @@ metadata:
 spec:
   secretTargetRef:
     - parameter: host
-      name: rabbitmq-secret
+      name: rabbitmq-keda-secret
       key: connection-string
-      # Valor esperado: amqp://guest:guest@rabbitmq:5672/
 
 ---
 # ═══════════════════════════════════════════════════════════════════════════

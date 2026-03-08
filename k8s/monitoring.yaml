@@ -145,7 +145,7 @@ spec:
       serviceAccountName: default
       containers:
         - name: prometheus
-          image: prom/prometheus:latest
+          image: prom/prometheus:v2.51.0 # Pin version to avoid breaking upgrades
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus"
