@@ -1,0 +1,1 @@
+Te pido que ejecutes urgentemente el prompt 2. Como si no tuvieras registro y realiza una auditoría de KPIs Core: Auditar MRR, churn, CAC, LTV, conversión y tráfico vs proyecciones del modelo Freemium v3 y ejecuta correcciones y ejecuta inmediatamente sus recomendaciones. Y continúa con la monitorización de .prompts/prompt_6.md.

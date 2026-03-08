@@ -61,13 +61,17 @@ Sistema de gestión de suscripciones para dealers. Maneja planes mensuales/anual
 >
 > Ver documento: `08-COMPLIANCE-LEGAL-RD/10-PROCEDIMIENTO-FISCAL-OKLA.md`
 
-### 1.2 Planes Disponibles
+### 1.2 Planes Disponibles (v2 — Freemium Model v3)
 
-| Plan           | Precio Mensual | Precio Anual            | Vehículos | Características        |
-| -------------- | -------------- | ----------------------- | --------- | ---------------------- |
-| **Starter**    | $49            | $490 (2 meses gratis)   | 15        | Básico                 |
-| **Pro** ⭐     | $129           | $1,290 (2 meses gratis) | 50        | Destacados + Analytics |
-| **Enterprise** | $299           | $2,990 (2 meses gratis) | Ilimitado | API + CRM + Premium    |
+> ⚠️ **ACTUALIZADO Feb 2026**: Los planes se renombraron de Starter/Pro/Enterprise
+> a Libre/Visible/Pro/Elite. Ver `frontend/web-next/src/lib/plan-config.ts` como fuente de verdad.
+
+| Plan        | Precio Mensual | Vehículos | Características                                   |
+| ----------- | -------------- | --------- | ------------------------------------------------- |
+| **Libre**   | $0             | Ilimitado | Búsqueda estándar, 10 fotos                       |
+| **Visible** | $29            | Ilimitado | Badge verificado, bulk upload, leads, 20 fotos    |
+| **Pro** ⭐  | $89            | Ilimitado | Analytics, ChatAgent, PricingAgent, 30 fotos      |
+| **Elite**   | $199           | Ilimitado | API, dashboard completo, video 360, prioridad top |
 
 ### 1.3 Early Bird (Hasta 31/01/2026)
 
@@ -105,11 +109,12 @@ Sistema de gestión de suscripciones para dealers. Maneja planes mensuales/anual
 │   └────────────────┘  │             │  │ • GET /my-subscription   │   │      │
 │   ┌────────────────┐  │             │  └──────────────────────────┘   │      │
 │   │ Dashboard      │──┘             │  ┌──────────────────────────┐   │      │
-│   │ (Manage Sub)   │               │  │ Plans                    │   │      │
-│   └────────────────┘               │  │ • Starter $49/mo (15)    │   │      │
-│                                    │  │ • Pro $129/mo (50) ⭐    │   │      │
-│   Payment Provider                 │  │ • Enterprise $299/mo    │   │      │
-│   ┌────────────────┐               │  └──────────────────────────┘   │      │
+│   │ (Manage Sub)   │               │  │ Plans (v2)               │   │      │
+│   └────────────────┘               │  │ • Libre $0/mo            │   │      │
+│                                    │  │ • Visible $29/mo         │   │      │
+│   Payment Provider                 │  │ • Pro $89/mo ⭐          │   │      │
+│   ┌────────────────┐               │  │ • Elite $199/mo          │   │      │
+│                                    │  └──────────────────────────┘   │      │
 │   │ AZUL           │◀─────────────│  ┌──────────────────────────┐   │      │
 │   │ Banco Popular  │               │  │ Early Bird (31/01/2026)  │   │      │
 │   │ (Recurring)    │               │  │ • 90 days free trial     │   │      │
@@ -246,13 +251,17 @@ public enum SubscriptionStatus
 
 ### 3.2 SubscriptionPlan (Enum)
 
+> ⚠️ Los nombres internos del enum (Free/Basic/Professional/Enterprise) se mapean
+> a los nombres v2 de usuario (Libre/Visible/Pro/Elite) mediante `PlanConfiguration`.
+
 ```csharp
 public enum SubscriptionPlan
 {
-    Free = 0,               // Sin suscripción
-    Starter = 1,            // $49/mes
-    Pro = 2,                // $129/mes
-    Enterprise = 3          // $299/mes
+    Free = 0,               // → Libre ($0/mes)
+    Basic = 1,              // → Visible ($29/mes)
+    Professional = 2,       // → Pro ($89/mes)
+    Enterprise = 3,         // → Elite ($199/mes)
+    Custom = 4              // → Elite (custom pricing)
 }
 ```
 
@@ -587,50 +596,71 @@ public enum CancellationReason
 
 ---
 
-## 5. Características por Plan
+## 5. Características por Plan (v2 — Freemium Model v3)
 
-### 5.1 Plan Starter ($49/mes)
+> Ver `frontend/web-next/src/lib/plan-config.ts` para la lista completa de features.
 
-| Característica     | Incluido    |
-| ------------------ | ----------- |
-| Vehículos activos  | 15          |
-| Fotos por vehículo | 10          |
-| Destacados         | ❌          |
-| Analytics básico   | ✅          |
-| Analytics avanzado | ❌          |
-| Soporte            | Email (48h) |
-| Import CSV         | ❌          |
-| API access         | ❌          |
-| CRM integración    | ❌          |
+### 5.1 Plan Libre ($0/mes)
 
-### 5.2 Plan Pro ($129/mes)
+| Característica     | Incluido          |
+| ------------------ | ----------------- |
+| Vehículos activos  | Ilimitado         |
+| Fotos por vehículo | 10                |
+| Prioridad búsqueda | Estándar          |
+| Badge              | Ninguno           |
+| ChatAgent          | ❌                |
+| PricingAgent       | 1 consulta gratis |
+| Dashboard          | ❌                |
+| Video Tour / 360   | ❌                |
 
-| Característica     | Incluido    |
-| ------------------ | ----------- |
-| Vehículos activos  | 50          |
-| Fotos por vehículo | 20          |
-| Destacados         | 5/mes       |
-| Analytics básico   | ✅          |
-| Analytics avanzado | ✅          |
-| Soporte            | Email (24h) |
-| Import CSV         | ✅          |
-| API access         | ❌          |
-| CRM integración    | ❌          |
+### 5.2 Plan Visible ($29/mes)
 
-### 5.3 Plan Enterprise ($299/mes)
+| Característica     | Incluido      |
+| ------------------ | ------------- |
+| Vehículos activos  | Ilimitado     |
+| Fotos por vehículo | 20            |
+| Prioridad búsqueda | Media         |
+| Badge              | ✅ Verificado |
+| Destacados         | 3/mes         |
+| ChatAgent Web      | 50 conv/mes   |
+| PricingAgent       | 5/mes         |
+| Dashboard          | Básico        |
+| Bulk Upload        | ✅            |
+| Lead Management    | ✅            |
 
-| Característica     | Incluido            |
-| ------------------ | ------------------- |
-| Vehículos activos  | Ilimitado           |
-| Fotos por vehículo | 30                  |
-| Destacados         | 20/mes              |
-| Analytics básico   | ✅                  |
-| Analytics avanzado | ✅                  |
-| Soporte            | Prioritario + Phone |
-| Import CSV         | ✅                  |
-| API access         | ✅                  |
-| CRM integración    | ✅                  |
-| Account Manager    | ✅                  |
+### 5.3 Plan Pro ($89/mes)
+
+| Característica     | Incluido           |
+| ------------------ | ------------------ |
+| Vehículos activos  | Ilimitado          |
+| Fotos por vehículo | 30                 |
+| Prioridad búsqueda | Alta               |
+| Badge              | ✅ Verificado Gold |
+| Destacados         | 10/mes             |
+| ChatAgent Web      | 200 conv/mes       |
+| ChatAgent WhatsApp | 50 conv/mes        |
+| PricingAgent       | 20/mes + PDF       |
+| Dashboard          | Avanzado           |
+| Branding Custom    | ✅                 |
+| Export Analytics   | ✅                 |
+
+### 5.4 Plan Elite ($199/mes)
+
+| Característica     | Incluido              |
+| ------------------ | --------------------- |
+| Vehículos activos  | Ilimitado             |
+| Fotos por vehículo | 50                    |
+| Prioridad búsqueda | Top                   |
+| Badge              | ✅ Verificado Premium |
+| Destacados         | 25/mes                |
+| ChatAgent Web      | Ilimitado             |
+| ChatAgent WhatsApp | Ilimitado             |
+| PricingAgent       | Ilimitado + PDF       |
+| Dashboard          | Completo              |
+| API Access         | ✅                    |
+| Video Tour / 360   | ✅                    |
+| Soporte            | Prioritario           |
+| Account Manager    | ✅                    |
 
 ---
 
