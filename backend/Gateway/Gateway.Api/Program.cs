@@ -1,4 +1,5 @@
 // Gateway entry point — v2026.02.24
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,6 +19,7 @@ using Gateway.Domain.Interfaces;
 using Gateway.Infrastructure.Services;
 using Gateway.Application.UseCases;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Secrets;
 using CarDealer.Shared.Middleware;
 using CarDealer.Shared.RateLimiting.Extensions;
 using CarDealer.Shared.RateLimiting.Models;
@@ -26,7 +28,14 @@ using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Resilience.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using System.IO.Compression;
+using Microsoft.AspNetCore.ResponseCompression;
 
+const string ServiceName = "Gateway";
+const string ServiceVersion = "1.0.0";
+
+try
+{
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================================================================
@@ -41,6 +50,9 @@ builder.UseStandardSerilog("Gateway", options =>
     options.RabbitMQEnabled = false; // Gateway uses direct Seq, not RabbitMQ for logs
 });
 
+// ============= SECRETS PROVIDER =============
+builder.Services.AddSecretProvider();
+
 // 1. Determinar entorno
 var isDevelopment = builder.Environment.IsDevelopment();
 var configFile = isDevelopment ? "ocelot.dev.json" : "ocelot.prod.json";
@@ -50,7 +62,20 @@ var configFile = isDevelopment ? "ocelot.dev.json" : "ocelot.prod.json";
 builder.Configuration.AddJsonFile(configFile, optional: false, reloadOnChange: true);
 
 // 3. Configuración esencial
-builder.Services.AddResponseCompression();
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/problem+json"
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -95,8 +120,8 @@ builder.Services.AddStandardErrorHandling(options =>
     options.PublishToErrorService = builder.Configuration.GetValue<bool>("ErrorHandling:PublishToErrorService", true);
     options.RabbitMQHost = builder.Configuration["RabbitMQ:Host"] ?? builder.Configuration["RabbitMQ:HostName"] ?? "rabbitmq";
     options.RabbitMQPort = builder.Configuration.GetValue<int>("RabbitMQ:Port", 5672);
-    options.RabbitMQUser = builder.Configuration["RabbitMQ:UserName"] ?? builder.Configuration["RabbitMQ:User"] ?? "guest";
-    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+    options.RabbitMQUser = builder.Configuration["RabbitMQ:UserName"] ?? builder.Configuration["RabbitMQ:User"] ?? throw new InvalidOperationException("RabbitMQ:UserName is not configured.");
+    options.RabbitMQPassword = builder.Configuration["RabbitMQ:Password"] ?? throw new InvalidOperationException("RabbitMQ:Password is not configured.");
     options.IncludeStackTrace = builder.Environment.IsDevelopment();
 
     // Propagate convenience properties to nested RabbitMQ options used by RabbitMQErrorPublisher
@@ -264,23 +289,30 @@ else
 // 10. Audit Publisher for security monitoring
 builder.Services.AddAuditPublisher(builder.Configuration);
 
+// 11. Health Checks — register ASP.NET Core HealthCheckService so the custom
+//     HealthCheckMiddleware (which runs before Ocelot) can execute real probes.
+//     ⚠️ CRITICAL: /health excludes checks tagged "external" (per copilot-instructions.md)
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("Gateway is running"),
+        tags: new[] { "ready" });
+
 var app = builder.Build();
 
 // ============================================================================
 // MIDDLEWARE PIPELINE
 // ============================================================================
 
-// HTTPS Redirect — enforce HTTPS in production (OWASP)
-if (!isDevelopment)
+// FASE 2: Global Error Handling - PRIMERO para capturar todas las excepciones
+app.UseGlobalErrorHandling();
+
+// HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
 
 // Performance: Enable response compression early in pipeline (saves 60-80% bandwidth)
 app.UseResponseCompression();
-
-// FASE 2: Global Error Handling - PRIMERO para capturar todas las excepciones
-app.UseGlobalErrorHandling();
 
 // Graceful Degradation — intercepta circuit breakers y timeouts para
 // devolver respuestas degradadas (503 con Retry-After) en lugar de errores 500
@@ -291,6 +323,12 @@ app.UseRequestLogging();
 
 // Security Headers (OWASP) — before CORS and routing
 app.UseApiSecurityHeaders(isProduction: !isDevelopment);
+
+// Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // CORS debe ir primero antes de cualquier otro middleware de routing
 app.UseCors("ReactPolicy");
@@ -353,6 +391,15 @@ app.UseMiddleware<ServiceRegistrationMiddleware>();
 await app.UseOcelot();
 
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "💀 {ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Make Program class accessible for testing
 public partial class Program { }

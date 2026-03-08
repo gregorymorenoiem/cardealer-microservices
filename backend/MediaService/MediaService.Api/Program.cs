@@ -1,4 +1,5 @@
 using MediaService.Application;
+using Microsoft.AspNetCore.HttpOverrides;
 using MediaService.Infrastructure;
 using MediaService.Infrastructure.Extensions;
 using MediaService.Infrastructure.Middleware;
@@ -25,19 +26,27 @@ using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Audit.Extensions;
 using CarDealer.Shared.Messaging;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Secrets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.IO.Compression;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 
 const string ServiceName = "MediaService";
 const string ServiceVersion = "1.0.0";
 
+try
+{
 var builder = WebApplication.CreateBuilder(args);
 
 // ============= CENTRALIZED LOGGING (Serilog → Seq) =============
 builder.UseStandardSerilog(ServiceName);
+
+// ============= SECRETS PROVIDER =============
+builder.Services.AddSecretProvider();
 
 // Add services to the container
 builder.Services.AddControllers()
@@ -145,17 +154,27 @@ builder.Services.AddAuditPublisher(builder.Configuration);
 
 // ========== SERVICE DISCOVERY ==========
 
-// Consul Client
-builder.Services.AddSingleton<IConsulClient>(sp => new ConsulClient(config =>
+// Service Discovery Configuration - with fallback to NoOp when Consul is disabled
+var consulEnabled = builder.Configuration.GetValue<bool>("Consul:Enabled", false);
+if (consulEnabled)
 {
-    config.Address = new Uri(builder.Configuration["Consul:Address"] ?? "http://localhost:8500");
-}));
+    builder.Services.AddSingleton<IConsulClient>(sp =>
+    {
+        var consulAddress = builder.Configuration["Consul:Address"] ?? "http://localhost:8500";
+        return new ConsulClient(config => config.Address = new Uri(consulAddress));
+    });
 
-// Service Discovery Services
-builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
-builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
-builder.Services.AddHttpClient("HealthCheck");
-builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+    builder.Services.AddScoped<IServiceRegistry, ConsulServiceRegistry>();
+    builder.Services.AddScoped<IServiceDiscovery, ConsulServiceDiscovery>();
+    builder.Services.AddHttpClient("HealthCheck");
+    builder.Services.AddScoped<IHealthChecker, HttpHealthChecker>();
+}
+else
+{
+    // Use NoOp implementations when Consul is disabled
+    builder.Services.AddScoped<IServiceRegistry, NoOpServiceRegistry>();
+    builder.Services.AddScoped<IServiceDiscovery, NoOpServiceDiscovery>();
+}
 
 // ========================================
 
@@ -234,6 +253,22 @@ builder.Services.AddHttpClient<MediaService.Application.Interfaces.IAuditService
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json",
+        "text/json",
+        "application/problem+json"
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
 var app = builder.Build();
 
 // ============= MIDDLEWARE PIPELINE (Canonical Order — Microsoft/OWASP) =============
@@ -243,39 +278,48 @@ app.UseGlobalErrorHandling();
 // 2. Security Headers (OWASP) — early in pipeline
 app.UseApiSecurityHeaders(isProduction: !app.Environment.IsDevelopment());
 
-// 3. Request Logging
+// 3. Response Compression — early, after error handling
+app.UseResponseCompression();
+
+// 4. Request Logging
 app.UseRequestLogging();
 
-// 4. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
+// 5. HTTPS Redirection — only outside K8s (TLS terminates at Ingress in production)
 if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
 
-// 5. Swagger — development only
+// 6. Swagger — development only
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// 6. CORS — before auth
+// 6.5. Forwarded Headers — required for correct client IP behind K8s/LB
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+// 7. CORS — before auth
 app.UseCors();
 
-// 7. Rate Limiting
+// 8. Rate Limiting
 app.UseRateLimiter();
 
-// 8. Authentication & Authorization
+// 9. Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 7. Audit middleware — after auth (has userId context)
+// 10. Audit middleware — after auth (has userId context)
 app.UseAuditMiddleware();
 
-// 8. Service Discovery Auto-Registration
+// 11. Service Discovery Auto-Registration
 app.UseMiddleware<ServiceRegistrationMiddleware>();
 
-// 9. Endpoints
+// 12. Endpoints
 app.MapControllers();
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
@@ -288,6 +332,15 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "💀 {ServiceName} terminated unexpectedly", ServiceName);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Expose Program class for integration testing
 public partial class Program { }

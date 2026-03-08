@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using CarDealer.Shared.Configuration;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MediaService.Api.Controllers;
 
@@ -21,10 +23,12 @@ namespace MediaService.Api.Controllers;
 /// Controller for media upload, retrieval, and deletion
 /// Requires authentication by default to prevent storage abuse (OWASP A01:2021)
 /// Read-only endpoints (GET) are allowed anonymous for public media access
+/// Rate-limited with "uploads" policy on all POST endpoints (OWASP API4:2023)
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[EnableRateLimiting("uploads")]
 public class MediaController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -160,7 +164,7 @@ public class MediaController : ControllerBase
             // Get public URL
             var url = await _storageService.GetFileUrlAsync(storageKey);
 
-            return Ok(new
+            return StatusCode(201, new
             {
                 url = url,
                 publicId = storageKey,
@@ -243,7 +247,7 @@ public class MediaController : ControllerBase
             // Get public URL
             var url = await _storageService.GetFileUrlAsync(storageKey);
 
-            return Ok(new
+            return StatusCode(201, new
             {
                 url = url,
                 publicId = storageKey,

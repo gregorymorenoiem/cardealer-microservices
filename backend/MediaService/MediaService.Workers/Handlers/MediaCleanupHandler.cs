@@ -1,4 +1,3 @@
-using MediaService.Domain.Enums;
 using MediaService.Domain.Interfaces.Repositories;
 using MediaService.Domain.Interfaces.Services;
 using Microsoft.Extensions.Logging;
@@ -58,7 +57,7 @@ public class MediaCleanupHandler
         try
         {
             var staleAssets = await _mediaRepository.GetByStatusAndDateAsync(
-                MediaStatus.Uploaded, cutoffDate, cancellationToken);
+                Domain.Enums.MediaStatus.Uploaded, cutoffDate, cancellationToken);
 
             foreach (var asset in staleAssets)
             {

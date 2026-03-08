@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace MediaService.Api.Controllers;
 
@@ -14,6 +15,11 @@ namespace MediaService.Api.Controllers;
 public class Video360Controller : ControllerBase
 {
     private readonly ILogger<Video360Controller> _logger;
+
+    // XSS/SQL injection detection patterns
+    private static readonly Regex DangerousPatternRegex = new(
+        @"(<script|</script>|javascript:|onerror\s*=|onload\s*=|onclick\s*=|<iframe|<object|<embed|eval\s*\(|<svg|alert\s*\(|';--|OR\s+1\s*=\s*1|UNION\s+SELECT|DROP\s+TABLE|INSERT\s+INTO|DELETE\s+FROM|EXEC\s*\()",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public Video360Controller(ILogger<Video360Controller> logger)
     {
@@ -44,6 +50,14 @@ public class Video360Controller : ControllerBase
         if (vehicleId == Guid.Empty)
             return BadRequest(new { error = "VehicleId is required." });
 
+        // SECURITY: Validate title for XSS/SQL injection patterns
+        if (!string.IsNullOrEmpty(title) && DangerousPatternRegex.IsMatch(title))
+        {
+            _logger.LogWarning("Blocked 360° video upload with dangerous title pattern from user {UserId}", 
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown");
+            return BadRequest(new { error = "Title contains invalid characters." });
+        }
+
         // Validate content type
         var allowedTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -52,6 +66,8 @@ public class Video360Controller : ControllerBase
 
         if (!allowedTypes.Contains(file.ContentType))
             return BadRequest(new { error = $"Content type '{file.ContentType}' is not supported for 360° videos. Use MP4, MPEG, WebM, or MOV." });
+
+        var currentUserId = GetCurrentUserId();
 
         // TODO: Replace with MediatR command when Video360Service logic is migrated
         // In production, this would queue the video for background processing
@@ -64,7 +80,7 @@ public class Video360Controller : ControllerBase
             FileSize = file.Length,
             ContentType = file.ContentType,
             Status = "processing",
-            UploadedBy = GetCurrentUserId(),
+            UploadedBy = currentUserId,
             EstimatedProcessingTime = "2-5 minutes",
             CreatedAt = DateTime.UtcNow
         };
@@ -153,11 +169,17 @@ public class Video360Controller : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult Delete(Guid id)
     {
-        _logger.LogInformation("Deleting 360° video {VideoId}", id);
+        var currentUserId = GetCurrentUserId();
+        _logger.LogInformation("User {UserId} deleting 360° video {VideoId}", currentUserId, id);
 
         // TODO: Replace with MediatR command when Video360Service logic is migrated
+        // SECURITY: When real implementation is added, MUST verify ownership:
+        //   var video = await _repo.GetByIdAsync(id);
+        //   if (video == null) return NotFound(...);
+        //   if (video.UploadedBy != currentUserId) return Forbid();
         // In production, this would also clean up S3/CDN storage
         return NoContent();
     }
@@ -166,6 +188,12 @@ public class Video360Controller : ControllerBase
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                        ?? User.FindFirst("sub")?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            throw new UnauthorizedAccessException("User ID claim is missing or invalid in the JWT token.");
+        }
+
+        return userId;
     }
 }

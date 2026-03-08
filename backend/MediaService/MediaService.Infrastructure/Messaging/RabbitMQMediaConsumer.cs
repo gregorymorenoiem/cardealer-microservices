@@ -155,7 +155,7 @@ public class RabbitMQMediaConsumer : BackgroundService
         
         if (retryCount >= maxRetries)
         {
-            _logger.LogError("Failed to connect to RabbitMQ after {MaxRetries} attempts. Service will continue without RabbitMQ messaging.", maxRetries);
+            _logger.LogWarning("Failed to connect to RabbitMQ after {MaxRetries} attempts. Service will continue in degraded mode without RabbitMQ messaging.", maxRetries);
         }
     }
 
@@ -306,6 +306,17 @@ public class RabbitMQMediaConsumer : BackgroundService
         public Dictionary<string, object>? ProcessingOptions { get; set; }
         public DateTime Timestamp { get; set; }
         public string CommandId { get; set; } = string.Empty;
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("RabbitMQMediaConsumer stopping gracefully...");
+        
+        try { _channel?.Close(); } catch { /* swallow on shutdown */ }
+        try { _connection?.Close(); } catch { /* swallow on shutdown */ }
+        
+        await base.StopAsync(cancellationToken);
+        _logger.LogInformation("RabbitMQMediaConsumer stopped");
     }
 
     public override void Dispose()

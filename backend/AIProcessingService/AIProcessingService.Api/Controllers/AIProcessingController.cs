@@ -24,7 +24,7 @@ public class AIProcessingController : ControllerBase
     /// Process a single image (segmentation, background replacement, etc.)
     /// </summary>
     [HttpPost("process")]
-    [AllowAnonymous] // Temporarily allow anonymous for testing
+    [Authorize]
     public async Task<ActionResult<ProcessImageResponse>> ProcessImage([FromBody] ProcessImageRequest request, CancellationToken ct)
     {
         var userId = GetUserIdFromClaims();

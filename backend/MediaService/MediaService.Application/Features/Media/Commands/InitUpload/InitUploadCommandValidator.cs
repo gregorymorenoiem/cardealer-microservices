@@ -8,9 +8,27 @@ public class InitUploadCommandValidator : AbstractValidator<InitUploadCommand>
 {
     public InitUploadCommandValidator()
     {
-        RuleFor(x => x.OwnerId).NotEmpty();
-        RuleFor(x => x.FileName).NotEmpty().NoSqlInjection().NoXss();
-        RuleFor(x => x.ContentType).NotEmpty().NoSqlInjection().NoXss();
+        RuleFor(x => x.OwnerId)
+            .NotEmpty()
+            .NoSqlInjection()
+            .NoXss();
+
+        RuleFor(x => x.Context)
+            .MaximumLength(200)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.Context));
+
+        RuleFor(x => x.FileName)
+            .NotEmpty()
+            .NoSqlInjection()
+            .NoXss();
+
+        RuleFor(x => x.ContentType)
+            .NotEmpty()
+            .NoSqlInjection()
+            .NoXss();
+
         RuleFor(x => x.FileSize).GreaterThan(0);
     }
 }

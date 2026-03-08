@@ -251,4 +251,26 @@ public class MediaRepository : IMediaRepository
             MediaByContext = mediaByContext
         };
     }
+
+    public async Task<IList<MediaAsset>> GetByStatusAndDateAsync(
+        Domain.Enums.MediaStatus status, DateTime cutoffDate, CancellationToken cancellationToken = default)
+    {
+        return await _context.MediaAssets
+            .Include(x => x.Variants)
+            .Where(x => x.Status == status && x.CreatedAt < cutoffDate)
+            .OrderBy(x => x.CreatedAt)
+            .Take(500)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IList<MediaAsset>> GetOrphansOlderThanAsync(
+        DateTime cutoffDate, CancellationToken cancellationToken = default)
+    {
+        return await _context.MediaAssets
+            .Include(x => x.Variants)
+            .Where(x => x.OwnerId == string.Empty && x.CreatedAt < cutoffDate)
+            .OrderBy(x => x.CreatedAt)
+            .Take(500)
+            .ToListAsync(cancellationToken);
+    }
 }

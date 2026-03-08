@@ -1100,6 +1100,27 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/vehicle-data/{everything}",
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/vehicle-data/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "vehiclessaleservice",
+          "Port": 8080
+        }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/favorites/count",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -4672,7 +4693,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "azulpaymentservice",
+          "Host": "billingservice",
           "Port": 80
         }
       ]
@@ -4690,7 +4711,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "azulpaymentservice",
+          "Host": "billingservice",
           "Port": 80
         }
       ],
@@ -7016,7 +7037,7 @@
         {
           "Name": "Error Service",
           "Version": "v1",
-          "Url": "http://errorservice:80/swagger/v1/swagger.json"
+          "Url": "http://errorservice:8080/swagger/v1/swagger.json"
         }
       ]
     },

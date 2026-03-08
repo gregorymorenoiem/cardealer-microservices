@@ -86,6 +86,16 @@ public interface IMediaRepository
     /// Gets statistics about media assets
     /// </summary>
     Task<MediaStatistics> GetStatisticsAsync(DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets media assets by status that were created before the cutoff date
+    /// </summary>
+    Task<IList<MediaAsset>> GetByStatusAndDateAsync(Enums.MediaStatus status, DateTime cutoffDate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets orphaned media assets not associated with any vehicle, older than the cutoff date
+    /// </summary>
+    Task<IList<MediaAsset>> GetOrphansOlderThanAsync(DateTime cutoffDate, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

@@ -47,7 +47,7 @@ RUN mkdir -p /run/secrets
 # Create non-root user (Alpine syntax)
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /app /run/secrets
 
 # Set environment for Docker
 ENV ASPNETCORE_ENVIRONMENT=Docker

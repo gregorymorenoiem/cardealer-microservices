@@ -816,6 +816,7 @@
       }
     },
     {
+      "_comment": "Public: Vehicle search/listing with 30s Gateway cache",
       "UpstreamPathTemplate": "/api/vehicles",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -829,6 +830,10 @@
           "Port": 8080
         }
       ],
+      "FileCacheOptions": {
+        "TtlSeconds": 30,
+        "Region": "vehiclesSearch"
+      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -900,7 +905,7 @@
       }
     },
     {
-      "_comment": "Public: GetById (AllowAnonymous)",
+      "_comment": "Public: GetById (AllowAnonymous) with 30s Gateway cache",
       "UpstreamPathTemplate": "/api/vehicles/{id}",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -914,6 +919,10 @@
           "Port": 8080
         }
       ],
+      "FileCacheOptions": {
+        "TtlSeconds": 30,
+        "Region": "vehicleDetail"
+      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -921,7 +930,7 @@
       }
     },
     {
-      "_comment": "Public: Similar vehicles (AllowAnonymous)",
+      "_comment": "Public: Similar vehicles (AllowAnonymous) with 60s Gateway cache",
       "UpstreamPathTemplate": "/api/vehicles/{id}/similar",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -935,6 +944,10 @@
           "Port": 8080
         }
       ],
+      "FileCacheOptions": {
+        "TtlSeconds": 60,
+        "Region": "vehiclesSimilar"
+      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -942,7 +955,7 @@
       }
     },
     {
-      "_comment": "Public: Featured vehicles (AllowAnonymous)",
+      "_comment": "Public: Featured vehicles (AllowAnonymous) with 60s Gateway cache",
       "UpstreamPathTemplate": "/api/vehicles/featured",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -956,6 +969,10 @@
           "Port": 8080
         }
       ],
+      "FileCacheOptions": {
+        "TtlSeconds": 60,
+        "Region": "vehiclesFeatured"
+      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1004,6 +1021,28 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "Vehicle Data APIs: CARFAX/VinAudit, Edmunds, MarketCheck (catch-all)",
+      "UpstreamPathTemplate": "/api/vehicle-data/{everything}",
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
+      "DownstreamPathTemplate": "/api/vehicle-data/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "vehiclessaleservice",
+          "Port": 8080
+        }
+      ],
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -1183,6 +1222,7 @@
       }
     },
     {
+      "_comment": "Public: Catalog listing (makes, models, etc.) with 5min Gateway cache",
       "UpstreamPathTemplate": "/api/catalog",
       "UpstreamHttpMethod": [
         "OPTIONS",
@@ -1196,6 +1236,10 @@
           "Port": 8080
         }
       ],
+      "FileCacheOptions": {
+        "TtlSeconds": 300,
+        "Region": "catalogListing"
+      },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
         "DurationOfBreak": 10,
@@ -2374,7 +2418,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "role": "Compliance"
+        "role": "Admin, SuperAdmin, Compliance"
       },
       "QoSOptions": {
         "ExceptionsAllowedBeforeBreaking": 3,
@@ -3115,7 +3159,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "azulpaymentservice",
+          "Host": "billingservice",
           "Port": 8080
         }
       ]
@@ -3133,7 +3177,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "azulpaymentservice",
+          "Host": "billingservice",
           "Port": 8080
         }
       ],

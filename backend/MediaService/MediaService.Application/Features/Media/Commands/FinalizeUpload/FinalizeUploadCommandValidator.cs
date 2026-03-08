@@ -1,4 +1,5 @@
 using FluentValidation;
+using MediaService.Application.Validators;
 
 namespace MediaService.Application.Features.Media.Commands.FinalizeUpload;
 
@@ -6,6 +7,9 @@ public class FinalizeUploadCommandValidator : AbstractValidator<FinalizeUploadCo
 {
     public FinalizeUploadCommandValidator()
     {
-        RuleFor(x => x.MediaId).NotEmpty();
+        RuleFor(x => x.MediaId)
+            .NotEmpty()
+            .NoSqlInjection()
+            .NoXss();
     }
 }

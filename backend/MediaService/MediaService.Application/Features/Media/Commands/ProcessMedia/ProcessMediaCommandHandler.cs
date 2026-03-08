@@ -96,11 +96,15 @@ public class ProcessMediaCommandHandler : IRequestHandler<ProcessMediaCommand, A
         var imageInfo = await _imageProcessor.GetImageInfoAsync(originalStream);
         image.SetDimensions(imageInfo.Width, imageInfo.Height);
 
+        // ── Variant definitions aligned with ImageProcessingHandler (Workers) ──
+        // Both sync (this handler) and async (Workers) must generate the same 5 variants
         var variants = new[]
         {
-            new { Name = "thumb", Width = 200, Height = 200, Quality = 80 },
-            new { Name = "small", Width = 400, Height = 400, Quality = 80 },
-            new { Name = "medium", Width = 800, Height = 800, Quality = 85 }
+            new { Name = "thumb",  Width = 200,  Height = 200,  Quality = 80, ContentType = "image/jpeg", Extension = ".jpg" },
+            new { Name = "small",  Width = 400,  Height = 400,  Quality = 85, ContentType = "image/jpeg", Extension = ".jpg" },
+            new { Name = "medium", Width = 800,  Height = 800,  Quality = 85, ContentType = "image/jpeg", Extension = ".jpg" },
+            new { Name = "large",  Width = 1200, Height = 1200, Quality = 90, ContentType = "image/jpeg", Extension = ".jpg" },
+            new { Name = "webp",   Width = 800,  Height = 800,  Quality = 80, ContentType = "image/webp", Extension = ".webp" },
         };
 
         var variantsGenerated = 0;
@@ -109,17 +113,26 @@ public class ProcessMediaCommandHandler : IRequestHandler<ProcessMediaCommand, A
         {
             try
             {
+                // Skip variants larger than original (except webp — always generate for web performance)
+                if (variant.Width >= imageInfo.Width && variant.Height >= imageInfo.Height
+                    && variant.Name != "webp")
+                {
+                    _logger.LogDebug("Skipping variant {VariantName} — original is smaller ({W}x{H})",
+                        variant.Name, imageInfo.Width, imageInfo.Height);
+                    continue;
+                }
+
                 originalStream.Position = 0;
                 using var variantStream = await _imageProcessor.CreateThumbnailAsync(
                     originalStream, variant.Width, variant.Height);
 
                 var variantStorageKey = $"{image.StorageKey}_{variant.Name}";
-                await _storageService.UploadFileAsync(variantStorageKey, variantStream, image.ContentType);
+                await _storageService.UploadFileAsync(variantStorageKey, variantStream, variant.ContentType);
 
                 var mediaVariant = new MediaVariant(
                     image.Id, variant.Name, variantStorageKey,
                     variant.Width, variant.Height, variantStream.Length,
-                    ".jpg", variant.Quality);
+                    variant.Extension, variant.Quality);
 
                 image.AddVariant(mediaVariant);
                 variantsGenerated++;

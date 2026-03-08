@@ -1,7 +1,12 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 namespace Gateway.Api.Middleware;
 
 /// <summary>
-/// Middleware to handle health check requests before Ocelot processes them
+/// Middleware to handle health check requests before Ocelot processes them.
+/// Uses ASP.NET Core HealthCheckService to run actual health probes instead
+/// of returning hardcoded "healthy" strings. CORS headers are applied inline
+/// because Ocelot would otherwise intercept these paths.
 /// </summary>
 public class HealthCheckMiddleware
 {
@@ -23,8 +28,11 @@ public class HealthCheckMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Intercept /health requests before Ocelot
-        if (context.Request.Path.Equals("/health", StringComparison.OrdinalIgnoreCase))
+        // Intercept health check requests before Ocelot
+        var path = context.Request.Path.Value ?? "";
+        if (path.Equals("/health", StringComparison.OrdinalIgnoreCase) ||
+            path.Equals("/health/ready", StringComparison.OrdinalIgnoreCase) ||
+            path.Equals("/health/live", StringComparison.OrdinalIgnoreCase))
         {
             // Apply CORS headers if Origin header is present
             if (context.Request.Headers.ContainsKey("Origin"))
@@ -47,9 +55,72 @@ public class HealthCheckMiddleware
                 }
             }
 
-            context.Response.StatusCode = 200;
-            context.Response.ContentType = "text/plain";
-            await context.Response.WriteAsync("Gateway is healthy");
+            // Use ASP.NET Core HealthCheckService for real probes
+            var healthCheckService = context.RequestServices.GetService<HealthCheckService>();
+
+            if (healthCheckService != null)
+            {
+                var lowerPath = path.ToLowerInvariant();
+                HealthReport report;
+
+                if (lowerPath == "/health")
+                {
+                    // /health — exclude external checks (⚠️ CRITICAL: per copilot-instructions.md)
+                    report = await healthCheckService.CheckHealthAsync(
+                        registration => !registration.Tags.Contains("external"),
+                        context.RequestAborted);
+                }
+                else if (lowerPath == "/health/ready")
+                {
+                    // /health/ready — only checks tagged "ready"
+                    report = await healthCheckService.CheckHealthAsync(
+                        registration => registration.Tags.Contains("ready"),
+                        context.RequestAborted);
+                }
+                else
+                {
+                    // /health/live — no checks, just confirm process is running
+                    report = new HealthReport(
+                        new Dictionary<string, HealthReportEntry>(),
+                        TimeSpan.Zero);
+                }
+
+                context.Response.StatusCode = report.Status == HealthStatus.Healthy ? 200 : 503;
+                context.Response.ContentType = "application/json";
+
+                var response = new
+                {
+                    status = report.Status.ToString(),
+                    service = "Gateway",
+                    timestamp = DateTime.UtcNow,
+                    checks = report.Entries.Select(e => new
+                    {
+                        name = e.Key,
+                        status = e.Value.Status.ToString(),
+                        duration = e.Value.Duration.TotalMilliseconds
+                        // description intentionally omitted — prevent info leakage (CWE-200)
+                    })
+                };
+
+                await context.Response.WriteAsJsonAsync(response);
+            }
+            else
+            {
+                // Fallback if HealthCheckService is not registered
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "application/json";
+
+                var fallbackResponse = new
+                {
+                    status = "Healthy",
+                    service = "Gateway",
+                    timestamp = DateTime.UtcNow,
+                    note = "HealthCheckService not registered — returning basic status"
+                };
+
+                await context.Response.WriteAsJsonAsync(fallbackResponse);
+            }
+
             return;
         }
 

@@ -1,5 +1,4 @@
 using MediaService.Domain.Entities;
-using MediaService.Domain.Enums;
 using MediaService.Domain.Interfaces.Repositories;
 using MediaService.Domain.Interfaces.Services;
 using Microsoft.Extensions.Logging;
@@ -54,13 +53,13 @@ public class ImageProcessingHandler
             return;
         }
 
-        if (mediaAsset.Type != MediaType.Image)
+        if (mediaAsset.Type != Domain.Enums.MediaType.Image)
         {
             _logger.LogInformation("MediaAsset {MediaAssetId} is not an image (Type={Type}), skipping", mediaAssetId, mediaAsset.Type);
             return;
         }
 
-        if (mediaAsset.Status == MediaStatus.Processed)
+        if (mediaAsset.Status == Domain.Enums.MediaStatus.Processed)
         {
             _logger.LogInformation("MediaAsset {MediaAssetId} already processed, skipping", mediaAssetId);
             return;

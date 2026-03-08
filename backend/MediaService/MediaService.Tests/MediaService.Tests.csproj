@@ -32,6 +32,7 @@
     <ProjectReference Include="../MediaService.Application/MediaService.Application.csproj" />
     <ProjectReference Include="../MediaService.Domain/MediaService.Domain.csproj" />
     <ProjectReference Include="../MediaService.Infrastructure/MediaService.Infrastructure.csproj" />
+    <ProjectReference Include="../MediaService.Workers/MediaService.Workers.csproj" />
   </ItemGroup>
 
 </Project>
