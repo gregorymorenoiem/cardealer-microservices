@@ -192,9 +192,10 @@ public static class HealthCheckExtensions
             }
         });
         
-        // Health endpoint - verifica todo con detalles
+        // Health endpoint - verifica todo EXCEPTO checks externos (evita timeouts en K8s probes)
         app.MapHealthChecks(endpoints.HealthPath, new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
         {
+            Predicate = check => !check.Tags.Contains("external"),
             ResponseWriter = endpoints.IncludeDetails 
                 ? UIResponseWriter.WriteHealthCheckUIResponse 
                 : WriteMinimalResponse,

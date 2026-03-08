@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
 namespace CarDealer.Shared.Middleware;
 
@@ -69,10 +70,16 @@ public class SecurityHeadersMiddleware
         headers["Permissions-Policy"] = _options.PermissionsPolicy;
 
         // Prevent caching of authenticated responses
+        // Skip if the endpoint already has explicit cache control (e.g., [ResponseCache] on public catalog data)
         if (context.User?.Identity?.IsAuthenticated == true)
         {
-            headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
-            headers["Pragma"] = "no-cache";
+            var endpoint = context.GetEndpoint();
+            var hasResponseCache = endpoint?.Metadata.GetMetadata<Microsoft.AspNetCore.Mvc.ResponseCacheAttribute>() != null;
+            if (!hasResponseCache)
+            {
+                headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+                headers["Pragma"] = "no-cache";
+            }
         }
 
         // Remove server identification header

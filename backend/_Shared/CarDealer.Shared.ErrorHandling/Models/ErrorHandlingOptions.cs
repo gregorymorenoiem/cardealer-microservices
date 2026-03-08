@@ -76,7 +76,7 @@ public class ErrorServiceOptions
     /// <summary>
     /// ErrorService base URL
     /// </summary>
-    public string BaseUrl { get; set; } = "http://errorservice:80";
+    public string BaseUrl { get; set; } = "http://errorservice:8080";
 
     /// <summary>
     /// Timeout in seconds for HTTP requests

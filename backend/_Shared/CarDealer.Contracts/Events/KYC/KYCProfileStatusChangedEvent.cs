@@ -23,10 +23,20 @@ public class KYCProfileStatusChangedEvent : EventBase
     /// <summary>Identificador del usuario dueño del perfil</summary>
     public Guid UserId { get; set; }
 
-    /// <summary>Email del usuario (para enviar la notificación directamente)</summary>
+    /// <summary>
+    /// [REMOVED — Ley 172-13 Art. 27 Data Minimization]
+    /// Email was removed from the event payload. Consumers should fetch
+    /// user email from their own data stores using UserId.
+    /// </summary>
+    [Obsolete("Removed for Ley 172-13 compliance. Use UserId to fetch email from UserService.")]
     public string Email { get; set; } = string.Empty;
 
-    /// <summary>Nombre completo del usuario</summary>
+    /// <summary>
+    /// [REMOVED — Ley 172-13 Art. 27 Data Minimization]
+    /// FullName was removed from the event payload. Consumers should fetch
+    /// user name from their own data stores using UserId.
+    /// </summary>
+    [Obsolete("Removed for Ley 172-13 compliance. Use UserId to fetch name from UserService.")]
     public string FullName { get; set; } = string.Empty;
 
     /// <summary>Estado anterior del perfil (e.g. "UnderReview")</summary>

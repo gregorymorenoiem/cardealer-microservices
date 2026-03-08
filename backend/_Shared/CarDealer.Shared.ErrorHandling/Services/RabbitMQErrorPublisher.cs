@@ -131,23 +131,32 @@ public class RabbitMQErrorPublisher : IErrorPublisher, IDisposable
         var json = JsonSerializer.Serialize(errorEvent, s_jsonOptions);
         var body = Encoding.UTF8.GetBytes(json);
 
-        var properties = _channel.CreateBasicProperties();
-        properties.Persistent = true;
-        properties.ContentType = "application/json";
-        properties.MessageId = errorEvent.Id.ToString();
-        properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-        properties.Headers = new Dictionary<string, object>
+        lock (_lock)
         {
-            ["service"] = _options.ServiceName,
-            ["severity"] = errorEvent.Severity.ToString(),
-            ["category"] = errorEvent.Category.ToString()
-        };
+            if (_channel == null || !_channel.IsOpen)
+            {
+                _logger.LogWarning("RabbitMQ channel closed before publish");
+                return;
+            }
 
-        _channel.BasicPublish(
-            exchange: _options.RabbitMQ.Exchange,
-            routingKey: _options.RabbitMQ.RoutingKey,
-            basicProperties: properties,
-            body: body);
+            var properties = _channel.CreateBasicProperties();
+            properties.Persistent = true;
+            properties.ContentType = "application/json";
+            properties.MessageId = errorEvent.Id.ToString();
+            properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            properties.Headers = new Dictionary<string, object>
+            {
+                ["service"] = _options.ServiceName,
+                ["severity"] = errorEvent.Severity.ToString(),
+                ["category"] = errorEvent.Category.ToString()
+            };
+
+            _channel.BasicPublish(
+                exchange: _options.RabbitMQ.Exchange,
+                routingKey: _options.RabbitMQ.RoutingKey,
+                basicProperties: properties,
+                body: body);
+        }
 
         _logger.LogDebug("Published error event {ErrorId} to RabbitMQ", errorEvent.Id);
     }
@@ -226,6 +235,8 @@ public class RabbitMQErrorPublisher : IErrorPublisher, IDisposable
     {
         if (_disposed) return;
 
+        try { _channel?.Close(); } catch { /* best-effort graceful close */ }
+        try { _connection?.Close(); } catch { /* best-effort graceful close */ }
         _channel?.Dispose();
         _connection?.Dispose();
         _disposed = true;

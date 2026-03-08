@@ -16,13 +16,13 @@ public class NoOpServiceDiscovery : IServiceDiscovery
         // Default fallback URLs for development
         _serviceUrls = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["AuthService"] = "http://authservice:80",
-            ["NotificationService"] = "http://notificationservice:80",
-            ["ErrorService"] = "http://errorservice:80",
-            ["UserService"] = "http://userservice:80",
-            ["RoleService"] = "http://roleservice:80",
-            ["ProductService"] = "http://productservice:80",
-            ["MediaService"] = "http://mediaservice:80"
+            ["AuthService"] = "http://authservice:8080",
+            ["NotificationService"] = "http://notificationservice:8080",
+            ["ErrorService"] = "http://errorservice:8080",
+            ["UserService"] = "http://userservice:8080",
+            ["RoleService"] = "http://roleservice:8080",
+            ["ProductService"] = "http://productservice:8080",
+            ["MediaService"] = "http://mediaservice:8080"
         };
     }
 

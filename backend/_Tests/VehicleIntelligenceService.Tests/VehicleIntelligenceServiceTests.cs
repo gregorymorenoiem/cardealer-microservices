@@ -60,8 +60,9 @@ public class VehicleIntelligenceServiceTests
         // Act
         var analysis = await _pricingEngine.AnalyzePriceAsync(input);
 
-        // Assert
-        analysis.PricePosition.Should().BeOneOf("Above Market", "Below Market", "Fair");
+        // Assert — 5-tier system
+        analysis.PricePosition.Should().BeOneOf(
+            "Great Deal", "Good Deal", "Fair", "High Price", "Overpriced");
     }
 
     [Fact]

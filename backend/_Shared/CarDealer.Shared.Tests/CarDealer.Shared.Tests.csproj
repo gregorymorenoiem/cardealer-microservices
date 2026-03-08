@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="FluentAssertions" Version="8.8.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="NSubstitute" Version="5.1.0" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.ApiVersioning/CarDealer.Shared.ApiVersioning.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.Caching/CarDealer.Shared.Caching.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.FeatureFlags/CarDealer.Shared.FeatureFlags.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.HealthChecks/CarDealer.Shared.HealthChecks.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.Idempotency/CarDealer.Shared.Idempotency.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.RateLimiting/CarDealer.Shared.RateLimiting.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
+    <ProjectReference Include="../CarDealer.Contracts/CarDealer.Contracts.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj" />
+    <ProjectReference Include="../CarDealer.Shared.Sagas/CarDealer.Shared.Sagas.csproj" />
+    <ProjectReference Include="../ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
