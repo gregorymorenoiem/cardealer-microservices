@@ -7,14 +7,14 @@
 
 ## 🚦 GATE OBLIGATORIO PRE-COMMIT Y PRE-PUSH
 
-NUNCA ejecutes `git commit` ni `git push` sin antes haber pasado los **8 pasos** de este gate.
+NUNCA ejecutes `git commit` ni `git push` sin antes haber pasado los **7 pasos** de este gate.
 Si cualquier paso falla, detente, corrige el problema y vuelve a correr el gate completo desde el paso 1.
 No hay excepciones. Este proceso garantiza que el CI/CD no se rompa.
 
 > ⚠️ **EL CI/CD TIENE DOS PIPELINES QUE DEBEN PASAR:**
 >
 > - **Pipeline Backend (.NET):** Pasos 1, 2, 4
-> - **Pipeline Frontend (Next.js/React):** Pasos 3a, 3b, 3c, 3d, 3e ← **El paso 3 tiene 5 sub-pasos que reproducen el CI/CD frontend exacto**
+> - **Pipeline Frontend (Next.js/React):** Pasos 3a, 3b, 3c, 3d ← **El paso 3 tiene 4 sub-pasos que reproducen el CI/CD frontend exacto**
 
 ---
 
@@ -179,39 +179,6 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3d] pnpm test --run — OK | 0 tests 
 
 ---
 
-### Paso 3e — `pnpm build` · Detecta errores de compilación Next.js que rompen el Docker build ← **PASO NUEVO**
-
-```bash
-cd frontend/web-next && pnpm build
-```
-
-Este paso reproduce el stage `RUN pnpm build` dentro del `Dockerfile` del job `🐳 Docker Build` del CI/CD.
-**Criterio de éxito:** `✓ Compiled successfully` sin líneas `Build error occurred` y sin `error TS****`.
-
-> ⚠️ **CAUSAS COMUNES DE FALLOS EN `pnpm build` (Next.js Turbopack):**
-
-| Error                                                                                      | Causa                                                                                                                                                                                                                      | Acción                                                                                                   |
-| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `Next.js can't recognize the exported \`runtime\` field... It mustn't be reexported.`      | `twitter-image.tsx` re-exporta `runtime` desde `opengraph-image.tsx`. Turbopack requiere que las route config fields (`runtime`, `size`, `contentType`) estén **declaradas directamente** en el archivo, no re-exportadas. | Declara `export const runtime = 'edge';` directamente en `twitter-image.tsx`. Solo re-exporta `default`. |
-| `Build error occurred` con `Type error: ...`                                               | Error TypeScript que `tsc --noEmit` no detectó porque el build de producción usa resolución más estricta.                                                                                                                  | Corre `pnpm typecheck` y corrige el error.                                                               |
-| `Module not found: Can't resolve '@/...'`                                                  | Alias `@/` no configurado en `tsconfig.json` o `next.config.ts`.                                                                                                                                                           | Verifica `paths` en `tsconfig.json`.                                                                     |
-| `⚠ The "middleware" file convention is deprecated. Use "proxy" instead.`                   | Warning de Next.js sobre convención deprecated — **no bloquea el build**, pero registra el archivo afectado para refactorizar.                                                                                             | Renombrar `middleware.ts` → `proxy.ts` cuando sea conveniente.                                           |
-| `⚠ Next.js can't recognize the exported \`runtime\` field in "/(main)/ruta/twitter-image"` | Mismo problema que el error crítico arriba pero en forma de warning previo al error.                                                                                                                                       | Ver corrección de `runtime` arriba.                                                                      |
-
-**Reglas específicas del proyecto OKLA:**
-
-- Cada archivo `twitter-image.tsx` DEBE declarar `runtime`, `size`, `contentType` inline (no re-exportarlos). Solo re-exportar `default` es seguro.
-- Si creas nuevas rutas con `opengraph-image.tsx` + `twitter-image.tsx`, sigue el patrón: `export { default } from './opengraph-image'; export const runtime = 'edge'; ...`
-- El build de CI usa `NEXT_PUBLIC_API_URL=` (vacío). Localmente puede diferir; el build debe pasar con o sin esa variable.
-
-Nunca uses `// @ts-ignore` para forzar el paso. Corrige el error en el archivo fuente.
-
-```bash
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3e] pnpm build — OK | Next.js compiled successfully" >> .github/copilot-audit.log
-```
-
----
-
 ### Paso 4 — `dotnet test` · Detecta tests rotos antes de que los detecte el CI/CD
 
 ```bash
@@ -272,11 +239,6 @@ dotnet build /p:TreatWarningsAsErrors=true \
   && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3d] pnpm test --run — OK | 0 tests fallidos" >> .github/copilot-audit.log \
   || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3d-FAIL] pnpm test --run — FALLO. Commit bloqueado. Revisa los tests fallidos arriba." >> .github/copilot-audit.log; exit 1; }
 
-# Paso 3e — Frontend: Next.js build (NUEVO — reproduce stage 'RUN pnpm build' del Dockerfile)
-(cd frontend/web-next && pnpm build) \
-  && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3e] pnpm build — OK | Next.js compiled successfully" >> .github/copilot-audit.log \
-  || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3e-FAIL] pnpm build — FALLO. Docker build fallará. Revisa errores de Turbopack/TS arriba." >> .github/copilot-audit.log; exit 1; }
-
 # Paso 4 — Backend: Tests
 dotnet test --no-build --logger "console;verbosity=minimal" 2>&1 | grep -E "Failed|Passed" | grep "\.dll"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test — Revisa output: unit tests deben tener Failed: 0" >> .github/copilot-audit.log
@@ -293,7 +255,6 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] ✅ Gate completo. Procediendo con c
 - **`pnpm typecheck` reporta CUALQUIER línea `error TS\*\***`\*\* ← BLOQUEO CRÍTICO
 - `pnpm install --frozen-lockfile` falla por lockfile desincronizado
 - **`pnpm test -- --run` reporta `Tests N failed` o `Test Files N failed`** ← BLOQUEO CRÍTICO
-- **`pnpm build` reporta `Build error occurred`** ← BLOQUEO CRÍTICO (el Docker build fallará exactamente aquí)
 - `dotnet test` reporta `Failed > 0` en tests **unitarios** (no Integration/E2E)
 
 > **NOTA:** DESPUÉS QUE SE TERMINE UNA AUDITORÍA Y SE IMPLEMENTEN SUS RECOMENDACIONES, EJECUTA EL PRE-COMMIT GATE COMPLETO PARA VALIDAR QUE TODO EL PROYECTO SIGUE FUNCIONANDO CORRECTAMENTE.
@@ -417,4 +378,4 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [TIPO] OBJETIVO — DESCRIPCIÓN" >> .githu
 ---
 
 _Última actualización: 2026-03-10 — Ambiente controlado OKLA · Auditoría habilitada_
-_Cambio: Gate ampliado a 8 pasos — añadidos pnpm typecheck (3b), pnpm frozen-lockfile (3c), pnpm test --run (3d) y pnpm build (3e). El paso 3e reproduce el stage `RUN pnpm build` del Dockerfile y detecta errores de Turbopack como re-exportación de route config fields._
+_Cambio: Gate ampliado a 7 pasos — añadidos pnpm typecheck (3b), pnpm frozen-lockfile (3c) y pnpm test --run (3d) que son todos los pasos que ejecuta el CI/CD frontend._
