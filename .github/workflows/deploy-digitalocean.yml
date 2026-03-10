@@ -321,6 +321,7 @@ jobs:
           kubectl apply -f k8s/ingress.yaml
 
       - name: 🗄️ Apply Backup CronJob
+        continue-on-error: true
         run: |
           echo "🗄️ Applying backup & disaster recovery manifests..."
           kubectl apply -f k8s/backup.yaml

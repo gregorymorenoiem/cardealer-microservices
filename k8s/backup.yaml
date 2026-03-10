@@ -6,40 +6,45 @@
 # Last updated: 2026-03-09 — Task 17: Backup/DR audit
 # =============================================================================
 
----
 # =============================================================================
-# Velero Backup Schedule (requires Velero installed)
-# Install: velero install --provider digitalocean --bucket okla-backups \
-#   --secret-file ./do-spaces-credentials \
-#   --backup-location-config s3Url=https://nyc3.digitaloceanspaces.com,region=nyc3
+# Velero Backup Schedule — DISABLED until Velero CRDs are installed on cluster.
+# Applying velero.io/v1 Schedule without the CRD causes:
+#   error: unable to recognize "k8s/backup.yaml": no matches for kind "Schedule" in version "velero.io/v1"
+# which exits with code 1 and breaks the entire deploy pipeline.
+#
+# To re-enable:
+#   1. Install Velero:  velero install --provider digitalocean --bucket okla-backups \
+#        --secret-file ./do-spaces-credentials \
+#        --backup-location-config s3Url=https://nyc3.digitaloceanspaces.com,region=nyc3
+#   2. Move k8s/backup-velero.yaml into this file or apply separately.
 # =============================================================================
-apiVersion: velero.io/v1
-kind: Schedule
-metadata:
-  name: okla-daily-backup
-  namespace: velero
-spec:
-  schedule: "0 2 * * *" # Daily at 2:00 AM UTC (10:00 PM RD)
-  template:
-    includedNamespaces:
-      - okla
-    includedResources:
-      - deployments
-      - services
-      - configmaps
-      - ingresses
-      - horizontalpodautoscalers
-      - poddisruptionbudgets
-      - networkpolicies
-      - serviceaccounts
-      - roles
-      - rolebindings
-    excludedResources:
-      - secrets # Secrets managed via External Secrets Operator
-    storageLocation: default
-    ttl: 720h # 30 days retention
-    snapshotVolumes: true
-  useOwnerReferencesInBackup: false
+# apiVersion: velero.io/v1
+# kind: Schedule
+# metadata:
+#   name: okla-daily-backup
+#   namespace: velero
+# spec:
+#   schedule: "0 2 * * *"
+#   template:
+#     includedNamespaces:
+#       - okla
+#     includedResources:
+#       - deployments
+#       - services
+#       - configmaps
+#       - ingresses
+#       - horizontalpodautoscalers
+#       - poddisruptionbudgets
+#       - networkpolicies
+#       - serviceaccounts
+#       - roles
+#       - rolebindings
+#     excludedResources:
+#       - secrets
+#     storageLocation: default
+#     ttl: 720h
+#     snapshotVolumes: true
+#   useOwnerReferencesInBackup: false
 
 ---
 # =============================================================================
@@ -153,26 +158,30 @@ spec:
 
                   echo "✅ All backups completed successfully"
               env:
+                # NOTE: These secrets must match what deploy-digitalocean.yml creates.
+                # The workflow creates per-service secrets (e.g. authservice-db-secret)
+                # with Database__Host, Database__Port, Database__Username, Database__Password.
+                # We reuse authservice-db-secret as a representative source for shared PG creds.
                 - name: PGPASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: database-secrets
-                      key: POSTGRES_PASSWORD
+                      name: authservice-db-secret
+                      key: Database__Password
                 - name: POSTGRES_HOST
                   valueFrom:
                     secretKeyRef:
-                      name: database-secrets
-                      key: POSTGRES_HOST
+                      name: authservice-db-secret
+                      key: Database__Host
                 - name: POSTGRES_PORT
                   valueFrom:
                     secretKeyRef:
-                      name: database-secrets
-                      key: POSTGRES_PORT
+                      name: authservice-db-secret
+                      key: Database__Port
                 - name: POSTGRES_USER
                   valueFrom:
                     secretKeyRef:
-                      name: database-secrets
-                      key: POSTGRES_USER
+                      name: authservice-db-secret
+                      key: Database__Username
                 # DO Spaces credentials for cross-region backup
                 - name: DO_SPACES_KEY
                   valueFrom:
