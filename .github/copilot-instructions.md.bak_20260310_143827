@@ -290,51 +290,13 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] ✅ Gate completo. Procediendo con c
 - `dotnet restore` reporta errores `NU****` o falta de proyectos
 - `dotnet build` reporta cualquier warning o error (`TreatWarningsAsErrors=true`)
 - `pnpm lint` reporta líneas con `error` (warnings son aceptables con justificación)
-- **`pnpm typecheck` reporta CUALQUIER línea `error TS****`** ← BLOQUEO CRÍTICO
+- **`pnpm typecheck` reporta CUALQUIER línea `error TS\*\***`\*\* ← BLOQUEO CRÍTICO
 - `pnpm install --frozen-lockfile` falla por lockfile desincronizado
 - **`pnpm test -- --run` reporta `Tests N failed` o `Test Files N failed`** ← BLOQUEO CRÍTICO
 - **`pnpm build` reporta `Build error occurred`** ← BLOQUEO CRÍTICO (el Docker build fallará exactamente aquí)
 - `dotnet test` reporta `Failed > 0` en tests **unitarios** (no Integration/E2E)
-- **Workflow de GitHub Actions con `Invalid workflow file`** ← BLOQUEO CRÍTICO (ver regla de permisos abajo)
 
 > **NOTA:** DESPUÉS QUE SE TERMINE UNA AUDITORÍA Y SE IMPLEMENTEN SUS RECOMENDACIONES, EJECUTA EL PRE-COMMIT GATE COMPLETO PARA VALIDAR QUE TODO EL PROYECTO SIGUE FUNCIONANDO CORRECTAMENTE.
-
----
-
-## ⚠️ REGLA CRÍTICA — Permisos en Reusable Workflows de GitHub Actions
-
-**Error tipo:** `The workflow is requesting 'X: write', but is only allowed 'X: none'`
-
-Este error ocurre cuando un job llama a un reusable workflow (`uses: ./.github/workflows/X.yml`) y el workflow llamado declara permisos que el job llamador no otorga explícitamente.
-
-**Regla:** El job que llama DEBE declarar `permissions:` con al menos los mismos permisos que el workflow llamado declara a nivel de workflow.
-
-### Tabla de reusable workflows del proyecto y permisos requeridos:
-
-| Workflow llamado | Permiso requerido | Razón |
-| --- | --- | --- |
-| `load-test.yml` | `issues: write` | Crea issues en GitHub al fallar un test programado |
-
-### Patrón correcto (SIEMPRE usar cuando se llame a un reusable workflow):
-
-```yaml
-# ❌ INCORRECTO — el job hereda permisos del caller, que puede no incluir issues:write
-smoke-test:
-  uses: ./.github/workflows/load-test.yml
-  secrets: inherit
-
-# ✅ CORRECTO — el job declara explícitamente los permisos que el callee necesita
-smoke-test:
-  permissions:
-    contents: read
-    issues: write        # requerido por load-test.yml para crear issues en fallos programados
-  uses: ./.github/workflows/load-test.yml
-  secrets: inherit
-```
-
-### Cuándo actualizar esta tabla:
-- Si agregas `permissions: X: write` a cualquier archivo `_reusable-*.yml` o workflow llamado con `uses:`, **agrega ese permiso a esta tabla** y al job llamador correspondiente.
-- Si creas un nuevo reusable workflow con permisos elevados, documenta aquí qué jobs lo llaman y actualiza esos jobs con `permissions:` explícito.
 
 ---
 
@@ -455,4 +417,4 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] [TIPO] OBJETIVO — DESCRIPCIÓN" >> .githu
 ---
 
 _Última actualización: 2026-03-10 — Ambiente controlado OKLA · Auditoría habilitada_
-_Cambio: Gate ampliado a 8 pasos — añadidos pnpm typecheck (3b), pnpm frozen-lockfile (3c), pnpm test --run (3d) y pnpm build (3e). El paso 3e reproduce el stage `RUN pnpm build` del Dockerfile y detecta errores de Turbopack como re-exportación de route config fields. Agregada regla crítica de permisos en reusable workflows (issues:write en smoke-test → load-test.yml)._
+_Cambio: Gate ampliado a 8 pasos — añadidos pnpm typecheck (3b), pnpm frozen-lockfile (3c), pnpm test --run (3d) y pnpm build (3e). El paso 3e reproduce el stage `RUN pnpm build` del Dockerfile y detecta errores de Turbopack como re-exportación de route config fields._

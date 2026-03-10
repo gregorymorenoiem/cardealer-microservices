@@ -401,12 +401,6 @@ jobs:
     name: 🔥 Post-Deploy Smoke Test
     needs: [prepare, health-check]
     if: success()
-    # load-test.yml declares permissions: issues:write (for scheduled failure alerts).
-    # A reusable workflow can only use permissions its caller explicitly grants.
-    # https://docs.github.com/en/actions/sharing-automations/reusing-workflows#supported-keywords
-    permissions:
-      contents: read
-      issues: write
     uses: ./.github/workflows/load-test.yml
     with:
       test_type: smoke
