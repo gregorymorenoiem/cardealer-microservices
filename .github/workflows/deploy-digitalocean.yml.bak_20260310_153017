@@ -274,8 +274,9 @@ jobs:
           # blindly pinning them causes ImagePullBackOff → rollout failure.
           #
           # Check via GHCR OCI API (no docker daemon / keychain needed):
-          #   curl -u "user:PAT" https://ghcr.io/v2/{owner}/{image}/manifests/{tag}
-          #   Returns 200 if image exists, 404/401 otherwise.
+          #   GET https://ghcr.io/v2/{owner}/{image}/manifests/{tag}
+          #   Authorization: Bearer <base64-encoded PAT>
+          GHCR_AUTH=$(echo -n "$GHCR_TOKEN" | base64)
           echo "📌 Pinning images to immutable tag: $IMAGE_TAG (skipping if not built)"
           PINNED=""
           SKIPPED=""
@@ -286,8 +287,7 @@ jobs:
             API_URL="https://ghcr.io/v2/${OWNER}/${IMAGE_NAME}/manifests/${IMAGE_TAG}"
 
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              -u "${OWNER}:${GHCR_TOKEN}" \
-              -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+              -H "Authorization: Bearer $GHCR_AUTH" \
               "$API_URL")
 
             if [ "$HTTP_STATUS" = "200" ]; then
@@ -306,10 +306,9 @@ jobs:
             fi
           done
 
-          # Use if/then to avoid set -e killing the script on empty vars
-          if [ -n "$PINNED" ]; then echo "::notice::Pinned to $IMAGE_TAG:$PINNED"; fi
-          if [ -n "$SKIPPED" ]; then echo "::notice::Skipped (no new build):$SKIPPED"; fi
-          if [ -n "$FAILED_PINS" ]; then echo "::warning::Failed to pin:$FAILED_PINS"; fi
+          [ -n "$PINNED" ]      && echo "::notice::Pinned to $IMAGE_TAG:$PINNED"
+          [ -n "$SKIPPED" ]     && echo "::notice::Skipped (no new build):$SKIPPED"
+          [ -n "$FAILED_PINS" ] && echo "::warning::Failed to pin:$FAILED_PINS"
           echo "✅ Image pinning complete"
 
       - name: 📡 Apply Services
