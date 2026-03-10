@@ -28,6 +28,7 @@ using UserService.Application.UseCases.Privacy.GetCommunicationPreferences;
 using UserService.Application.UseCases.Privacy.UpdateCommunicationPreferences;
 using UserService.Application.UseCases.Privacy.RequestDataExport;
 using UserService.Application.UseCases.Privacy.GetExportStatus;
+using UserService.Application.UseCases.Privacy.DownloadExportData;
 using UserService.Application.UseCases.Privacy.RequestAccountDeletion;
 using UserService.Application.UseCases.Privacy.ConfirmAccountDeletion;
 using UserService.Application.UseCases.Privacy.CancelAccountDeletion;
@@ -48,7 +49,7 @@ public class PrivacyControllerTests
     {
         _mediatorMock = new Mock<IMediator>();
         _controller = new PrivacyController(_mediatorMock.Object);
-        
+
         // Setup mock HTTP context with user claims
         var httpContext = new DefaultHttpContext();
         httpContext.User = new ClaimsPrincipal(
@@ -58,9 +59,9 @@ public class PrivacyControllerTests
             }, "TestAuth")
         );
         httpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
-        _controller.ControllerContext = new ControllerContext 
-        { 
-            HttpContext = httpContext 
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = httpContext
         };
     }
 
@@ -235,6 +236,11 @@ public class PrivacyControllerTests
                 PriceChanges: true,
                 Recommendations: false
             ),
+            WhatsApp: new WhatsAppPreferencesDto(
+                Transactional: true,
+                Marketing: false,
+                PriceAlerts: false
+            ),
             Privacy: new PrivacyPreferencesDto(
                 AllowProfiling: false,
                 AllowThirdPartySharing: false,
@@ -285,6 +291,11 @@ public class PrivacyControllerTests
                 PriceChanges: true,
                 Recommendations: false
             ),
+            WhatsApp: new WhatsAppPreferencesDto(
+                Transactional: true,
+                Marketing: false,
+                PriceAlerts: true
+            ),
             Privacy: new PrivacyPreferencesDto(
                 AllowProfiling: false,
                 AllowThirdPartySharing: false,
@@ -329,6 +340,11 @@ public class PrivacyControllerTests
                 NewMessages: true,
                 PriceChanges: true,
                 Recommendations: false
+            ),
+            WhatsApp: new WhatsAppPreferencesDto(
+                Transactional: true,
+                Marketing: false,
+                PriceAlerts: false
             ),
             Privacy: new PrivacyPreferencesDto(
                 AllowProfiling: false,
@@ -416,18 +432,58 @@ public class PrivacyControllerTests
     }
 
     [Fact]
-    public async Task DownloadExport_WithValidToken_ShouldReturnFile()
+    public async Task DownloadExport_WithValidToken_ShouldReturnNotFound_WhenFileDoesNotExist()
     {
-        // Arrange
+        // Arrange — MediatR returns valid result but file doesn't exist on disk
         var token = "valid-export-token";
+        _mediatorMock
+            .Setup(m => m.Send(It.Is<DownloadExportDataQuery>(q => q.DownloadToken == token), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DownloadExportDataResult(
+                FilePath: "/non/existent/file.zip",
+                FileName: "datos.zip",
+                FileSizeBytes: 1000,
+                IsExpired: false));
 
         // Act
         var result = await _controller.DownloadExport(token);
 
+        // Assert — file doesn't exist, so controller returns 404
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task DownloadExport_WithInvalidToken_ShouldReturnNotFound()
+    {
+        // Arrange — MediatR returns null for invalid token
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<DownloadExportDataQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((DownloadExportDataResult?)null);
+
+        // Act
+        var result = await _controller.DownloadExport("bad-token");
+
         // Assert
-        var fileResult = result.Should().BeOfType<FileContentResult>().Subject;
-        fileResult.ContentType.Should().Be("application/json");
-        fileResult.FileDownloadName.Should().Contain("mis-datos-okla");
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task DownloadExport_WithExpiredToken_ShouldReturn410()
+    {
+        // Arrange — MediatR returns expired result
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<DownloadExportDataQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DownloadExportDataResult(
+                FilePath: "/some/file.zip",
+                FileName: "datos.zip",
+                FileSizeBytes: 0,
+                IsExpired: true));
+
+        // Act
+        var result = await _controller.DownloadExport("expired-token");
+
+        // Assert — 410 Gone
+        var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
+        objectResult.StatusCode.Should().Be(410);
     }
 
     #endregion

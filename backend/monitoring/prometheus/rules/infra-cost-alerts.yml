@@ -1,0 +1,112 @@
+# =============================================================================
+# OKLA Infrastructure Cost Alert Rules — CONTRA #8 FIX
+#
+# Three-tier cost monitoring for DigitalOcean cloud spending:
+#   $168/month (80%) = Warning  → Platform team alert
+#   $189/month (90%) = Critical → CTO alert (email + SMS + Teams + Slack)
+#   $210/month (100%) = Emergency → Auto-reduce non-critical resources
+#
+# Metrics expected (exposed by AdminService /metrics endpoint):
+#   okla_infra_cost_usd_monthly           — gauge, current month projected in USD
+#   okla_infra_cost_usd_current           — gauge, actual spend-to-date in USD
+#   okla_infra_cost_budget_usd            — gauge, budget ceiling ($210)
+#   okla_infra_cost_budget_utilization     — gauge, 0.0–1.0+ (current/budget)
+#
+# SLA: Alert reaches CTO < 5 minutes from threshold breach.
+# Runbook: docs/runbooks/RUNBOOK_INFRA_COST.md
+# =============================================================================
+
+groups:
+  - name: infra_cost_alerts
+    interval: 15s # Match Prometheus scrape interval for fastest detection
+    rules:
+      # ── TIER 1: 80% of $210 ($168) WARNING ───────────────────────────────
+      - alert: InfraCostWarning
+        expr: okla_infra_cost_usd_monthly > 168
+        for: 0m # Fire immediately — no wait time for cost alerts
+        labels:
+          severity: warning
+          service: adminservice
+          team: platform
+          alert_type: infra_cost_warning
+        annotations:
+          summary: "⚠️ DigitalOcean projected cost exceeded $168 (80% of $210 budget)"
+          description: >-
+            Projected monthly cloud cost is ${{ $value | printf "%.2f" }} (threshold: $168 = 80% of $210 budget).
+            Review resource usage at /api/admin/finance/dashboard.
+            Consider scaling down non-critical services or reducing replica counts.
+          runbook: "https://github.com/okla-rd/cardealer-microservices/blob/main/docs/runbooks/RUNBOOK_INFRA_COST.md"
+          dashboard: "https://grafana.okla.do/d/infra-cost/infra-cost-overview"
+
+      # ── TIER 2: 90% of $210 ($189) CRITICAL (CTO ALERT) ──────────────────
+      - alert: InfraCostCritical
+        expr: okla_infra_cost_usd_monthly > 189
+        for: 0m # Fire immediately — CTO must know within 5 minutes
+        labels:
+          severity: critical
+          service: adminservice
+          team: cto
+          alert_type: infra_cost_critical
+        annotations:
+          summary: "🔴 CRITICAL: DigitalOcean projected cost exceeded $189 (90% of $210 budget)"
+          description: >-
+            Projected monthly cloud cost is ${{ $value | printf "%.2f" }} (critical threshold: $189 = 90% of $210 budget).
+            Emergency resource reduction will auto-activate at $210.
+            Immediate action required: follow runbook to scale down non-critical workloads.
+            CTO must acknowledge within 1 hour.
+          runbook: "https://github.com/okla-rd/cardealer-microservices/blob/main/docs/runbooks/RUNBOOK_INFRA_COST.md"
+          dashboard: "https://grafana.okla.do/d/infra-cost/infra-cost-overview"
+
+      # ── TIER 3: 100% of $210 EMERGENCY ───────────────────────────────────
+      - alert: InfraCostEmergency
+        expr: okla_infra_cost_usd_monthly > 210
+        for: 0m # Immediate — emergency resource reduction required
+        labels:
+          severity: critical
+          service: adminservice
+          team: cto
+          alert_type: infra_cost_emergency
+        annotations:
+          summary: "🚨 EMERGENCY: DigitalOcean projected cost exceeds $210 budget!"
+          description: >-
+            Projected monthly cloud cost is ${{ $value | printf "%.2f" }} — OVER the $210 monthly budget.
+            AUTO-EXECUTING runbook steps:
+            1. Scale non-critical services to 0 replicas (video360, llm-server, etc.)
+            2. Reduce active service replicas to minimum (1 per critical service)
+            3. Disable non-essential CronJobs
+            CTO must review and approve continued spending or activate cost-saving measures.
+          runbook: "https://github.com/okla-rd/cardealer-microservices/blob/main/docs/runbooks/RUNBOOK_INFRA_COST.md"
+
+      # ── PROJECTED COST ALERT ──────────────────────────────────────────────
+      # Alert if daily rate projects to exceed $210 by month end
+      - alert: InfraCostProjectedOverrun
+        expr: >-
+          okla_infra_cost_usd_current / day_of_month(timestamp(vector(0)))
+          * days_in_month(timestamp(vector(0))) > 210
+        for: 1h # Require sustained high spending, not a transient spike
+        labels:
+          severity: warning
+          service: adminservice
+          team: platform
+          alert_type: infra_cost_projected
+        annotations:
+          summary: "📈 Projected DigitalOcean cost will exceed $210 budget this month"
+          description: >-
+            At current daily rate, projected monthly cloud cost will be ${{ $value | printf "%.2f" }} (budget: $210).
+            Days remaining in month: approximately {{ with printf "%.0f" (query "days_in_month(timestamp(vector(0))) - day_of_month(timestamp(vector(0)))") }}{{ . }}{{ end }}.
+            Consider preemptive resource reduction per the runbook.
+          runbook: "https://github.com/okla-rd/cardealer-microservices/blob/main/docs/runbooks/RUNBOOK_INFRA_COST.md"
+
+      # ── BUDGET UTILIZATION STATUS ─────────────────────────────────────────
+      - alert: InfraCostBudgetHealthy
+        expr: okla_infra_cost_budget_utilization < 0.60
+        for: 0m
+        labels:
+          severity: info
+          service: adminservice
+          team: platform
+        annotations:
+          summary: "ℹ️ Infrastructure cost well within budget (<60%)"
+          description: >-
+            Current budget utilization is {{ $value | printf "%.1f" }}% ($210 budget).
+            Infrastructure cost is healthy. No action needed.

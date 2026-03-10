@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
@@ -81,10 +81,14 @@ function getTimeUntilMidnightDR(): {
   return { hours, minutes, seconds };
 }
 
-export function VehicleOfTheDay({ vehicles }: VehicleOfTheDayProps) {
+/**
+ * CWV FIX: Isolated countdown component — re-renders every second WITHOUT
+ * triggering a re-render of the parent VehicleOfTheDay component.
+ * This prevents ~60 unnecessary re-renders per minute of the entire card.
+ */
+const CountdownTimer = memo(function CountdownTimer() {
   const [countdown, setCountdown] = useState(getTimeUntilMidnightDR());
 
-  // Update countdown every second
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown(getTimeUntilMidnightDR());
@@ -92,6 +96,20 @@ export function VehicleOfTheDay({ vehicles }: VehicleOfTheDayProps) {
     return () => clearInterval(timer);
   }, []);
 
+  return (
+    <div className="text-muted-foreground mt-4 flex items-center gap-2 text-sm">
+      <Clock className="h-4 w-4" />
+      <span>
+        Nuevo vehículo en{' '}
+        <strong>
+          {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
+        </strong>
+      </span>
+    </div>
+  );
+});
+
+export function VehicleOfTheDay({ vehicles }: VehicleOfTheDayProps) {
   // Select vehicle of the day deterministically
   const selectedVehicle = useMemo(() => {
     if (!vehicles || vehicles.length === 0) return null;
@@ -195,16 +213,8 @@ export function VehicleOfTheDay({ vehicles }: VehicleOfTheDayProps) {
                 </Button>
               </Link>
 
-              {/* Countdown */}
-              <div className="text-muted-foreground mt-4 flex items-center gap-2 text-sm">
-                <Clock className="h-4 w-4" />
-                <span>
-                  Nuevo vehículo en{' '}
-                  <strong>
-                    {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
-                  </strong>
-                </span>
-              </div>
+              {/* Countdown — isolated component to avoid re-rendering the entire card */}
+              <CountdownTimer />
             </div>
           </div>
         </CardContent>

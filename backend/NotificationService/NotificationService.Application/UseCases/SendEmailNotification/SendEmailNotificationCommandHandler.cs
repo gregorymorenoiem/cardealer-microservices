@@ -17,6 +17,7 @@ public class SendEmailNotificationCommandHandler
     private readonly INotificationLogRepository _logRepository;
     private readonly IEmailProvider _emailProvider;
     private readonly IConfigurationServiceClient _configClient;
+    private readonly IUserConsentClient _consentClient;
     private readonly ILogger<SendEmailNotificationCommandHandler> _logger;
 
     public SendEmailNotificationCommandHandler(
@@ -24,12 +25,14 @@ public class SendEmailNotificationCommandHandler
         INotificationLogRepository logRepository,
         IEmailProvider emailProvider,
         IConfigurationServiceClient configClient,
+        IUserConsentClient consentClient,
         ILogger<SendEmailNotificationCommandHandler> logger)
     {
         _notificationRepository = notificationRepository;
         _logRepository = logRepository;
         _emailProvider = emailProvider;
         _configClient = configClient;
+        _consentClient = consentClient;
         _logger = logger;
     }
 
@@ -52,6 +55,26 @@ public class SendEmailNotificationCommandHandler
         }
 
         _logger.LogInformation("Creating email notification for {To}", request.To);
+
+        // ═══ CONSENT GATE — Ley 172-13 Art. 27 compliance ═══
+        // Marketing emails require explicit user opt-in.
+        // Transactional emails (IsMarketing=false) always proceed.
+        if (request.IsMarketing && request.RecipientUserId.HasValue)
+        {
+            var hasConsent = await _consentClient.IsEmailMarketingAllowedAsync(
+                request.RecipientUserId.Value, cancellationToken);
+            if (!hasConsent)
+            {
+                _logger.LogInformation(
+                    "Email marketing blocked for UserId={UserId} — no opt-in consent. Skipping send to {To}",
+                    request.RecipientUserId.Value, request.To);
+                return new SendEmailNotificationResponse(
+                    Guid.NewGuid(),
+                    "ConsentBlocked",
+                    "User has not opted in to email marketing"
+                );
+            }
+        }
 
         try
         {

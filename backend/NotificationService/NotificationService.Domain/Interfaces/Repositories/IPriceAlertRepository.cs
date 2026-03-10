@@ -13,4 +13,9 @@ public interface IPriceAlertRepository
     Task UpdateAsync(PriceAlert priceAlert);
     Task DeleteAsync(Guid id);
     Task<bool> ExistsAsync(Guid id, Guid userId);
+
+    /// <summary>
+    /// Deletes all price alerts for a user (Ley 172-13 cascade deletion).
+    /// </summary>
+    Task<int> DeleteByUserIdAsync(Guid userId);
 }

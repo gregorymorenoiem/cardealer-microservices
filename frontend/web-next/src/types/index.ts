@@ -57,6 +57,11 @@ export interface Vehicle {
   vin?: string;
   oklaScore?: number;
 
+  // Odometer verification (VinAudit/CARFAX cross-reference)
+  odometerRollbackDetected?: boolean;
+  historicalMileage?: number;
+  odometerVerifiedAt?: string;
+
   // Seller
   sellerId: string;
   sellerType: 'seller' | 'dealer';

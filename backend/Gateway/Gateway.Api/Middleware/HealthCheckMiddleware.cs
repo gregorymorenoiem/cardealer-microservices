@@ -56,7 +56,7 @@ public class HealthCheckMiddleware
             }
 
             // Use ASP.NET Core HealthCheckService for real probes
-            var healthCheckService = context.RequestServices.GetService<HealthCheckService>();
+            var healthCheckService = context.RequestServices?.GetService<HealthCheckService>();
 
             if (healthCheckService != null)
             {

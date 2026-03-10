@@ -22,9 +22,39 @@ public class VehicleImage : ITenantEntity
     public int? Width { get; set; }
     public int? Height { get; set; }
 
+    // ========================================
+    // MODERACIÓN AUTOMÁTICA DE FOTOS
+    // ========================================
+    /// <summary>
+    /// Moderation status: Pending (default), Approved, Rejected.
+    /// Images rejected by AI moderation are flagged with a specific reason.
+    /// </summary>
+    public ImageModerationStatus ModerationStatus { get; set; } = ImageModerationStatus.Pending;
+    /// <summary>Specific rejection reason shown to the dealer (e.g., "Marca de agua de SuperCarros detectada")</summary>
+    public string? ModerationRejectionReason { get; set; }
+    /// <summary>Comma-separated flags (e.g., "watermark,low_resolution,stock_photo")</summary>
+    public string? ModerationFlags { get; set; }
+    /// <summary>When the moderation was last performed</summary>
+    public DateTime? ModeratedAt { get; set; }
+    /// <summary>Who/what moderated: "PhotoModerationService", "admin:userId", etc.</summary>
+    public string? ModeratedBy { get; set; }
+
     // Metadata
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation
     public Vehicle? Vehicle { get; set; }
+}
+
+/// <summary>
+/// Per-image moderation status
+/// </summary>
+public enum ImageModerationStatus
+{
+    /// <summary>Not yet moderated</summary>
+    Pending = 0,
+    /// <summary>Passed all moderation checks</summary>
+    Approved = 1,
+    /// <summary>Failed moderation — reason in ModerationRejectionReason</summary>
+    Rejected = 2
 }

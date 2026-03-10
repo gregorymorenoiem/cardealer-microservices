@@ -93,4 +93,12 @@ public class VerificationTokenRepository : IVerificationTokenRepository
                            vt.ExpiresAt > now &&
                            !vt.IsUsed);
     }
+
+    /// <inheritdoc />
+    public async Task<int> DeleteByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return await _context.VerificationTokens
+            .Where(vt => vt.Email == email)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

@@ -1,0 +1,60 @@
+groups:
+  - name: chatbot-whatsapp-sla
+    rules:
+      # ═══════════════════════════════════════════════════════════════
+      # WhatsApp Response Latency SLA: < 3 seconds (3000ms)
+      # ═══════════════════════════════════════════════════════════════
+
+      - alert: WhatsAppLatencyP95Exceeds3s
+        expr: |
+          histogram_quantile(0.95,
+            rate(chatbot_whatsapp_webhook_latency_bucket[5m])
+          ) > 3000
+        for: 2m
+        labels:
+          severity: critical
+          service: chatbotservice
+          channel: whatsapp
+        annotations:
+          summary: "WhatsApp response P95 latency exceeds 3s SLA"
+          description: |
+            The 95th percentile of WhatsApp webhook processing latency
+            has been above 3000ms for the last 2 minutes.
+            Current P95: {{ $value }}ms
+            SLA target: < 3000ms
+          runbook: "Check LLM response times, database query latency, and Meta API timeouts."
+
+      - alert: WhatsAppLatencyP50Exceeds2s
+        expr: |
+          histogram_quantile(0.50,
+            rate(chatbot_whatsapp_webhook_latency_bucket[5m])
+          ) > 2000
+        for: 5m
+        labels:
+          severity: warning
+          service: chatbotservice
+          channel: whatsapp
+        annotations:
+          summary: "WhatsApp median response latency above 2s (degrading)"
+          description: |
+            The median WhatsApp webhook latency is above 2000ms, 
+            approaching the 3s SLA limit.
+            Current P50: {{ $value }}ms
+
+      # ═══════════════════════════════════════════════════════════════
+      # Plan Gate Monitoring
+      # ═══════════════════════════════════════════════════════════════
+
+      - alert: WhatsAppPlanGateHighRejections
+        expr: |
+          rate(chatbot_whatsapp_plan_gate_rejections_total[15m]) > 0.5
+        for: 5m
+        labels:
+          severity: info
+          service: chatbotservice
+        annotations:
+          summary: "High WhatsApp plan gate rejections"
+          description: |
+            More than 0.5 rejections/sec for 5 minutes.
+            Buyers are trying to use WhatsApp for dealers on Libre/Visible plans.
+            Consider surfacing upgrade prompts.

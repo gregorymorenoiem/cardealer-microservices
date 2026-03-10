@@ -22,6 +22,13 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
+  // Critical dealer PWA paths — these are the first 3 actions a dealer does on mobile
+  '/dealer',
+  '/dealer/inventario',
+  '/publicar',
+  '/dealer/leads',
+  '/dealer/analytics',
+  '/cuenta/perfil',
 ];
 
 // Routes that should use network-first strategy
@@ -116,8 +123,30 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
+  // Skip non-GET requests — but attempt offline queue for important POSTs
   if (request.method !== 'GET') {
+    if (request.method === 'POST' && url.pathname.startsWith('/api/')) {
+      event.respondWith(
+        fetch(request.clone()).catch(async () => {
+          // Network failed — notify the client about offline state
+          const clients = await self.clients.matchAll({ type: 'window' });
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'OFFLINE_REQUEST_QUEUED',
+              url: url.pathname,
+              method: request.method,
+            });
+          });
+          return new Response(
+            JSON.stringify({
+              error: 'offline',
+              message: 'Guardado para enviar cuando vuelvas a tener conexión',
+            }),
+            { status: 503, headers: { 'Content-Type': 'application/json' } }
+          );
+        })
+      );
+    }
     return;
   }
 
@@ -371,6 +400,64 @@ self.addEventListener('notificationclick', event => {
 // BACKGROUND SYNC
 // =============================================================================
 
+// ── IndexedDB helper ─────────────────────────────────────────────────────────
+
+const DB_NAME = 'okla-sync-db';
+const DB_VERSION = 1;
+
+function openSyncDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('favorites')) {
+        db.createObjectStore('favorites', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('messages')) {
+        db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('vehicle-drafts')) {
+        db.createObjectStore('vehicle-drafts', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+  });
+}
+
+async function getPendingFromDB(storeName) {
+  try {
+    const db = await openSyncDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readonly');
+      const store = tx.objectStore(storeName);
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.warn('[SW] IndexedDB getPending failed:', error);
+    return [];
+  }
+}
+
+async function removeFromPendingDB(storeName, id) {
+  try {
+    const db = await openSyncDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      const request = store.delete(id);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.warn('[SW] IndexedDB removeFromPending failed:', error);
+  }
+}
+
+// ── Sync handlers ────────────────────────────────────────────────────────────
+
 self.addEventListener('sync', event => {
   console.log('[SW] Background sync:', event.tag);
 
@@ -378,12 +465,13 @@ self.addEventListener('sync', event => {
     event.waitUntil(syncFavorites());
   } else if (event.tag === 'sync-messages') {
     event.waitUntil(syncMessages());
+  } else if (event.tag === 'sync-vehicle-drafts') {
+    event.waitUntil(syncVehicleDrafts());
   }
 });
 
 async function syncFavorites() {
   try {
-    // Get pending favorites from IndexedDB
     const pendingFavorites = await getPendingFromDB('favorites');
 
     for (const favorite of pendingFavorites) {
@@ -398,7 +486,7 @@ async function syncFavorites() {
     console.log('[SW] Favorites synced successfully');
   } catch (error) {
     console.error('[SW] Failed to sync favorites:', error);
-    throw error;
+    throw error; // Retry on next sync opportunity
   }
 }
 
@@ -422,14 +510,27 @@ async function syncMessages() {
   }
 }
 
-// Placeholder functions for IndexedDB operations
-async function getPendingFromDB(storeName) {
-  // Implementation would use IndexedDB
-  return [];
-}
+async function syncVehicleDrafts() {
+  try {
+    const drafts = await getPendingFromDB('vehicle-drafts');
 
-async function removeFromPendingDB(storeName, id) {
-  // Implementation would use IndexedDB
+    for (const draft of drafts) {
+      await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: draft.authToken ? `Bearer ${draft.authToken}` : '',
+        },
+        body: JSON.stringify(draft.payload),
+      });
+      await removeFromPendingDB('vehicle-drafts', draft.id);
+    }
+
+    console.log('[SW] Vehicle drafts synced successfully');
+  } catch (error) {
+    console.error('[SW] Failed to sync vehicle drafts:', error);
+    throw error;
+  }
 }
 
 // =============================================================================

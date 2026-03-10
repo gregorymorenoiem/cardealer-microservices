@@ -167,7 +167,7 @@ export function BrandVehiclesClient({ brand, brandName }: BrandVehiclesClientPro
             {popularModels.map(([model, count]) => (
               <Link
                 key={model}
-                href={`/vehiculos?make=${brand}&model=${encodeURIComponent(model)}`}
+                href={`/marcas/${brand}/${encodeURIComponent(model.toLowerCase().replace(/\s+/g, '-'))}`}
               >
                 <Badge
                   variant="secondary"

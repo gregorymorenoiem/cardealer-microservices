@@ -235,16 +235,24 @@ export interface LeadFunnel {
 // =============================================================================
 
 export interface ImportResult {
-  id: string;
-  dealerId: string;
-  filename: string;
-  totalRecords: number;
+  success: boolean;
+  totalRows: number;
+  successCount: number;
+  errorCount: number;
+  message: string;
+  results: ImportRowResult[];
+  // Computed getters for backward compatibility with the page
   successful: number;
   failed: number;
-  status: 'processing' | 'completed' | 'failed';
   errors: ImportError[];
-  createdAt: string;
-  completedAt: string | null;
+}
+
+export interface ImportRowResult {
+  row: number;
+  success: boolean;
+  vehicleId?: string;
+  title?: string;
+  errors: string[];
 }
 
 export interface ImportError {
@@ -390,15 +398,27 @@ export const dealerAnalyticsService = {
   },
 
   // --- Vehicle Import ---
-  importVehicles: async (dealerId: string, file: File) => {
+  importVehicles: async (_dealerId: string, file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('dealerId', dealerId);
     const response = await apiClient.post<ImportResult>('/api/vehicles/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000,
     });
-    return response.data;
+    // Normalize response: add backward-compatible fields
+    const data = response.data;
+    return {
+      ...data,
+      successful: data.successCount ?? data.successful ?? 0,
+      failed: data.errorCount ?? data.failed ?? 0,
+      errors: (data.results ?? [])
+        .filter((r: ImportRowResult) => !r.success)
+        .map((r: ImportRowResult) => ({
+          row: r.row,
+          field: '',
+          message: (r.errors ?? []).join('; '),
+        })),
+    };
   },
 
   getImportHistory: async (dealerId: string) => {

@@ -15,6 +15,7 @@ using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Resilience.Extensions;
 using CarDealer.Shared.Secrets;
 using SearchAgent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -178,6 +179,7 @@ try
         ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
     });
 
+    app.UseGracefulDegradation();
     app.UseCors();
     app.UseRateLimiter();
     app.UseAuthentication();

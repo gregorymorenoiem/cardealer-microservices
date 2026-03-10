@@ -47,6 +47,11 @@ public class GetCommunicationPreferencesQueryHandler : IRequestHandler<GetCommun
                 PriceChanges: prefs?.PushPriceChanges ?? true,
                 Recommendations: prefs?.PushRecommendations ?? false
             ),
+            WhatsApp: new WhatsAppPreferencesDto(
+                Transactional: prefs?.WhatsAppTransactional ?? true,
+                Marketing: prefs?.WhatsAppMarketing ?? false,
+                PriceAlerts: prefs?.WhatsAppPriceAlerts ?? false
+            ),
             Privacy: new PrivacyPreferencesDto(
                 AllowProfiling: prefs?.AllowProfiling ?? true,
                 AllowThirdPartySharing: prefs?.AllowThirdPartySharing ?? false,

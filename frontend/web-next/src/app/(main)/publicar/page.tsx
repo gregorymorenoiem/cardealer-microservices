@@ -15,6 +15,8 @@ import { useCanSell } from '@/hooks/use-kyc';
 import { useSellerByUserId } from '@/hooks/use-seller';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { Suspense } from 'react';
+import { OnboardingBanner } from '@/components/onboarding/onboarding-banner';
 
 export default function PublicarPage() {
   const { user } = useAuth();
@@ -156,6 +158,11 @@ export default function PublicarPage() {
   return (
     <div className="bg-muted/50 min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-8">
+        {/* Onboarding banner for first-time dealers */}
+        <Suspense fallback={null}>
+          <OnboardingBanner />
+        </Suspense>
+
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-foreground mb-2 text-3xl font-bold">Publicar Vehículo</h1>

@@ -309,6 +309,7 @@ function DocumentRow({
           ref={fileInputRef}
           type="file"
           accept=".pdf,.jpg,.jpeg,.png"
+          capture="environment"
           onChange={handleFileSelect}
           className="hidden"
         />
@@ -555,8 +556,8 @@ export default function DealerDocumentsPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-primary bg-primary/10">
           <CardContent className="p-4">
-            <h4 className="mb-2 font-medium text-primary">🚀 Rápido y Simple</h4>
-            <p className="text-sm text-primary">
+            <h4 className="text-primary mb-2 font-medium">🚀 Rápido y Simple</h4>
+            <p className="text-primary text-sm">
               Solo 1 documento para empezar. Sube tu cédula y estarás listo en minutos.
             </p>
           </CardContent>

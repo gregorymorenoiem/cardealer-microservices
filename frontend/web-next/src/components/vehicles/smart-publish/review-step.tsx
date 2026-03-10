@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { ListingQualityScore } from './listing-quality-score';
 import type { VehicleFormData } from './smart-publish-wizard';
 import { escapeHtml } from '@/lib/security/sanitize';
@@ -21,6 +22,7 @@ import {
   Barcode,
   ArrowLeftRight,
   MessageCircle,
+  ShieldCheck,
 } from 'lucide-react';
 
 // ============================================================
@@ -62,6 +64,7 @@ export function ReviewStep({
   isPublishing,
 }: ReviewStepProps) {
   const primaryImage = data.images.find(img => img.isPrimary) || data.images[0];
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
 
   // Validation checks
   const errors: string[] = [];
@@ -75,7 +78,7 @@ export function ReviewStep({
   if (!data.transmission) errors.push('Transmisión es requerida');
   if (!data.fuelType) errors.push('Tipo de combustible es requerido');
 
-  const canPublish = errors.length === 0;
+  const canPublish = errors.length === 0 && disclaimerAccepted;
 
   return (
     <div className="space-y-6">
@@ -268,6 +271,35 @@ export function ReviewStep({
                 Recibirás una notificación cuando sea aprobado (generalmente en menos de 24 horas).
               </p>
             </div>
+
+            {/* ── Mandatory Disclaimer Checkbox (Ley 172-13 + TOS) ── */}
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={disclaimerAccepted}
+                  onChange={e => setDisclaimerAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="text-xs leading-relaxed text-gray-700">
+                  <ShieldCheck className="mr-1 mb-0.5 inline h-3.5 w-3.5 text-amber-600" />
+                  Confirmo que toda la información proporcionada en este anuncio es
+                  <strong> exacta, veraz y de mi propiedad o representación legítima</strong>.
+                  Acepto los{' '}
+                  <a
+                    href="/terminos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-emerald-700 underline hover:text-emerald-800"
+                  >
+                    Términos de Servicio
+                  </a>{' '}
+                  y entiendo que OKLA actúa como intermediario y no es responsable por la exactitud
+                  de la información publicada por los vendedores.
+                </span>
+              </label>
+            </div>
+
             <button
               onClick={onPublish}
               disabled={!canPublish || isPublishing}

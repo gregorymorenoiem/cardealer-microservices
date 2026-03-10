@@ -184,21 +184,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 15
             timeoutSeconds: 10
@@ -385,21 +385,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 15
             timeoutSeconds: 10
@@ -480,21 +480,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 15
             timeoutSeconds: 10
@@ -580,21 +580,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 15
             timeoutSeconds: 10
@@ -698,21 +698,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 15
             timeoutSeconds: 10
@@ -804,21 +804,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 15
             timeoutSeconds: 10
@@ -901,21 +901,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 15
             timeoutSeconds: 10
@@ -996,21 +996,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 15
             timeoutSeconds: 10
@@ -1091,7 +1091,7 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
@@ -1099,14 +1099,14 @@ spec:
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -1486,21 +1486,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -1581,14 +1581,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -1676,21 +1676,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -1771,14 +1771,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -1866,14 +1866,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -1961,14 +1961,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -2056,14 +2056,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -2151,14 +2151,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -2246,21 +2246,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -2341,14 +2341,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -2436,14 +2436,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -2531,14 +2531,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -2626,14 +2626,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -2721,14 +2721,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -2816,14 +2816,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -2911,21 +2911,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -3006,14 +3006,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3101,14 +3101,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3196,14 +3196,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3291,14 +3291,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3386,14 +3386,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3481,14 +3481,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3576,14 +3576,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3671,14 +3671,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3766,14 +3766,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3861,14 +3861,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -3956,21 +3956,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -4051,14 +4051,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -4154,21 +4154,21 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /health/ready
               port: 8080
             periodSeconds: 10
             timeoutSeconds: 5
@@ -4249,14 +4249,14 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 24
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             periodSeconds: 30
             timeoutSeconds: 5
@@ -4446,7 +4446,7 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
@@ -4546,7 +4546,7 @@ spec:
                 - ALL
           startupProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5

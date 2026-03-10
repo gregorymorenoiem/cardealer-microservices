@@ -13,13 +13,15 @@
 'use client';
 
 import * as React from 'react';
-import { Heart, Share2, MapPin, Calendar, Gauge, Shield, Clock } from 'lucide-react';
+import { Heart, Share2, MapPin, Calendar, Gauge, Shield, Clock, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DealRatingBadge } from '@/components/ui/deal-rating-badge';
 import { ScoreBadge } from '@/components/okla-score/score-badge';
 import { AuthPromptDialog } from '@/components/ui/auth-prompt-dialog';
 import { ShareDialog } from '@/components/ui/share-dialog';
+import { ReportVehicleModal } from './report-vehicle-modal';
+import { OdometerAlert } from './odometer-alert';
 import { useAuth } from '@/hooks/use-auth';
 import { useFavoriteStatus } from '@/hooks/use-favorites';
 import { cn, formatCurrency, formatNumber } from '@/lib/utils';
@@ -36,6 +38,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
 
   const [showAuthPrompt, setShowAuthPrompt] = React.useState(false);
   const [showShare, setShowShare] = React.useState(false);
+  const [showReport, setShowReport] = React.useState(false);
 
   const title = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
 
@@ -80,6 +83,14 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
           )}
         </div>
 
+        {/* Odometer Rollback Alert — visible to buyers */}
+        {vehicle.odometerRollbackDetected && (
+          <OdometerAlert
+            declaredMileage={vehicle.mileage}
+            historicalMileage={vehicle.historicalMileage}
+          />
+        )}
+
         {/* Title */}
         <h1 className="text-foreground text-2xl font-bold lg:text-3xl">{title}</h1>
 
@@ -116,7 +127,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
 
           {/* Price */}
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-extrabold text-primary lg:text-4xl">
+            <span className="text-primary text-3xl font-extrabold lg:text-4xl">
               {formatCurrency(vehicle.price)}
             </span>
             {vehicle.originalPrice && vehicle.originalPrice > vehicle.price && (
@@ -135,7 +146,7 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
             <span className="ml-1 text-xs">(60 meses)</span>
             <a
               href={`/herramientas/calculadora-financiamiento?precio=${vehicle.price}`}
-              className="ml-2 text-xs font-medium text-primary hover:underline"
+              className="text-primary ml-2 text-xs font-medium hover:underline"
             >
               Calcular cuota real →
             </a>
@@ -168,6 +179,16 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
             Compartir
           </Button>
         </div>
+
+        {/* Report — visible to everyone, no auth required */}
+        <button
+          onClick={() => setShowReport(true)}
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-slate-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+          aria-label="Reportar este vehículo"
+        >
+          <Flag className="h-3.5 w-3.5" />
+          Reportar este vehículo
+        </button>
 
         {/* Published Date */}
         <div className="text-muted-foreground mt-4 flex items-center justify-center gap-1.5 text-xs">
@@ -204,6 +225,14 @@ export function VehicleHeader({ vehicle, className }: VehicleHeaderProps) {
           imageUrl: vehicle.images?.[0]?.url,
           slug: vehicle.slug,
         }}
+      />
+
+      {/* Report vehicle modal — no auth required */}
+      <ReportVehicleModal
+        open={showReport}
+        onClose={() => setShowReport(false)}
+        vehicleId={vehicle.id}
+        vehicleTitle={title}
       />
     </>
   );

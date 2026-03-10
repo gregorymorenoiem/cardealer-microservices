@@ -15,6 +15,15 @@ const SupportAgentWidget = dynamic(
   { ssr: false }
 );
 
+// Lazy-load ComparisonBar — only rendered when vehicles are selected for comparison
+const ComparisonBar = dynamic(
+  () =>
+    import('@/components/comparison/comparison-bar').then(mod => ({
+      default: mod.ComparisonBar,
+    })),
+  { ssr: false }
+);
+
 /**
  * MainLayoutShell
  *
@@ -48,6 +57,7 @@ export function MainLayoutShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Footer />
+      <ComparisonBar />
       {!hideSupportWidget && <SupportAgentWidget />}
     </div>
   );

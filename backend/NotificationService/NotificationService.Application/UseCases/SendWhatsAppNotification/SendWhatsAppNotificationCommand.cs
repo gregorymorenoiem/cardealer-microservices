@@ -11,6 +11,8 @@ public record SendWhatsAppNotificationCommand(
     string? TemplateName = null,
     Dictionary<string, string>? TemplateParameters = null,
     string? LanguageCode = "es",
+    bool IsMarketing = false,
+    Guid? RecipientUserId = null,
     Dictionary<string, object>? Metadata = null
 ) : IRequest<SendWhatsAppNotificationResponse>;
 

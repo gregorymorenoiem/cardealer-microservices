@@ -74,4 +74,12 @@ public class LoginHistoryRepository : ILoginHistoryRepository
             .OrderByDescending(l => l.LoginTime)
             .ToListAsync(cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<int> DeleteAllByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.LoginHistories
+            .Where(l => l.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

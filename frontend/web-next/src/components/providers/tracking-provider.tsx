@@ -24,6 +24,7 @@ import {
   trackVehicleSearch as pixelVehicleSearch,
   identifyUser,
 } from '@/lib/retargeting-pixels';
+import { captureAdParams } from '@/lib/ad-params';
 import type { TrackingEventType, DeviceInfo, TrackEventRequest } from '@/types/analytics';
 
 // =============================================================================
@@ -75,6 +76,10 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
 
     // Initialize retargeting pixels (Facebook, Google, TikTok)
     initRetargetingPixels();
+
+    // SEM FIX: Capture gclid + UTM params from landing URL for Google Ads attribution.
+    // Must run on every page load — params are in the URL only on the first visit.
+    captureAdParams();
 
     // Track session start
     enqueueEvent('session_start', {

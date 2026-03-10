@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   Store,
   User,
-  Car,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { cn, formatCurrency, formatMileage } from '@/lib/utils';
 import { Badge } from './badge';
@@ -25,6 +25,7 @@ import { Skeleton } from './skeleton';
 import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
 import { vehicleService } from '@/services/vehicles';
 import { vehicleKeys } from '@/hooks/use-vehicles';
+import { useLocalComparison } from '@/hooks/use-comparisons';
 import type { VehicleCardData } from '@/types';
 
 export interface VehicleCardProps {
@@ -49,7 +50,8 @@ export function VehicleCard({
   className,
 }: VehicleCardProps) {
   const [imageError, setImageError] = React.useState(false);
-  const [isHovered, setIsHovered] = React.useState(false);
+  // CWV FIX: Removed dead `isHovered` state — it was set but never read,
+  // causing unnecessary re-renders on every mouse enter/leave across all cards.
   const queryClient = useQueryClient();
 
   // Prefetch vehicle detail on hover (fires once per slug)
@@ -76,6 +78,21 @@ export function VehicleCard({
     e.preventDefault();
     e.stopPropagation();
     onFavoriteClick?.(vehicle.id);
+  };
+
+  // Comparison state
+  const localComparison = useLocalComparison();
+  const isInComparison = localComparison.isInComparison(vehicle.id);
+  const canAddMore = localComparison.canAddMore;
+
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isInComparison) {
+      localComparison.removeVehicle(vehicle.id);
+    } else if (canAddMore) {
+      localComparison.addVehicle(vehicle.id);
+    }
   };
 
   const vehicleUrl = `/vehiculos/${vehicle.slug}`;
@@ -210,11 +227,7 @@ export function VehicleCard({
         'group border-border bg-card hover:border-primary/30 block overflow-hidden rounded-xl border shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl',
         className
       )}
-      onMouseEnter={() => {
-        setIsHovered(true);
-        handlePrefetch();
-      }}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handlePrefetch}
     >
       {/* Image Section */}
       <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-700">
@@ -244,19 +257,38 @@ export function VehicleCard({
 
         {/* Favorite Button */}
         {showFavoriteButton && (
-          <button
-            onClick={handleFavoriteClick}
-            className={cn(
-              'bg-background/90 absolute top-3 right-3 min-h-[44px] min-w-[44px] rounded-full p-2.5 shadow-md backdrop-blur-sm transition-all',
-              'opacity-100 sm:opacity-0 sm:group-hover:opacity-100',
-              isFavorite
-                ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-950'
-                : 'text-muted-foreground hover:bg-muted hover:text-red-500'
-            )}
-            aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-          >
-            <Heart className={cn('h-5 w-5', isFavorite && 'fill-current')} />
-          </button>
+          <div className="absolute top-3 right-3 flex flex-col gap-2">
+            <button
+              onClick={handleFavoriteClick}
+              className={cn(
+                'bg-background/90 min-h-[44px] min-w-[44px] rounded-full p-2.5 shadow-md backdrop-blur-sm transition-all',
+                'opacity-100 sm:opacity-0 sm:group-hover:opacity-100',
+                isFavorite
+                  ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-950'
+                  : 'text-muted-foreground hover:bg-muted hover:text-red-500'
+              )}
+              aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            >
+              <Heart className={cn('h-5 w-5', isFavorite && 'fill-current')} />
+            </button>
+
+            {/* Compare Button */}
+            <button
+              onClick={handleCompareClick}
+              className={cn(
+                'bg-background/90 min-h-[44px] min-w-[44px] rounded-full p-2.5 shadow-md backdrop-blur-sm transition-all',
+                'opacity-100 sm:opacity-0 sm:group-hover:opacity-100',
+                isInComparison
+                  ? 'text-primary bg-primary/10 hover:bg-primary/20'
+                  : 'text-muted-foreground hover:bg-muted hover:text-primary',
+                !canAddMore && !isInComparison && 'cursor-not-allowed opacity-50'
+              )}
+              aria-label={isInComparison ? 'Quitar de comparación' : 'Agregar a comparación'}
+              disabled={!canAddMore && !isInComparison}
+            >
+              <ArrowLeftRight className={cn('h-5 w-5', isInComparison && 'text-primary')} />
+            </button>
+          </div>
         )}
 
         {/* Photo Count */}
@@ -352,22 +384,20 @@ export function VehicleCard({
             )}
           </div>
 
-          {/* CTA Button — always visible on mobile, shown on hover for desktop */}
-          <button
-            onClick={e => {
-              e.preventDefault();
-              e.stopPropagation();
-              window.location.href = vehicleUrl;
-            }}
+          {/* CTA Button — CWV P1-4 FIX: Visual-only span instead of button with
+              window.location.href. The entire card is already a <Link> so this button was
+              redundant and caused full-page navigation instead of client-side routing.
+              Now it's a visual indicator that inherits the Link click. */}
+          <span
             className={cn(
               'bg-primary mt-3 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-all duration-200',
               'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
             )}
-            aria-label="Ver detalles y contactar vendedor"
+            aria-hidden="true"
           >
             <MessageCircle className="h-4 w-4" />
             Contactar vendedor
-          </button>
+          </span>
         </div>
       </div>
     </Link>

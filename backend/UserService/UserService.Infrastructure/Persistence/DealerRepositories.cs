@@ -31,6 +31,29 @@ namespace UserService.Infrastructure.Persistence
                 .FirstOrDefaultAsync(d => d.OwnerUserId == ownerId);
         }
 
+        public async Task<Dealer?> GetBySlugAsync(string slug)
+        {
+            return await _context.Dealers
+                .Include(d => d.Employees)
+                .FirstOrDefaultAsync(d => d.Slug == slug && d.IsActive);
+        }
+
+        public async Task<IEnumerable<Dealer>> GetForSitemapAsync()
+        {
+            return await _context.Dealers
+                .Where(d => d.IsActive && d.Slug != null)
+                .Select(d => new Dealer
+                {
+                    Id = d.Id,
+                    Slug = d.Slug,
+                    BusinessName = d.BusinessName,
+                    UpdatedAt = d.UpdatedAt,
+                    CreatedAt = d.CreatedAt
+                })
+                .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Dealer>> GetAllAsync(int page = 1, int pageSize = 10)
         {
             return await _context.Dealers
@@ -76,8 +99,8 @@ namespace UserService.Infrastructure.Persistence
 
             if (isVerified.HasValue)
             {
-                query = query.Where(d => isVerified.Value 
-                    ? d.VerificationStatus == DealerVerificationStatus.Verified 
+                query = query.Where(d => isVerified.Value
+                    ? d.VerificationStatus == DealerVerificationStatus.Verified
                     : d.VerificationStatus != DealerVerificationStatus.Verified);
             }
 

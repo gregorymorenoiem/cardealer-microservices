@@ -213,7 +213,11 @@ function ConfigurableBannerCard({ banner }: { banner: ConfigurableBanner }) {
 function AdSlotLeaderboard() {
   const { data: banners, isLoading } = useSearchLeaderboardBanners();
 
-  // While loading, render placeholder to avoid layout shift
+  const activeBanner = banners?.[0]; // Show first active banner (rotate in future)
+
+  // CWV FIX: Only show skeleton while loading, return null when no banners.
+  // Previous approach showed skeleton → then collapsed to null → causing CLS.
+  // Now: loading=skeleton, has banner=render, no banner=null (no shift)
   if (isLoading) {
     return (
       <div
@@ -223,10 +227,6 @@ function AdSlotLeaderboard() {
     );
   }
 
-  const activeBanner = banners?.[0]; // Show first active banner (rotate in future)
-
-  // No fallback — this page is for buyers, not sellers.
-  // Reserve min-height to prevent CLS when banner loads/disappears.
   return activeBanner ? (
     <div className="col-span-full min-h-[88px]">
       <ConfigurableBannerCard banner={activeBanner} />
@@ -364,10 +364,14 @@ export default function VehiculosClient() {
     return { query: aiQuery, confidence: 1.0, latencyMs: 0, wasCached: false };
   });
 
+  // CWV FIX: useTransition keeps the UI responsive while filters update.
+  // Without this, every setFilters call blocks the main thread (INP > 200ms).
+  const [isFilterPending, startFilterTransition] = React.useTransition();
+
   // Core search hook — handles URL sync, debounce, React Query
   const {
     filters,
-    setFilters,
+    setFilters: _setFilters,
     setFilter,
     clearFilters,
     clearFilter,
@@ -378,6 +382,16 @@ export default function VehiculosClient() {
     refetch,
     activeFilterCount,
   } = useVehicleSearch({ syncUrl: true });
+
+  // CWV FIX: Wrap setFilters in startTransition to keep UI responsive
+  const setFilters = React.useCallback(
+    (newFilters: Parameters<typeof _setFilters>[0]) => {
+      startFilterTransition(() => {
+        _setFilters(newFilters);
+      });
+    },
+    [_setFilters]
+  );
 
   // Catalog data
   const { data: makes = [] } = useMakes();
@@ -543,20 +557,27 @@ export default function VehiculosClient() {
         const ai = result.aiFilters;
 
         if (!result.isAiSearchEnabled) {
-          // AI disabled — clear filters and show all vehicles (no raw NL chip)
-          clearFilters();
+          // AI disabled/degraded — preserve existing manual filters, just show a toast
+          // Do NOT call clearFilters() — the user may have manually set make/year/price
           setSearchInput(query.trim());
-          toast.info('La búsqueda inteligente no está disponible en este momento.');
+          const msg =
+            ai?.mensaje_usuario ||
+            'La búsqueda inteligente no está disponible en este momento. Usa los filtros manuales.';
+          toast.info(msg);
           return;
         }
 
         if (ai.confianza === 0) {
           // Claude temporarily overloaded (529) → mensaje_usuario is set → don't pollute filters
           // Genuine low-confidence → also don't use raw NL text as a filter chip
+          // Preserve existing manual filters — do NOT clearFilters()
           if (ai.mensaje_usuario) {
             toast.warning(ai.mensaje_usuario);
+          } else {
+            toast.warning(
+              'La búsqueda inteligente no pudo procesar tu consulta. Usa los filtros manuales.'
+            );
           }
-          clearFilters();
           setSearchInput(query.trim());
           return;
         }
@@ -580,15 +601,17 @@ export default function VehiculosClient() {
           wasCached: result.wasCached,
         });
       } catch {
-        // On AI error, don't pollute filters with raw NL text — show a toast instead
-        clearFilters();
+        // On AI error, preserve existing manual filters — do NOT clearFilters()
+        // The user may have make/model/year/price set manually; wiping them is destructive
         setSearchInput(query.trim());
-        toast.error('Error al procesar la búsqueda inteligente. Intenta de nuevo.');
+        toast.error(
+          'La búsqueda inteligente no está disponible. Tus filtros actuales se mantienen.'
+        );
       } finally {
         setIsAiSearching(false);
       }
     },
-    [isAiSearching, setFilters, clearFilters]
+    [isAiSearching, setFilters]
   );
 
   // Auto-trigger AI search when landing from homepage NLP search.

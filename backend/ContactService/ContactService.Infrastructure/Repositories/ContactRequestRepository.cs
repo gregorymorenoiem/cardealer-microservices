@@ -88,4 +88,45 @@ public class ContactRequestRepository : IContactRequestRepository
             .Where(cr => cr.SellerId == sellerId && cr.Status != "Closed")
             .CountAsync(cr => cr.Messages.Any(m => !m.IsRead && m.IsFromBuyer), cancellationToken);
     }
+
+    public async Task<int> CountBySellerIdAsync(Guid sellerId, CancellationToken cancellationToken = default)
+    {
+        return await _context.ContactRequests
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .CountAsync(cr => cr.SellerId == sellerId, cancellationToken);
+    }
+
+    public async Task<int> CountBySellerIdInPeriodAsync(Guid sellerId, DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        return await _context.ContactRequests
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .CountAsync(cr => cr.SellerId == sellerId && cr.CreatedAt >= from && cr.CreatedAt <= to, cancellationToken);
+    }
+
+    public async Task<int> AnonymizeByBuyerIdAsync(Guid buyerId, CancellationToken cancellationToken = default)
+    {
+        var requests = await _context.ContactRequests
+            .IgnoreQueryFilters()
+            .Where(cr => cr.BuyerId == buyerId)
+            .ToListAsync(cancellationToken);
+
+        foreach (var request in requests)
+        {
+            request.BuyerName = "[SUPRIMIDO]";
+            request.BuyerEmail = "[SUPRIMIDO]";
+            request.BuyerPhone = null;
+            request.Name = "[SUPRIMIDO]";
+            request.Email = "[SUPRIMIDO]";
+            request.Phone = "[SUPRIMIDO]";
+        }
+
+        if (requests.Count > 0)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        return requests.Count;
+    }
 }

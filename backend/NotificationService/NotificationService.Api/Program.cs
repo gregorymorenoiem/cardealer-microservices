@@ -33,6 +33,7 @@ using System.Text;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.IO.Compression;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -127,13 +128,33 @@ builder.Services.AddHostedService<InvoiceNotificationConsumer>(); // Factura ele
 // KYCStatusChangedNotificationConsumer — already registered in AddInfrastructure() (ServiceCollectionExtensions.cs)
 builder.Services.AddHostedService<PriceAlertTriggeredConsumer>();
 builder.Services.AddHostedService<SavedSearchActivatedConsumer>();
+builder.Services.AddHostedService<VehiclePublishedAlertMatcherConsumer>(); // 🔔 NEW: Matches published vehicles against saved searches & price alerts
 builder.Services.AddHostedService<UserLoggedInEventConsumer>(); // Security in-app notifications on login
 builder.Services.AddHostedService<UserSettingsChangedEventConsumer>(); // In-app confirmation when user saves settings
 
-// 🔄 RETENTION: Subscription lifecycle notification consumers
+// 🔔 LEAD NOTIFICATIONS: Email + WhatsApp to dealer when buyer contacts about a vehicle
+builder.Services.AddHostedService<LeadCreatedNotificationConsumer>();
+
+// 📊 ONBOARDING: 7-day dealer performance report (email + WhatsApp + in-app)
+builder.Services.AddHostedService<DealerOnboardingReportConsumer>();
+
+// 📈 UPSELL: Daily check for LIBRE-plan dealers with 5+ inquiries → personalized ROI email
+builder.Services.AddHostedService<LeadThresholdUpsellWorker>();
+
+// ⭐ FEATURED UPSELL: Daily check for vehicles published 45+ days → suggest Featured Listing ($6/mo)
+builder.Services.AddHostedService<ListingInactivityUpsellWorker>();
+
+// � MONTHLY BENCHMARK: 1st of each month → sends dealer metrics vs. VISIBLE-plan average email
+builder.Services.AddHostedService<MonthlyBenchmarkReportWorker>();
+// 📬 WEEKLY RECOMMENDATION: Every Monday 8AM DR → sends top actionable recommendation via WhatsApp (Pro/Elite dealers)
+builder.Services.AddHostedService<WeeklyRecommendationWorker>();
+// �🔄 RETENTION: Subscription lifecycle notification consumers
 builder.Services.AddHostedService<TrialEndingNotificationConsumer>();               // Trial expiry warnings (3-day + 1-day)
 builder.Services.AddHostedService<PaymentFailedNotificationConsumer>();              // Payment failure alerts with update CTA
 builder.Services.AddHostedService<SubscriptionCancelledNotificationConsumer>();      // Cancellation confirmation + feedback request
+builder.Services.AddHostedService<RevenueThresholdAlertConsumer>();                  // Revenue < OPEX threshold alert → founder (CONTRA #7)
+builder.Services.AddHostedService<InfrastructureCostAlertConsumer>();                // Cloud cost > $210 budget alert → CTO (CONTRA #8)
+builder.Services.AddHostedService<UserDataDeletionConsumer>();                       // Ley 172-13 cascade user data deletion
 
 // Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
 builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "NotificationService");
@@ -159,7 +180,7 @@ builder.Services.AddResiliencePipeline("notification-circuit-breaker", pipelineB
 });
 
 // ============= OBSERVABILITY (OpenTelemetry → shared library) =============
-builder.Services.AddStandardObservability(builder.Configuration, ServiceName, "1.0.0");
+builder.Services.AddStandardObservability(builder.Configuration, ServiceName, ServiceVersion);
 
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
@@ -267,7 +288,16 @@ builder.Services.AddHttpClient<NotificationService.Application.Interfaces.IAudit
     client.BaseAddress = new Uri(auditServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
+
+// User Consent Client — checks CommunicationPreferences before sending marketing (Ley 172-13)
+builder.Services.AddHttpClient<NotificationService.Application.Interfaces.IUserConsentClient, NotificationService.Infrastructure.External.UserConsentClient>(client =>
+{
+    var userServiceUrl = builder.Configuration["ServiceUrls:UserService"] ?? "http://userservice:8080";
+    client.BaseAddress = new Uri(userServiceUrl);
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(builder.Configuration);
 
 // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
 builder.Services.AddResponseCompression(options =>

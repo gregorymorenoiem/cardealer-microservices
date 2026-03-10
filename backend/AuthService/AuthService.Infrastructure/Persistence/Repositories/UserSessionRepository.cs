@@ -123,4 +123,12 @@ public class UserSessionRepository : IUserSessionRepository
 
         return null;
     }
+
+    /// <inheritdoc />
+    public async Task<int> DeleteAllByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.UserSessions
+            .Where(s => s.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

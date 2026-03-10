@@ -31,6 +31,12 @@ public interface IVehicleRepository
     Task DeleteAsync(Guid id);
     Task<bool> ExistsAsync(Guid id);
     Task<int> GetCountAsync(VehicleSearchParameters? parameters = null);
+
+    /// <summary>
+    /// Returns active (non-featured, non-sold) vehicles published more than <paramref name="daysOld"/> days ago.
+    /// Used by the listing inactivity upsell worker to suggest Featured Listing to dealers with stale inventory.
+    /// </summary>
+    Task<IEnumerable<Vehicle>> GetStaleActiveListingsAsync(int daysOld, int skip = 0, int take = 100);
 }
 
 public class VehicleSearchParameters

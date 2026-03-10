@@ -1,12 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using ChatbotService.Domain.Entities;
+using CarDealer.Shared.Encryption;
 
 namespace ChatbotService.Infrastructure.Persistence;
 
 public class ChatbotDbContext : DbContext
 {
+    private readonly IFieldEncryptor? _encryptor;
+
     public ChatbotDbContext(DbContextOptions<ChatbotDbContext> options) : base(options)
     {
+    }
+
+    public ChatbotDbContext(DbContextOptions<ChatbotDbContext> options, IFieldEncryptor encryptor) : base(options)
+    {
+        _encryptor = encryptor;
     }
 
     // Chat entities
@@ -340,5 +348,58 @@ public class ChatbotDbContext : DbContext
                 .HasForeignKey(e => e.ChatbotConfigurationId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        // ═══════════════════════════════════════════════════════════
+        // PII ENCRYPTION AT REST — Ley 172-13 Compliance
+        // AES-256-GCM via ValueConverter. DecryptOrPassthrough enables
+        // zero-downtime migration from plaintext → encrypted.
+        // ═══════════════════════════════════════════════════════════
+        if (_encryptor != null)
+        {
+            var enc = _encryptor;
+
+            // ChatMessage — user chat transcriptions (PII)
+            modelBuilder.Entity<ChatMessage>().Property(m => m.Content)
+                .HasConversion(
+                    v => enc.Encrypt(v),
+                    v => enc.DecryptOrPassthrough(v));
+
+            // ChatSession — user contact data
+            modelBuilder.Entity<ChatSession>().Property(s => s.UserEmail)
+                .HasConversion(
+                    v => v == null ? null : enc.Encrypt(v),
+                    v => v == null ? null : enc.DecryptOrPassthrough(v));
+
+            modelBuilder.Entity<ChatSession>().Property(s => s.UserPhone)
+                .HasConversion(
+                    v => v == null ? null : enc.Encrypt(v),
+                    v => v == null ? null : enc.DecryptOrPassthrough(v));
+
+            modelBuilder.Entity<ChatSession>().Property(s => s.UserName)
+                .HasConversion(
+                    v => v == null ? null : enc.Encrypt(v),
+                    v => v == null ? null : enc.DecryptOrPassthrough(v));
+
+            // ChatLead — collected lead PII
+            modelBuilder.Entity<ChatLead>().Property(l => l.FullName)
+                .HasConversion(
+                    v => v == null ? null : enc.Encrypt(v),
+                    v => v == null ? null : enc.DecryptOrPassthrough(v));
+
+            modelBuilder.Entity<ChatLead>().Property(l => l.Email)
+                .HasConversion(
+                    v => v == null ? null : enc.Encrypt(v),
+                    v => v == null ? null : enc.DecryptOrPassthrough(v));
+
+            modelBuilder.Entity<ChatLead>().Property(l => l.Phone)
+                .HasConversion(
+                    v => v == null ? null : enc.Encrypt(v),
+                    v => v == null ? null : enc.DecryptOrPassthrough(v));
+
+            modelBuilder.Entity<ChatLead>().Property(l => l.WhatsApp)
+                .HasConversion(
+                    v => v == null ? null : enc.Encrypt(v),
+                    v => v == null ? null : enc.DecryptOrPassthrough(v));
+        }
     }
 }

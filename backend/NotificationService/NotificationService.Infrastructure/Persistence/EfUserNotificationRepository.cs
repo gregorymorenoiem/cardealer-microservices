@@ -125,4 +125,11 @@ public class EfUserNotificationRepository : IUserNotificationRepository
             .Where(n => n.ExpiresAt != null && n.ExpiresAt < DateTime.UtcNow)
             .ExecuteDeleteAsync();
     }
+
+    public async Task<int> DeleteByUserIdAsync(Guid userId)
+    {
+        return await _context.UserNotifications
+            .Where(n => n.UserId == userId)
+            .ExecuteDeleteAsync();
+    }
 }

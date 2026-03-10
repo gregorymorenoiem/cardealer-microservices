@@ -56,7 +56,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { sanitizeText } from '@/lib/security/sanitize';
-import { csrfFetch } from '@/lib/security/csrf';
 import { toast } from 'sonner';
 import { messagingService, type Conversation, type Message } from '@/services/messaging';
 

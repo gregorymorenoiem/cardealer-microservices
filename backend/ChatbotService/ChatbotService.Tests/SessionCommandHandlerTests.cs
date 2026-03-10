@@ -74,6 +74,8 @@ public class SendMessageCommandHandlerTests
         InteractionLimitReached = false,
         MessageCount = 0,
         Language = "es",
+        ConsentAccepted = true, // Disclosure accepted for SendMessage tests
+        ConsentAcceptedAt = DateTime.UtcNow,
         CreatedAt = DateTime.UtcNow,
         LastActivityAt = DateTime.UtcNow
     };

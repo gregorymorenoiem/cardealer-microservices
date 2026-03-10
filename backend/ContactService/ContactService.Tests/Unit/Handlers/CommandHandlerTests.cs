@@ -1,3 +1,4 @@
+using CarDealer.Contracts.Enums;
 using ContactService.Application.DTOs;
 using ContactService.Application.Features.ContactRequests.Commands;
 using ContactService.Domain.Entities;
@@ -17,14 +18,39 @@ public class CreateContactRequestCommandHandlerTests
 {
     private readonly Mock<IContactRequestRepository> _contactRequestRepo = new();
     private readonly Mock<IContactMessageRepository> _contactMessageRepo = new();
+    private readonly Mock<IEventPublisher> _eventPublisher = new();
+    private readonly Mock<IConversationUsageTracker> _usageTracker = new();
+    private readonly Mock<IDealerPlanResolver> _planResolver = new();
+    private readonly Mock<IConversationOverageRepository> _overageRepo = new();
     private readonly Mock<ILogger<CreateContactRequestCommandHandler>> _logger = new();
     private readonly CreateContactRequestCommandHandler _sut;
 
     public CreateContactRequestCommandHandlerTests()
     {
+        // Default: resolve dealer plan as "elite" and return normal usage
+        _planResolver
+            .Setup(r => r.GetDealerPlanAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("elite");
+        _usageTracker
+            .Setup(t => t.IncrementAndCheckAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ConversationUsageResult
+            {
+                CurrentCount = 1,
+                MaxAllowed = 2000,
+                Status = ConversationUsageStatus.Normal,
+                JustCrossedWarningThreshold = false,
+                JustReachedLimit = false,
+                OverageCount = 0,
+                ProjectedMonthlyTotal = 30
+            });
+
         _sut = new CreateContactRequestCommandHandler(
             _contactRequestRepo.Object,
             _contactMessageRepo.Object,
+            _eventPublisher.Object,
+            _usageTracker.Object,
+            _planResolver.Object,
+            _overageRepo.Object,
             _logger.Object);
     }
 
@@ -48,12 +74,12 @@ public class CreateContactRequestCommandHandlerTests
         };
 
         _contactRequestRepo
-            .Setup(r => r.CreateAsync(It.IsAny<ContactRequest>()))
-            .ReturnsAsync((ContactRequest cr) => cr);
+            .Setup(r => r.CreateAsync(It.IsAny<ContactRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactRequest cr, CancellationToken _) => cr);
 
         _contactMessageRepo
-            .Setup(r => r.CreateAsync(It.IsAny<ContactMessage>()))
-            .ReturnsAsync((ContactMessage m) => m);
+            .Setup(r => r.CreateAsync(It.IsAny<ContactMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactMessage m, CancellationToken _) => m);
 
         // Act
         var result = await _sut.Handle(command, CancellationToken.None);
@@ -68,9 +94,9 @@ public class CreateContactRequestCommandHandlerTests
         result.Status.Should().Be("Open");
         result.MessageCount.Should().Be(1);
 
-        _contactRequestRepo.Verify(r => r.CreateAsync(It.IsAny<ContactRequest>()), Times.Once);
+        _contactRequestRepo.Verify(r => r.CreateAsync(It.IsAny<ContactRequest>(), It.IsAny<CancellationToken>()), Times.Once);
         _contactMessageRepo.Verify(r => r.CreateAsync(It.Is<ContactMessage>(
-            m => m.Message == "Is this still available?" && m.IsFromBuyer == true)), Times.Once);
+            m => m.Message == "Is this still available?" && m.IsFromBuyer == true), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -89,11 +115,11 @@ public class CreateContactRequestCommandHandlerTests
         };
 
         _contactRequestRepo
-            .Setup(r => r.CreateAsync(It.IsAny<ContactRequest>()))
-            .ReturnsAsync((ContactRequest cr) => cr);
+            .Setup(r => r.CreateAsync(It.IsAny<ContactRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactRequest cr, CancellationToken _) => cr);
         _contactMessageRepo
-            .Setup(r => r.CreateAsync(It.IsAny<ContactMessage>()))
-            .ReturnsAsync((ContactMessage m) => m);
+            .Setup(r => r.CreateAsync(It.IsAny<ContactMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactMessage m, CancellationToken _) => m);
 
         // Act
         var result = await _sut.Handle(command, CancellationToken.None);
@@ -121,11 +147,11 @@ public class CreateContactRequestCommandHandlerTests
         };
 
         _contactRequestRepo
-            .Setup(r => r.CreateAsync(It.IsAny<ContactRequest>()))
-            .ReturnsAsync((ContactRequest cr) => cr);
+            .Setup(r => r.CreateAsync(It.IsAny<ContactRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactRequest cr, CancellationToken _) => cr);
         _contactMessageRepo
-            .Setup(r => r.CreateAsync(It.IsAny<ContactMessage>()))
-            .ReturnsAsync((ContactMessage m) => m);
+            .Setup(r => r.CreateAsync(It.IsAny<ContactMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactMessage m, CancellationToken _) => m);
 
         // Act
         var result = await _sut.Handle(command, CancellationToken.None);
@@ -169,9 +195,9 @@ public class ReplyToContactRequestCommandHandlerTests
         var sellerId = Guid.NewGuid();
         var contactRequest = CreateTestRequest(buyerId, sellerId);
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id)).ReturnsAsync(contactRequest);
-        _contactMessageRepo.Setup(r => r.CreateAsync(It.IsAny<ContactMessage>()))
-            .ReturnsAsync((ContactMessage m) => m);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
+        _contactMessageRepo.Setup(r => r.CreateAsync(It.IsAny<ContactMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactMessage m, CancellationToken _) => m);
 
         var command = new ReplyToContactRequestCommand
         {
@@ -187,7 +213,7 @@ public class ReplyToContactRequestCommandHandlerTests
         result.IsFromBuyer.Should().BeTrue();
         result.Message.Should().Be("Still interested");
         result.SenderId.Should().Be(buyerId);
-        _contactRequestRepo.Verify(r => r.UpdateAsync(It.IsAny<ContactRequest>()), Times.Never);
+        _contactRequestRepo.Verify(r => r.UpdateAsync(It.IsAny<ContactRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -198,11 +224,11 @@ public class ReplyToContactRequestCommandHandlerTests
         var sellerId = Guid.NewGuid();
         var contactRequest = CreateTestRequest(buyerId, sellerId, "Open");
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id)).ReturnsAsync(contactRequest);
-        _contactMessageRepo.Setup(r => r.CreateAsync(It.IsAny<ContactMessage>()))
-            .ReturnsAsync((ContactMessage m) => m);
-        _contactRequestRepo.Setup(r => r.UpdateAsync(It.IsAny<ContactRequest>()))
-            .ReturnsAsync((ContactRequest cr) => cr);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
+        _contactMessageRepo.Setup(r => r.CreateAsync(It.IsAny<ContactMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactMessage m, CancellationToken _) => m);
+        _contactRequestRepo.Setup(r => r.UpdateAsync(It.IsAny<ContactRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactRequest cr, CancellationToken _) => cr);
 
         var command = new ReplyToContactRequestCommand
         {
@@ -218,7 +244,7 @@ public class ReplyToContactRequestCommandHandlerTests
         result.IsFromBuyer.Should().BeFalse();
         contactRequest.Status.Should().Be("Responded");
         contactRequest.RespondedAt.Should().NotBeNull();
-        _contactRequestRepo.Verify(r => r.UpdateAsync(contactRequest), Times.Once);
+        _contactRequestRepo.Verify(r => r.UpdateAsync(contactRequest, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -229,9 +255,9 @@ public class ReplyToContactRequestCommandHandlerTests
         var sellerId = Guid.NewGuid();
         var contactRequest = CreateTestRequest(buyerId, sellerId, "Responded");
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id)).ReturnsAsync(contactRequest);
-        _contactMessageRepo.Setup(r => r.CreateAsync(It.IsAny<ContactMessage>()))
-            .ReturnsAsync((ContactMessage m) => m);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
+        _contactMessageRepo.Setup(r => r.CreateAsync(It.IsAny<ContactMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactMessage m, CancellationToken _) => m);
 
         var command = new ReplyToContactRequestCommand
         {
@@ -244,7 +270,7 @@ public class ReplyToContactRequestCommandHandlerTests
         await _sut.Handle(command, CancellationToken.None);
 
         // Assert
-        _contactRequestRepo.Verify(r => r.UpdateAsync(It.IsAny<ContactRequest>()), Times.Never);
+        _contactRequestRepo.Verify(r => r.UpdateAsync(It.IsAny<ContactRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -252,7 +278,7 @@ public class ReplyToContactRequestCommandHandlerTests
     {
         // Arrange
         var requestId = Guid.NewGuid();
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId)).ReturnsAsync((ContactRequest?)null);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>())).ReturnsAsync((ContactRequest?)null);
 
         var command = new ReplyToContactRequestCommand
         {
@@ -275,7 +301,7 @@ public class ReplyToContactRequestCommandHandlerTests
         var randomUserId = Guid.NewGuid();
         var contactRequest = CreateTestRequest(buyerId, sellerId);
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id)).ReturnsAsync(contactRequest);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
 
         var command = new ReplyToContactRequestCommand
         {
@@ -312,9 +338,9 @@ public class UpdateContactRequestStatusCommandHandlerTests
         var sellerId = Guid.NewGuid();
         var contactRequest = new ContactRequest(Guid.NewGuid(), buyerId, sellerId, "Test", "Buyer", "b@t.com", "Hi");
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id)).ReturnsAsync(contactRequest);
-        _contactRequestRepo.Setup(r => r.UpdateAsync(It.IsAny<ContactRequest>()))
-            .ReturnsAsync((ContactRequest cr) => cr);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
+        _contactRequestRepo.Setup(r => r.UpdateAsync(It.IsAny<ContactRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContactRequest cr, CancellationToken _) => cr);
 
         var command = new UpdateContactRequestStatusCommand
         {
@@ -329,14 +355,14 @@ public class UpdateContactRequestStatusCommandHandlerTests
         // Assert
         result.Should().Be(MediatR.Unit.Value);
         contactRequest.Status.Should().Be("Closed");
-        _contactRequestRepo.Verify(r => r.UpdateAsync(contactRequest), Times.Once);
+        _contactRequestRepo.Verify(r => r.UpdateAsync(contactRequest, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Handle_NotFound_ThrowsKeyNotFoundException()
     {
         var requestId = Guid.NewGuid();
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId)).ReturnsAsync((ContactRequest?)null);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>())).ReturnsAsync((ContactRequest?)null);
 
         var command = new UpdateContactRequestStatusCommand
         {
@@ -356,7 +382,7 @@ public class UpdateContactRequestStatusCommandHandlerTests
         var sellerId = Guid.NewGuid();
         var contactRequest = new ContactRequest(Guid.NewGuid(), buyerId, sellerId, "Test", "B", "b@t.com", "Hi");
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id)).ReturnsAsync(contactRequest);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
 
         var command = new UpdateContactRequestStatusCommand
         {
@@ -392,7 +418,7 @@ public class DeleteContactRequestCommandHandlerTests
         var sellerId = Guid.NewGuid();
         var contactRequest = new ContactRequest(Guid.NewGuid(), buyerId, sellerId, "Test", "B", "b@t.com", "Hi");
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id)).ReturnsAsync(contactRequest);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
 
         var command = new DeleteContactRequestCommand
         {
@@ -405,7 +431,7 @@ public class DeleteContactRequestCommandHandlerTests
 
         // Assert
         result.Should().Be(MediatR.Unit.Value);
-        _contactRequestRepo.Verify(r => r.DeleteAsync(contactRequest.Id), Times.Once);
+        _contactRequestRepo.Verify(r => r.DeleteAsync(contactRequest.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -415,7 +441,7 @@ public class DeleteContactRequestCommandHandlerTests
         var sellerId = Guid.NewGuid();
         var contactRequest = new ContactRequest(Guid.NewGuid(), buyerId, sellerId, "Test", "B", "b@t.com", "Hi");
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id)).ReturnsAsync(contactRequest);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
 
         var command = new DeleteContactRequestCommand
         {
@@ -425,14 +451,14 @@ public class DeleteContactRequestCommandHandlerTests
 
         await _sut.Handle(command, CancellationToken.None);
 
-        _contactRequestRepo.Verify(r => r.DeleteAsync(contactRequest.Id), Times.Once);
+        _contactRequestRepo.Verify(r => r.DeleteAsync(contactRequest.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Handle_NotFound_ThrowsKeyNotFoundException()
     {
         var requestId = Guid.NewGuid();
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId)).ReturnsAsync((ContactRequest?)null);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>())).ReturnsAsync((ContactRequest?)null);
 
         var command = new DeleteContactRequestCommand
         {
@@ -451,7 +477,7 @@ public class DeleteContactRequestCommandHandlerTests
         var sellerId = Guid.NewGuid();
         var contactRequest = new ContactRequest(Guid.NewGuid(), buyerId, sellerId, "Test", "B", "b@t.com", "Hi");
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id)).ReturnsAsync(contactRequest);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(contactRequest.Id, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
 
         var command = new DeleteContactRequestCommand
         {

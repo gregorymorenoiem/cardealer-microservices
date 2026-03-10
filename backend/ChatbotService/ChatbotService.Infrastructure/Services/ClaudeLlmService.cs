@@ -171,7 +171,7 @@ public class ClaudeLlmService : ILlmService
             {
                 var errorBody = await response.Content.ReadAsStringAsync(llmCts.Token);
                 var statusCode = (int)response.StatusCode;
-                
+
                 // 429 (rate limit) and 529 (overloaded) are transient — graceful degradation
                 if (statusCode == 429 || statusCode == 529)
                 {
@@ -308,32 +308,34 @@ public class ClaudeLlmService : ILlmService
 
     /// <summary>
     /// Returns a context-aware fallback response.
+    /// Includes contact CTA so users can reach a human agent when AI is unavailable.
     /// </summary>
     private static string GetIntelligentFallback(string userMessage)
     {
+        const string contactCta = "\n\nSi necesitas ayuda inmediata, visita https://okla.do/contacto o escríbenos por WhatsApp. 💬";
         var lower = userMessage.ToLowerInvariant();
 
         if (lower.Contains("precio") || lower.Contains("cuanto") || lower.Contains("cuesta") ||
             lower.Contains("presupuesto") || lower.Contains("financ"))
             return "No pude procesar tu consulta de precio en este momento. " +
-                   "¿Podrías indicarme tu presupuesto aproximado y el tipo de vehículo que te interesa? 💰";
+                   "¿Podrías indicarme tu presupuesto aproximado y el tipo de vehículo que te interesa? 💰" + contactCta;
 
         if (lower.Contains("suv") || lower.Contains("sedan") || lower.Contains("camioneta") ||
             lower.Contains("carro") || lower.Contains("yipeta") || lower.Contains("pickup"))
             return "Estoy teniendo dificultades técnicas, pero tenemos un amplio inventario. " +
-                   "¿Podrías intentar de nuevo en unos segundos? 🚗";
+                   "¿Podrías intentar de nuevo en unos segundos? 🚗" + contactCta;
 
         if (lower.Contains("contacto") || lower.Contains("llamar") || lower.Contains("visitar") ||
             lower.Contains("cita") || lower.Contains("agente") || lower.Contains("persona"))
             return "No pude procesar tu mensaje, pero puedo transferirte a un agente humano. " +
-                   "¿Te gustaría hablar con un asesor de ventas directamente? 📞";
+                   "¿Te gustaría hablar con un asesor de ventas directamente? 📞" + contactCta;
 
         if (lower.Contains("disponible") || lower.Contains("hoy") || lower.Contains("ver") ||
             lower.Contains("ir") || lower.Contains("visita"))
-            return "Disculpa, tuve un problema técnico. ¿Quieres que te agende una visita para ver el vehículo? 🏪";
+            return "Disculpa, tuve un problema técnico. ¿Quieres que te agende una visita para ver el vehículo? 🏪" + contactCta;
 
         return "Disculpa, estoy experimentando dificultades técnicas momentáneas. " +
-               "¿Podrías reformular tu pregunta? Estoy aquí para ayudarte. 😊";
+               "¿Podrías reformular tu pregunta? Estoy aquí para ayudarte. 😊" + contactCta;
     }
 
     public Task<LlmModelInfo> GetModelInfoAsync(CancellationToken ct = default)

@@ -17,6 +17,7 @@ public class DealerDto
     // Basic Info
     public string BusinessName { get; set; } = string.Empty;
     public string? TradeName { get; set; }
+    public string? Slug { get; set; }
     public string? Description { get; set; }
     public DealerType DealerType { get; set; }
 

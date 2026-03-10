@@ -1,30 +1,39 @@
 using MediatR;
 using ReviewService.Application.Features.Reviews.Commands;
 using ReviewService.Application.DTOs;
+using ReviewService.Application.Interfaces;
 using ReviewService.Domain.Interfaces;
 using ReviewService.Domain.Entities;
 using ReviewService.Domain.Base;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 
 namespace ReviewService.Application.Features.Reviews.Handlers;
 
 /// <summary>
-/// Handler para CreateReviewCommand
+/// Handler para CreateReviewCommand.
+/// Verifica contacto previo buyer→seller vía ContactService antes de permitir la reseña.
 /// </summary>
 public class CreateReviewCommandHandler : IRequestHandler<CreateReviewCommand, Result<ReviewDto>>
 {
     private readonly IReviewRepository _reviewRepository;
     private readonly IReviewSummaryRepository _summaryRepository;
+    private readonly IContactVerificationService _contactVerification;
     private readonly IValidator<CreateReviewCommand> _validator;
+    private readonly ILogger<CreateReviewCommandHandler> _logger;
 
     public CreateReviewCommandHandler(
         IReviewRepository reviewRepository,
         IReviewSummaryRepository summaryRepository,
-        IValidator<CreateReviewCommand> validator)
+        IContactVerificationService contactVerification,
+        IValidator<CreateReviewCommand> validator,
+        ILogger<CreateReviewCommandHandler> logger)
     {
         _reviewRepository = reviewRepository;
         _summaryRepository = summaryRepository;
+        _contactVerification = contactVerification;
         _validator = validator;
+        _logger = logger;
     }
 
     public async Task<Result<ReviewDto>> Handle(CreateReviewCommand request, CancellationToken cancellationToken)
@@ -35,6 +44,19 @@ public class CreateReviewCommandHandler : IRequestHandler<CreateReviewCommand, R
         {
             var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
             return Result<ReviewDto>.Failure(errors);
+        }
+
+        // Verificar que el buyer tuvo contacto real con el seller (anti-fake reviews)
+        var hasContacted = await _contactVerification.HasBuyerContactedSellerAsync(
+            request.BuyerId, request.SellerId, cancellationToken);
+
+        if (!hasContacted)
+        {
+            _logger.LogWarning(
+                "Review creation denied — no prior contact. BuyerId={BuyerId}, SellerId={SellerId}",
+                request.BuyerId, request.SellerId);
+            return Result<ReviewDto>.Failure(
+                "Solo puedes dejar una reseña si has contactado a este vendedor previamente.");
         }
 
         // Verificar si ya existe una review de este buyer para este seller/vehicle
@@ -59,7 +81,7 @@ public class CreateReviewCommandHandler : IRequestHandler<CreateReviewCommand, R
             Content = request.Content,
             BuyerName = request.BuyerName,
             BuyerPhotoUrl = request.BuyerPhotoUrl,
-            IsVerifiedPurchase = request.OrderId.HasValue,
+            IsVerifiedPurchase = hasContacted && request.OrderId.HasValue,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

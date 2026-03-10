@@ -86,4 +86,12 @@ public class TrustedDeviceRepository : ITrustedDeviceRepository
             .AsNoTracking()
             .CountAsync(d => d.UserId == userId && d.IsTrusted, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<int> DeleteAllByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.TrustedDevices
+            .Where(d => d.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

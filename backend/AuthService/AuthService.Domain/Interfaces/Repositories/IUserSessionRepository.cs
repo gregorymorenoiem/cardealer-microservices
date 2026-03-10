@@ -28,4 +28,9 @@ public interface IUserSessionRepository
         string userId,
         string deviceFingerprint,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Ley 172-13: Hard-deletes ALL sessions for a user (cascade deletion).
+    /// </summary>
+    Task<int> DeleteAllByUserIdAsync(string userId, CancellationToken cancellationToken = default);
 }

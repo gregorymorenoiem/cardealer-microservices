@@ -42,6 +42,7 @@ import {
   type DealerRole,
 } from '@/services/dealer-employees';
 import { toast } from 'sonner';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 import Image from 'next/image';
 
 // ============================================================================
@@ -198,8 +199,8 @@ export default function DealerEmployeesPage() {
   if (!dealer) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <AlertCircle className="mb-4 h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-medium text-muted-foreground">
+        <AlertCircle className="text-muted-foreground mb-4 h-12 w-12" />
+        <p className="text-muted-foreground text-lg font-medium">
           Necesitas una cuenta de dealer para acceder a esta función
         </p>
       </div>
@@ -210,7 +211,7 @@ export default function DealerEmployeesPage() {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <AlertCircle className="mb-4 h-12 w-12 text-red-400" />
-        <p className="mb-4 text-lg font-medium text-muted-foreground">Error al cargar empleados</p>
+        <p className="text-muted-foreground mb-4 text-lg font-medium">Error al cargar empleados</p>
         <Button onClick={() => refetch()} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
           Reintentar
@@ -224,7 +225,10 @@ export default function DealerEmployeesPage() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Empleados</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground text-2xl font-bold">Empleados</h1>
+            <VideoHelpButton sectionKey="empleados" variant="icon" />
+          </div>
           <p className="text-muted-foreground">Gestiona tu equipo y permisos</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90">
@@ -238,12 +242,12 @@ export default function DealerEmployeesPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <Users className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <Users className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalEmployees}</p>
-                <p className="text-sm text-muted-foreground">Empleados</p>
+                <p className="text-muted-foreground text-sm">Empleados</p>
               </div>
             </div>
           </CardContent>
@@ -256,7 +260,7 @@ export default function DealerEmployeesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalLeads}</p>
-                <p className="text-sm text-muted-foreground">Leads Totales</p>
+                <p className="text-muted-foreground text-sm">Leads Totales</p>
               </div>
             </div>
           </CardContent>
@@ -269,7 +273,7 @@ export default function DealerEmployeesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.avgRating || '-'}</p>
-                <p className="text-sm text-muted-foreground">Rating Promedio</p>
+                <p className="text-muted-foreground text-sm">Rating Promedio</p>
               </div>
             </div>
           </CardContent>
@@ -284,7 +288,7 @@ export default function DealerEmployeesPage() {
                 <p className="text-2xl font-bold">
                   {dealer.maxActiveListings ? Math.ceil(dealer.maxActiveListings / 3) : 5}
                 </p>
-                <p className="text-sm text-muted-foreground">Límite Plan</p>
+                <p className="text-muted-foreground text-sm">Límite Plan</p>
               </div>
             </div>
           </CardContent>
@@ -294,7 +298,7 @@ export default function DealerEmployeesPage() {
       {/* Search */}
       <div className="flex gap-4">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder="Buscar empleados..."
             className="pl-10"
@@ -309,12 +313,12 @@ export default function DealerEmployeesPage() {
         {filteredEmployees.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Users className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-lg font-medium text-muted-foreground">
+              <Users className="text-muted-foreground mb-4 h-12 w-12" />
+              <p className="text-muted-foreground text-lg font-medium">
                 {searchQuery ? 'No se encontraron empleados' : 'No tienes empleados registrados'}
               </p>
               {!searchQuery && (
-                <Button className="mt-4 bg-primary hover:bg-primary/90">
+                <Button className="bg-primary hover:bg-primary/90 mt-4">
                   <Plus className="mr-2 h-4 w-4" />
                   Invitar Primer Empleado
                 </Button>
@@ -352,7 +356,7 @@ export default function DealerEmployeesPage() {
                         <h3 className="font-semibold">{employee.name}</h3>
                         {getRoleBadge(employee.role)}
                       </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                      <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
                         <span className="flex items-center gap-1">
                           <Mail className="h-3 w-3" />
                           {employee.email}
@@ -375,18 +379,18 @@ export default function DealerEmployeesPage() {
                   <div className="flex gap-6 sm:gap-8">
                     <div className="text-center">
                       <p className="text-xl font-bold">{employee.leadsCount || 0}</p>
-                      <p className="text-xs text-muted-foreground">Leads</p>
+                      <p className="text-muted-foreground text-xs">Leads</p>
                     </div>
                     <div className="text-center">
                       <p className="text-xl font-bold">{employee.salesCount || 0}</p>
-                      <p className="text-xs text-muted-foreground">Ventas</p>
+                      <p className="text-muted-foreground text-xs">Ventas</p>
                     </div>
                     <div className="text-center">
                       <p className="flex items-center justify-center text-xl font-bold">
                         {employee.rating || '-'}
                         {employee.rating && <Star className="ml-1 h-3 w-3 text-amber-500" />}
                       </p>
-                      <p className="text-xs text-muted-foreground">Rating</p>
+                      <p className="text-muted-foreground text-xs">Rating</p>
                     </div>
                   </div>
 
@@ -432,7 +436,7 @@ export default function DealerEmployeesPage() {
                 <Shield className="h-5 w-5 text-purple-600" />
                 <h4 className="font-medium">Administrador</h4>
               </div>
-              <ul className="space-y-1 text-sm text-muted-foreground">
+              <ul className="text-muted-foreground space-y-1 text-sm">
                 <li>• Acceso completo al panel</li>
                 <li>• Gestión de empleados</li>
                 <li>• Configuración de cuenta</li>
@@ -444,7 +448,7 @@ export default function DealerEmployeesPage() {
                 <TrendingUp className="h-5 w-5 text-blue-600" />
                 <h4 className="font-medium">Ventas</h4>
               </div>
-              <ul className="space-y-1 text-sm text-muted-foreground">
+              <ul className="text-muted-foreground space-y-1 text-sm">
                 <li>• Gestión de inventario</li>
                 <li>• Atención de leads</li>
                 <li>• Mensajes y citas</li>
@@ -456,7 +460,7 @@ export default function DealerEmployeesPage() {
                 <Users className="h-5 w-5 text-green-600" />
                 <h4 className="font-medium">Soporte</h4>
               </div>
-              <ul className="space-y-1 text-sm text-muted-foreground">
+              <ul className="text-muted-foreground space-y-1 text-sm">
                 <li>• Ver inventario</li>
                 <li>• Responder mensajes</li>
                 <li>• Gestión de citas</li>

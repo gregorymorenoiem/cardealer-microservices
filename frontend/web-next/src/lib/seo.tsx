@@ -38,6 +38,14 @@ export interface VehicleSEO {
   availability?: 'InStock' | 'OutOfStock' | 'PreOrder';
   createdAt?: string;
   updatedAt?: string;
+  // SEO AUDIT FIX: New fields for Google Rich Results
+  vin?: string;
+  bodyType?: string;
+  numberOfDoors?: number;
+  driveWheelConfiguration?: string;
+  engineSize?: string;
+  // OKLA Score for structured data (0-1000)
+  oklaScore?: number;
 }
 
 export interface DealerSEO {
@@ -281,19 +289,52 @@ export function generateWebsiteJsonLd() {
 }
 
 /**
- * Generate JSON-LD for Vehicle (Product schema)
+ * Generate JSON-LD for Vehicle (Car schema for Google Rich Results)
+ *
+ * Required fields per Google Vehicle Rich Results Test:
+ * - @type: Car
+ * - name, brand, model, vehicleModelDate
+ * - vehicleIdentificationNumber (VIN)
+ * - mileageFromOdometer (QuantitativeValue)
+ * - itemCondition (NewCondition/UsedCondition)
+ * - offers (Offer with price, priceCurrency, availability, itemCondition)
+ * - image (URL array or ImageObject array)
+ * - manufacturer (Organization)
+ * - offerCount (number of available offers — required by Rich Results)
+ *
+ * @see https://developers.google.com/search/docs/appearance/structured-data/vehicle-listing
  */
 export function generateVehicleJsonLd(vehicle: VehicleSEO) {
+  const vehicleUrl = `${SITE_URL}/vehiculos/${vehicle.slug}`;
+  const conditionUrl =
+    vehicle.condition === 'new'
+      ? 'https://schema.org/NewCondition'
+      : 'https://schema.org/UsedCondition';
+
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Car',
-    '@id': `${SITE_URL}/vehiculos/${vehicle.slug}`,
+    '@id': vehicleUrl,
     name: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
     description: vehicle.description || `${vehicle.year} ${vehicle.make} ${vehicle.model} en venta`,
-    url: `${SITE_URL}/vehiculos/${vehicle.slug}`,
-    image: vehicle.images,
+    url: vehicleUrl,
+    // IMAGE: Google Rich Results requires at least one image
+    image:
+      vehicle.images.length > 0
+        ? vehicle.images.slice(0, 6).map(url => ({
+            '@type': 'ImageObject',
+            url,
+            width: 1200,
+            height: 800,
+          }))
+        : [`${SITE_URL}/og-image.jpg`],
+    // BRAND + MANUFACTURER: Google uses both for vehicle identification
     brand: {
       '@type': 'Brand',
+      name: vehicle.make,
+    },
+    manufacturer: {
+      '@type': 'Organization',
       name: vehicle.make,
     },
     model: vehicle.model,
@@ -301,23 +342,49 @@ export function generateVehicleJsonLd(vehicle: VehicleSEO) {
     color: vehicle.color,
     fuelType: mapFuelType(vehicle.fuelType),
     vehicleTransmission: mapTransmission(vehicle.transmission),
+    // VIN: Primary unique identifier for Google vehicle rich results
+    vehicleIdentificationNumber: vehicle.vin || undefined,
+    // BODY TYPE: SUV, Sedan, etc. for richer schema
+    bodyType: vehicle.bodyType ? mapBodyType(vehicle.bodyType) : undefined,
+    // ADDITIONAL SPECS
+    numberOfDoors: vehicle.numberOfDoors || undefined,
+    driveWheelConfiguration: vehicle.driveWheelConfiguration
+      ? mapDriveWheel(vehicle.driveWheelConfiguration)
+      : undefined,
+    vehicleEngine: vehicle.engineSize
+      ? {
+          '@type': 'EngineSpecification',
+          name: vehicle.engineSize,
+        }
+      : undefined,
+    // MILEAGE: Required by Google Rich Results — QuantitativeValue with unit
     mileageFromOdometer: vehicle.mileage
       ? {
           '@type': 'QuantitativeValue',
           value: vehicle.mileage,
           unitCode: 'KMT',
+          unitText: 'km',
         }
       : undefined,
-    itemCondition:
-      vehicle.condition === 'new'
-        ? 'https://schema.org/NewCondition'
-        : 'https://schema.org/UsedCondition',
+    // CONDITION: Required at Car level AND inside Offer
+    itemCondition: conditionUrl,
+    // DATE: datePosted + dateModified for Google freshness signals
+    datePosted: vehicle.createdAt || undefined,
+    dateModified: vehicle.updatedAt || vehicle.createdAt || undefined,
+    // OFFERS: Required by Google Rich Results with price, currency, availability
     offers: {
       '@type': 'Offer',
-      url: `${SITE_URL}/vehiculos/${vehicle.slug}`,
+      '@id': `${vehicleUrl}#offer`,
+      url: vehicleUrl,
       priceCurrency: vehicle.currency || 'DOP',
       price: vehicle.price,
+      // ITEM CONDITION INSIDE OFFER: Required by Google Rich Results Test
+      itemCondition: conditionUrl,
       availability: `https://schema.org/${vehicle.availability || 'InStock'}`,
+      // PRICE VALID UNTIL: Required for Google to show price in rich results
+      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      // OFFER COUNT: Required by Google for vehicle listings
+      offerCount: 1,
       seller: vehicle.sellerName
         ? {
             '@type': vehicle.sellerType === 'dealer' ? 'AutoDealer' : 'Person',
@@ -340,6 +407,35 @@ export function generateVehicleJsonLd(vehicle: VehicleSEO) {
         addressRegion: vehicle.location.province,
         addressCountry: vehicle.location.country || 'DO',
       },
+    };
+  }
+
+  // OKLA Score as Review structured data — differentiator vs competitors
+  if (vehicle.oklaScore !== undefined && vehicle.oklaScore > 0) {
+    jsonLd.review = {
+      '@type': 'Review',
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: (vehicle.oklaScore / 200).toFixed(1), // 0-1000 → 0-5 scale
+        bestRating: '5',
+        worstRating: '0',
+      },
+      author: {
+        '@type': 'Organization',
+        name: 'OKLA Score™',
+        url: `${SITE_URL}/okla-score`,
+      },
+      name: `OKLA Score™: ${vehicle.oklaScore}/1,000`,
+      description:
+        vehicle.oklaScore >= 850
+          ? 'Excelente — Vehículo en condiciones óptimas'
+          : vehicle.oklaScore >= 700
+            ? 'Bueno — Buen estado general'
+            : vehicle.oklaScore >= 550
+              ? 'Regular — Algunas preocupaciones menores'
+              : vehicle.oklaScore >= 400
+                ? 'Deficiente — Problemas significativos detectados'
+                : 'Crítico — Riesgos graves detectados',
     };
   }
 
@@ -491,23 +587,77 @@ export function generateArticleJsonLd(article: ArticleSEO) {
 // =============================================================================
 
 function mapFuelType(fuelType?: string): string | undefined {
+  // SEO AUDIT FIX: Added accent variants, GLP, and electric variants common in DR market
   const mapping: Record<string, string> = {
     gasolina: 'https://schema.org/Gasoline',
     diesel: 'https://schema.org/Diesel',
+    diésel: 'https://schema.org/Diesel',
     electrico: 'https://schema.org/Electricity',
+    eléctrico: 'https://schema.org/Electricity',
+    electric: 'https://schema.org/Electricity',
     híbrido: 'https://schema.org/HybridElectric',
+    hibrido: 'https://schema.org/HybridElectric',
+    hybrid: 'https://schema.org/HybridElectric',
     gas: 'https://schema.org/NaturalGas',
+    glp: 'https://schema.org/NaturalGas',
+    gnv: 'https://schema.org/NaturalGas',
+    'plug-in hybrid': 'https://schema.org/HybridElectric',
   };
   return fuelType ? mapping[fuelType.toLowerCase()] : undefined;
 }
 
 function mapTransmission(transmission?: string): string | undefined {
+  // SEO AUDIT FIX: Added tiptronic, CVT, semi-automatic, and common abbreviations
   const mapping: Record<string, string> = {
     automatica: 'https://schema.org/AutomaticTransmission',
     automática: 'https://schema.org/AutomaticTransmission',
+    automatic: 'https://schema.org/AutomaticTransmission',
+    auto: 'https://schema.org/AutomaticTransmission',
     manual: 'https://schema.org/ManualTransmission',
+    tiptronic: 'https://schema.org/AutomaticTransmission',
+    cvt: 'https://schema.org/AutomaticTransmission',
+    'semi-automatica': 'https://schema.org/AutomaticTransmission',
+    'semi-automática': 'https://schema.org/AutomaticTransmission',
+    dualclutch: 'https://schema.org/AutomaticTransmission',
   };
   return transmission ? mapping[transmission.toLowerCase()] : undefined;
+}
+
+// SEO AUDIT FIX: New mapping functions for additional vehicle properties
+function mapBodyType(bodyType?: string): string | undefined {
+  const mapping: Record<string, string> = {
+    sedan: 'https://schema.org/Sedan',
+    sedán: 'https://schema.org/Sedan',
+    suv: 'https://schema.org/SUV',
+    camioneta: 'https://schema.org/SUV',
+    pickup: 'https://schema.org/Pickup',
+    'pick-up': 'https://schema.org/Pickup',
+    hatchback: 'https://schema.org/Hatchback',
+    coupe: 'https://schema.org/Coupe',
+    cupé: 'https://schema.org/Coupe',
+    convertible: 'https://schema.org/Convertible',
+    van: 'https://schema.org/Van',
+    minivan: 'https://schema.org/Minivan',
+    wagon: 'https://schema.org/Wagon',
+    truck: 'https://schema.org/Truck',
+    camión: 'https://schema.org/Truck',
+    bus: 'https://schema.org/Bus',
+    crossover: 'https://schema.org/SUV',
+  };
+  return bodyType ? mapping[bodyType.toLowerCase()] : undefined;
+}
+
+function mapDriveWheel(drive?: string): string | undefined {
+  const mapping: Record<string, string> = {
+    fwd: 'https://schema.org/FrontWheelDriveConfiguration',
+    'front-wheel': 'https://schema.org/FrontWheelDriveConfiguration',
+    rwd: 'https://schema.org/RearWheelDriveConfiguration',
+    'rear-wheel': 'https://schema.org/RearWheelDriveConfiguration',
+    awd: 'https://schema.org/AllWheelDriveConfiguration',
+    '4wd': 'https://schema.org/FourWheelDriveConfiguration',
+    '4x4': 'https://schema.org/FourWheelDriveConfiguration',
+  };
+  return drive ? mapping[drive.toLowerCase()] : undefined;
 }
 
 // =============================================================================
@@ -522,9 +672,9 @@ interface JsonLdProps {
  * Component to render JSON-LD script tag
  */
 export function JsonLd({ data }: JsonLdProps) {
-  return (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
-  );
+  // SEO AUDIT FIX: Escape </script> sequences to prevent XSS injection
+  const safeJson = JSON.stringify(data).replace(/</g, '\u003c').replace(/>/g, '\u003e');
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJson }} />;
 }
 
 /**

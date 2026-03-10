@@ -14,4 +14,9 @@ public interface IVerificationTokenRepository
     Task DeleteAsync(Guid id);
     Task DeleteExpiredTokensAsync();
     Task<bool> ExistsValidTokenAsync(string email, VerificationTokenType type);
+
+    /// <summary>
+    /// Ley 172-13: Hard-deletes ALL verification tokens for an email (cascade deletion).
+    /// </summary>
+    Task<int> DeleteByEmailAsync(string email, CancellationToken cancellationToken = default);
 }

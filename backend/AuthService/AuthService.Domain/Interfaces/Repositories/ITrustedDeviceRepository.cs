@@ -51,4 +51,9 @@ public interface ITrustedDeviceRepository
     /// Count trusted devices for a user.
     /// </summary>
     Task<int> CountTrustedDevicesAsync(string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Ley 172-13: Hard-deletes ALL trusted devices for a user (cascade deletion).
+    /// </summary>
+    Task<int> DeleteAllByUserIdAsync(string userId, CancellationToken cancellationToken = default);
 }

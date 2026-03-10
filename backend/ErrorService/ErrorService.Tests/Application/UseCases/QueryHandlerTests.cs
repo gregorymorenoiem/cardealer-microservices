@@ -46,7 +46,7 @@ public class GetErrorQueryHandlerTests
             Metadata = new Dictionary<string, object> { { "correlationId", "corr-456" } }
         };
 
-        _repoMock.Setup(x => x.GetByIdAsync(errorId)).ReturnsAsync(errorLog);
+        _repoMock.Setup(x => x.GetByIdAsync(errorId, It.IsAny<CancellationToken>())).ReturnsAsync(errorLog);
 
         var query = new GetErrorQuery(new GetErrorRequest(errorId));
 
@@ -68,7 +68,7 @@ public class GetErrorQueryHandlerTests
     {
         // Arrange
         var errorId = Guid.NewGuid();
-        _repoMock.Setup(x => x.GetByIdAsync(errorId)).ReturnsAsync((ErrorLog?)null);
+        _repoMock.Setup(x => x.GetByIdAsync(errorId, It.IsAny<CancellationToken>())).ReturnsAsync((ErrorLog?)null);
 
         var query = new GetErrorQuery(new GetErrorRequest(errorId));
 
@@ -99,7 +99,7 @@ public class GetErrorQueryHandlerTests
             Metadata = new Dictionary<string, object>()
         };
 
-        _repoMock.Setup(x => x.GetByIdAsync(errorId)).ReturnsAsync(errorLog);
+        _repoMock.Setup(x => x.GetByIdAsync(errorId, It.IsAny<CancellationToken>())).ReturnsAsync(errorLog);
 
         var query = new GetErrorQuery(new GetErrorRequest(errorId));
 
@@ -155,7 +155,7 @@ public class GetErrorsQueryHandlerTests
             }
         };
 
-        _repoMock.Setup(x => x.GetAsync(It.IsAny<ErrorQuery>())).ReturnsAsync(errors);
+        _repoMock.Setup(x => x.GetAsync(It.IsAny<ErrorQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(errors);
 
         var request = new GetErrorsRequest("VehiclesSaleService", null, null, 1, 10);
         var query = new GetErrorsQuery(request);
@@ -176,7 +176,7 @@ public class GetErrorsQueryHandlerTests
     public async Task Handle_NoErrors_ReturnsEmptyList()
     {
         // Arrange
-        _repoMock.Setup(x => x.GetAsync(It.IsAny<ErrorQuery>()))
+        _repoMock.Setup(x => x.GetAsync(It.IsAny<ErrorQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Enumerable.Empty<ErrorLog>());
 
         var request = new GetErrorsRequest("NonExistentService", null, null, 1, 10);
@@ -199,8 +199,8 @@ public class GetErrorsQueryHandlerTests
         var from = DateTime.UtcNow.AddDays(-7);
         var to = DateTime.UtcNow;
 
-        _repoMock.Setup(x => x.GetAsync(It.IsAny<ErrorQuery>()))
-            .Callback<ErrorQuery>(q => capturedQuery = q)
+        _repoMock.Setup(x => x.GetAsync(It.IsAny<ErrorQuery>(), It.IsAny<CancellationToken>()))
+            .Callback<ErrorQuery, CancellationToken>((q, _) => capturedQuery = q)
             .ReturnsAsync(Enumerable.Empty<ErrorLog>());
 
         var request = new GetErrorsRequest("AuthService", from, to, 2, 25);
@@ -253,7 +253,7 @@ public class GetErrorStatsQueryHandlerTests
             }
         };
 
-        _repoMock.Setup(x => x.GetStatsAsync(It.IsAny<DateTime?>(), It.IsAny<DateTime?>()))
+        _repoMock.Setup(x => x.GetStatsAsync(It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(stats);
 
         var query = new GetErrorStatsQuery(new GetErrorStatsRequest(null, null));
@@ -278,7 +278,7 @@ public class GetErrorStatsQueryHandlerTests
         var from = DateTime.UtcNow.AddDays(-30);
         var to = DateTime.UtcNow;
 
-        _repoMock.Setup(x => x.GetStatsAsync(from, to))
+        _repoMock.Setup(x => x.GetStatsAsync(from, to, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ErrorStats());
 
         var query = new GetErrorStatsQuery(new GetErrorStatsRequest(from, to));
@@ -287,7 +287,7 @@ public class GetErrorStatsQueryHandlerTests
         await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        _repoMock.Verify(x => x.GetStatsAsync(from, to), Times.Once);
+        _repoMock.Verify(x => x.GetStatsAsync(from, to, It.IsAny<CancellationToken>()), Times.Once);
     }
 }
 
@@ -312,7 +312,7 @@ public class GetServiceNamesQueryHandlerTests
             "NotificationService", "ContactService"
         };
 
-        _repoMock.Setup(x => x.GetServiceNamesAsync())
+        _repoMock.Setup(x => x.GetServiceNamesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(serviceNames);
 
         var query = new GetServiceNamesQuery(new GetServiceNamesRequest());
@@ -331,7 +331,7 @@ public class GetServiceNamesQueryHandlerTests
     public async Task Handle_NoServices_ReturnsEmptyList()
     {
         // Arrange
-        _repoMock.Setup(x => x.GetServiceNamesAsync())
+        _repoMock.Setup(x => x.GetServiceNamesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Enumerable.Empty<string>());
 
         var query = new GetServiceNamesQuery(new GetServiceNamesRequest());

@@ -101,6 +101,16 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
             _ => config.WelcomeMessage
         };
 
+        // ══════════════════════════════════════════════════════════════
+        // BOT DISCLOSURE — Mensaje obligatorio de identificación de bot
+        // Incluye: nombre del dealer, "Soy un asistente virtual de OKLA",
+        // enlace a política de privacidad, y flag de consentimiento.
+        // ══════════════════════════════════════════════════════════════
+        var dealerName = config.DealerDisplayName ?? "OKLA";
+        var privacyUrl = config.PrivacyPolicyUrl ?? "https://okla.do/privacidad";
+        var disclosureMessage = $"🤖 Soy un asistente virtual de OKLA, al servicio de {dealerName}. " +
+            $"Al continuar esta conversación, aceptas nuestra política de privacidad: {privacyUrl}";
+
         return new StartSessionResponse
         {
             SessionId = session.Id,
@@ -115,7 +125,10 @@ public class StartSessionCommandHandler : IRequestHandler<StartSessionCommand, S
             BotAvatarUrl = config.BotAvatarUrl,
             MaxInteractionsPerSession = config.MaxInteractionsPerSession,
             RemainingInteractions = config.MaxInteractionsPerSession,
-            ChatMode = chatMode.ToString()
+            ChatMode = chatMode.ToString(),
+            DisclosureMessage = disclosureMessage,
+            PrivacyPolicyUrl = privacyUrl,
+            RequiresConsent = config.RequireDisclosureConsent
         };
     }
 
@@ -193,6 +206,24 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Cha
         var config = await _configRepository.GetByIdAsync(session.ChatbotConfigurationId, ct)
             ?? await _configRepository.GetDefaultAsync(ct)
             ?? throw new InvalidOperationException("No chatbot configuration found");
+
+        // ── 1b. CONSENT GATE: Verificar disclosure aceptado ──────────
+        // Si la config requiere consentimiento y el comprador no lo ha dado,
+        // rechazar TODOS los mensajes hasta que acepte el disclosure.
+        if (config.RequireDisclosureConsent && !session.ConsentAccepted)
+        {
+            return new ChatbotResponse
+            {
+                MessageId = Guid.NewGuid(),
+                Response = "⚠️ Debes aceptar el aviso de privacidad antes de continuar. " +
+                    "Por favor, acepta los términos mostrados al inicio de la conversación.",
+                IsFallback = false,
+                IntentName = "disclosure_consent_required",
+                ConfidenceScore = 1.0m,
+                RemainingInteractions = session.MaxInteractionsPerSession - session.InteractionCount,
+                ResponseTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds
+            };
+        }
 
         // ── 2. Verificar handoff: si un humano tiene control, no procesar con bot ──
         if (!session.IsBotActive)
@@ -871,5 +902,49 @@ public class ReturnToBotCommandHandler : IRequestHandler<ReturnToBotCommand, Han
         return new HandoffResult(true,
             "Control devuelto al bot",
             HandoffStatus.ReturnedToBot);
+    }
+}
+
+/// <summary>
+/// Handler para aceptar el disclosure de bot y política de privacidad.
+/// Marca la sesión como ConsentAccepted=true, desbloqueando el envío de mensajes.
+/// </summary>
+public class AcceptDisclosureCommandHandler : IRequestHandler<AcceptDisclosureCommand, AcceptDisclosureResult>
+{
+    private readonly IChatSessionRepository _sessionRepository;
+    private readonly ILogger<AcceptDisclosureCommandHandler> _logger;
+
+    public AcceptDisclosureCommandHandler(
+        IChatSessionRepository sessionRepository,
+        ILogger<AcceptDisclosureCommandHandler> logger)
+    {
+        _sessionRepository = sessionRepository;
+        _logger = logger;
+    }
+
+    public async Task<AcceptDisclosureResult> Handle(AcceptDisclosureCommand request, CancellationToken ct)
+    {
+        var session = await _sessionRepository.GetByTokenAsync(request.SessionToken, ct);
+        if (session == null)
+        {
+            return new AcceptDisclosureResult(false, "Session not found", null);
+        }
+
+        if (session.ConsentAccepted)
+        {
+            return new AcceptDisclosureResult(true, "Consent already accepted", session.ConsentAcceptedAt);
+        }
+
+        session.ConsentAccepted = true;
+        session.ConsentAcceptedAt = DateTime.UtcNow;
+        session.LastActivityAt = DateTime.UtcNow;
+
+        await _sessionRepository.UpdateAsync(session, ct);
+
+        _logger.LogInformation(
+            "Disclosure consent accepted: Session {SessionId}, User {UserId}",
+            session.Id, session.UserId);
+
+        return new AcceptDisclosureResult(true, "Disclosure accepted", session.ConsentAcceptedAt);
     }
 }

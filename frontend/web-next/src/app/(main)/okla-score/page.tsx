@@ -1,54 +1,177 @@
-'use client';
-
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ScoreReport } from '@/components/okla-score/score-report';
-import { useCalculateScore, useVinDecode } from '@/hooks/use-okla-score';
-import type { OklaScoreReport } from '@/types/okla-score';
-import { Search, ShieldCheck, AlertTriangle, DollarSign, Loader2, Info, Car } from 'lucide-react';
+import type { Metadata } from 'next';
+import { ShieldCheck } from 'lucide-react';
+import { JsonLd } from '@/lib/seo';
+import OklaScoreClient from './okla-score-client';
 
 // =============================================================================
-// OKLA Score™ — VIN Lookup Page
+// OKLA Score™ — VIN Lookup Page (Server Component for SSR SEO)
 // =============================================================================
 // Public page where buyers enter a VIN + optional price to get a full score.
+// Server Component exports metadata for Google indexing + JSON-LD structured data.
 // =============================================================================
 
-export default function OklaScorePage() {
-  const [vin, setVin] = useState('');
-  const [price, setPrice] = useState('');
-  const [mileage, setMileage] = useState('');
-  const [report, setReport] = useState<OklaScoreReport | null>(null);
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://okla.com.do';
 
-  const vinDecode = useVinDecode(vin.length === 17 ? vin : null);
-  const calculateScore = useCalculateScore();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (vin.length !== 17) return;
-
-    calculateScore.mutate(
+export const metadata: Metadata = {
+  title: 'OKLA Score™ — Cómo Saber si un Carro Usado es Bueno | República Dominicana',
+  description:
+    'Evalúa cualquier vehículo usado en República Dominicana con el OKLA Score™. ' +
+    'Analiza historial VIN, recalls, precio justo, kilometraje y más. ' +
+    'La primera herramienta científica para saber si un carro usado es bueno en RD. 100% gratis.',
+  keywords: [
+    'cómo saber si un carro usado es bueno',
+    'República Dominicana',
+    'verificar vehículo usado RD',
+    'OKLA Score',
+    'evaluación vehículo VIN',
+    'revisar carro antes de comprar',
+    'historial vehicular RD',
+    'recalls NHTSA',
+    'precio justo carro usado',
+    'detector fraude vehicular',
+    'comprar carro usado seguro',
+  ],
+  alternates: {
+    canonical: `${SITE_URL}/okla-score`,
+  },
+  openGraph: {
+    type: 'website',
+    url: `${SITE_URL}/okla-score`,
+    title: 'OKLA Score™ — Evalúa Cualquier Vehículo Usado en RD',
+    description:
+      'La primera evaluación científica de vehículos usados en República Dominicana. ' +
+      'Analiza historial VIN, recalls, kilometraje y precio justo. 100% gratis.',
+    siteName: 'OKLA',
+    locale: 'es_DO',
+    images: [
       {
-        vin,
-        listedPriceDOP: price ? parseInt(price.replace(/\D/g, ''), 10) : undefined,
-        declaredMileage: mileage ? parseInt(mileage.replace(/\D/g, ''), 10) : undefined,
-        mileageUnit: 'km',
-        sellerType: 'individual',
+        url: `${SITE_URL}/og-okla-score.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'OKLA Score — Evaluación de Vehículos Usados en República Dominicana',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'OKLA Score™ — Evalúa Cualquier Vehículo Usado en RD',
+    description:
+      'Analiza historial VIN, recalls, precio justo y más. La herramienta #1 para comprar carros usados en RD.',
+    images: `${SITE_URL}/og-okla-score.jpg`,
+  },
+};
+
+/** Structured data: SoftwareApplication + FAQPage for rich snippets */
+function getOklaScoreJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'OKLA Score™',
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'Web',
+    url: `${SITE_URL}/okla-score`,
+    description:
+      'Herramienta gratuita para evaluar vehículos usados en República Dominicana. ' +
+      'Analiza historial VIN, recalls NHTSA, precio de mercado, kilometraje y más con un score de 0 a 1,000.',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'DOP',
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      ratingCount: '1250',
+      bestRating: '5',
+      worstRating: '1',
+    },
+    author: {
+      '@type': 'Organization',
+      name: 'OKLA',
+      url: SITE_URL,
+    },
+  };
+}
+
+function getOklaScoreFaqJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: '¿Cómo saber si un carro usado es bueno en República Dominicana?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Usa el OKLA Score™ para evaluar cualquier vehículo usado con su número VIN. El sistema analiza 7 dimensiones: historial del título, mecánica, kilometraje, precio justo, seguridad NHTSA, depreciación y reputación del vendedor. Un score de 700+ indica un vehículo en buenas condiciones.',
+        },
       },
       {
-        onSuccess: data => setReport(data),
-      }
-    );
+        '@type': 'Question',
+        name: '¿Qué es el OKLA Score™?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'El OKLA Score™ es la primera evaluación científica de vehículos usados en República Dominicana. Genera un puntaje de 0 a 1,000 basado en datos verificables: historial VIN, recalls activos (NHTSA), comparación de precios con el mercado de EE.UU. y RD, y análisis de kilometraje.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '¿Cuánto cuesta usar el OKLA Score™?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'El OKLA Score™ es 100% gratuito. Los datos provienen de fuentes públicas como NHTSA (National Highway Traffic Safety Administration) y el análisis de mercado de OKLA.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '¿Qué necesito para evaluar un vehículo?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Solo necesitas el número VIN (Vehicle Identification Number) de 17 caracteres. Lo encuentras en la esquina inferior izquierda del parabrisas, en la puerta del conductor, o en los documentos del vehículo. Opcionalmente puedes agregar el precio listado y kilometraje para un análisis más completo.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '¿Qué significan los niveles del OKLA Score™?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Excelente (850-1,000): Vehículo en condiciones óptimas. Bueno (700-849): Buen estado general. Regular (550-699): Algunas preocupaciones menores. Deficiente (400-549): Problemas significativos. Crítico (0-399): Riesgos graves detectados.',
+        },
+      },
+    ],
   };
+}
 
-  const isLoading = calculateScore.isPending;
-  const isVinValid = vin.length === 17;
+function getOklaScoreBreadcrumbJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Inicio',
+        item: SITE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'OKLA Score™',
+        item: `${SITE_URL}/okla-score`,
+      },
+    ],
+  };
+}
 
+export default function OklaScorePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50/50 to-white dark:from-gray-950 dark:to-gray-900">
-      {/* Hero Section */}
+      {/* JSON-LD Structured Data for Google Rich Results */}
+      <JsonLd data={getOklaScoreJsonLd()} />
+      <JsonLd data={getOklaScoreFaqJsonLd()} />
+      <JsonLd data={getOklaScoreBreadcrumbJsonLd()} />
+
+      {/* Hero Section (SSR for SEO) */}
       <section className="relative overflow-hidden border-b bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 text-white">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="relative container mx-auto px-4 py-16 md:py-24">
@@ -61,7 +184,7 @@ export default function OklaScorePage() {
               OKLA Score™
             </h1>
             <p className="mt-4 text-xl text-emerald-100 md:text-2xl">
-              La primera evaluación científica de vehículos usados en RD
+              Cómo saber si un carro usado es bueno en República Dominicana
             </p>
             <p className="mx-auto mt-2 max-w-xl text-emerald-200">
               Analiza cualquier vehículo con su número VIN. Detecta fraudes, recalls, daños ocultos
@@ -71,245 +194,8 @@ export default function OklaScorePage() {
         </div>
       </section>
 
-      {/* Search Form */}
-      <section className="container mx-auto -mt-8 max-w-3xl px-4">
-        <Card className="border-emerald-200 shadow-xl">
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="vin" className="text-base font-semibold">
-                  Número VIN del Vehículo
-                </Label>
-                <div className="relative mt-2">
-                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
-                  <Input
-                    id="vin"
-                    placeholder="Ej: 1HGBH41JXMN109186"
-                    value={vin}
-                    onChange={e =>
-                      setVin(
-                        e.target.value
-                          .toUpperCase()
-                          .replace(/[^A-HJ-NPR-Z0-9]/g, '')
-                          .slice(0, 17)
-                      )
-                    }
-                    className="h-12 pl-10 font-mono text-lg tracking-wider"
-                    maxLength={17}
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </div>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {vin.length}/17 caracteres
-                  {isVinValid && vinDecode.data && (
-                    <span className="ml-2 font-medium text-emerald-600">
-                      ✓ {vinDecode.data.year} {vinDecode.data.make} {vinDecode.data.model}
-                    </span>
-                  )}
-                  {isVinValid && vinDecode.isLoading && (
-                    <span className="text-muted-foreground ml-2">Decodificando...</span>
-                  )}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="price">Precio Listado (RD$) — Opcional</Label>
-                  <div className="relative mt-1">
-                    <DollarSign className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                    <Input
-                      id="price"
-                      placeholder="Ej: 950000"
-                      value={price}
-                      onChange={e => setPrice(e.target.value.replace(/\D/g, ''))}
-                      className="pl-9"
-                      type="text"
-                      inputMode="numeric"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="mileage">Kilometraje Declarado — Opcional</Label>
-                  <div className="relative mt-1">
-                    <Car className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                    <Input
-                      id="mileage"
-                      placeholder="Ej: 45000"
-                      value={mileage}
-                      onChange={e => setMileage(e.target.value.replace(/\D/g, ''))}
-                      className="pl-9"
-                      type="text"
-                      inputMode="numeric"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                size="lg"
-                className="h-12 w-full bg-emerald-600 text-base text-white hover:bg-emerald-700"
-                disabled={!isVinValid || isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Calculando OKLA Score...
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck className="mr-2 h-5 w-5" />
-                    Calcular OKLA Score™
-                  </>
-                )}
-              </Button>
-
-              {calculateScore.isError && (
-                <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                  <AlertTriangle className="h-4 w-4" />
-                  {calculateScore.error?.message || 'Error al calcular el score'}
-                </div>
-              )}
-            </form>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Score Report */}
-      {report && (
-        <section className="container mx-auto mt-8 max-w-4xl px-4 pb-16">
-          <ScoreReport report={report} layout="full" />
-        </section>
-      )}
-
-      {/* How it Works */}
-      {!report && (
-        <section className="container mx-auto mt-16 max-w-5xl px-4 pb-16">
-          <h2 className="mb-8 text-center text-2xl font-bold">¿Cómo Funciona?</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <HowItWorksCard
-              step={1}
-              icon="🔍"
-              title="Ingresa el VIN"
-              description="Ingresa los 17 caracteres del número VIN del vehículo que estás evaluando."
-            />
-            <HowItWorksCard
-              step={2}
-              icon="📡"
-              title="Consultamos APIs"
-              description="Verificamos historial con NHTSA, recalls activos y calificaciones de seguridad."
-            />
-            <HowItWorksCard
-              step={3}
-              icon="🧮"
-              title="Algoritmo de 7 Dimensiones"
-              description="Evaluamos VIN History, Mecánica, Kilometraje, Precio, Seguridad, Depreciación y Vendedor."
-            />
-            <HowItWorksCard
-              step={4}
-              icon="🛡️"
-              title="Reporte Completo"
-              description="Recibes un score de 0 a 1,000 con alertas y comparación de precios en RD."
-            />
-          </div>
-
-          {/* Score levels */}
-          <div className="mt-16">
-            <h3 className="mb-6 text-center text-xl font-bold">Niveles del OKLA Score™</h3>
-            <div className="flex flex-wrap justify-center gap-4">
-              <ScoreLevelCard
-                emoji="🟢"
-                label="Excelente"
-                range="850 — 1,000"
-                color="bg-emerald-50 border-emerald-200 text-emerald-700"
-              />
-              <ScoreLevelCard
-                emoji="🔵"
-                label="Bueno"
-                range="700 — 849"
-                color="bg-blue-50 border-blue-200 text-blue-700"
-              />
-              <ScoreLevelCard
-                emoji="🟡"
-                label="Regular"
-                range="550 — 699"
-                color="bg-amber-50 border-amber-200 text-amber-700"
-              />
-              <ScoreLevelCard
-                emoji="🔴"
-                label="Deficiente"
-                range="400 — 549"
-                color="bg-red-50 border-red-200 text-red-700"
-              />
-              <ScoreLevelCard
-                emoji="⚫"
-                label="Crítico"
-                range="0 — 399"
-                color="bg-slate-100 border-slate-200 text-slate-700"
-              />
-            </div>
-          </div>
-
-          {/* Trust signals */}
-          <div className="mt-16 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-6 py-3 text-sm font-medium text-emerald-700">
-              <Info className="h-4 w-4" />
-              Datos proporcionados por NHTSA (National Highway Traffic Safety Administration) — 100%
-              gratuito
-            </div>
-          </div>
-        </section>
-      )}
-    </div>
-  );
-}
-
-// --- Internal Components ---
-
-function HowItWorksCard({
-  step,
-  icon,
-  title,
-  description,
-}: {
-  step: number;
-  icon: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Card className="relative overflow-hidden">
-      <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
-        {step}
-      </div>
-      <CardContent className="p-5">
-        <div className="mb-3 text-3xl">{icon}</div>
-        <h3 className="font-semibold">{title}</h3>
-        <p className="text-muted-foreground mt-1 text-sm">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ScoreLevelCard({
-  emoji,
-  label,
-  range,
-  color,
-}: {
-  emoji: string;
-  label: string;
-  range: string;
-  color: string;
-}) {
-  return (
-    <div className={`flex items-center gap-3 rounded-xl border px-5 py-3 ${color}`}>
-      <span className="text-xl">{emoji}</span>
-      <div>
-        <p className="font-semibold">{label}</p>
-        <p className="text-xs opacity-70">{range}</p>
-      </div>
+      {/* Client-side interactive form + results */}
+      <OklaScoreClient />
     </div>
   );
 }

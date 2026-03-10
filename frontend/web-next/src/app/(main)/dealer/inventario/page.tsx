@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useCurrentDealer, useDealerStats } from '@/hooks/use-dealers';
 import { useVehiclesByDealer, useDeleteVehicle, useUpdateVehicle } from '@/hooks/use-vehicles';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import type { VehicleStatus } from '@/types';
@@ -236,7 +237,10 @@ export default function InventoryPage() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div>
-          <h1 className="text-foreground text-2xl font-bold">Inventario</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground text-2xl font-bold">Inventario</h1>
+            <VideoHelpButton sectionKey="inventario" variant="icon" />
+          </div>
           <p className="text-muted-foreground">
             {activeCount} de {maxListings} vehículos activos
           </p>

@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import { apiClient } from '@/lib/api-client';
 import {
@@ -21,10 +21,7 @@ import {
   Star,
   Search,
   Megaphone,
-  BarChart3,
-  Eye,
   Zap,
-  Crown,
   Coins,
   Loader2,
   ShieldAlert,
@@ -102,7 +99,7 @@ function formatCoins(amount: number | null | undefined) {
 // =============================================================================
 
 export default function AdCatalogPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user: _user, isAuthenticated } = useAuth();
   const [products, setProducts] = useState<AdProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +113,7 @@ export default function AdCatalogPage() {
           '/api/advertising/catalog'
         );
         setProducts(res.data.data?.products ?? res.data.data ?? []);
-      } catch (err: unknown) {
+      } catch (_err: unknown) {
         setError('No se pudo cargar el catálogo de publicidad.');
       } finally {
         setIsLoading(false);
@@ -308,7 +305,7 @@ export default function AdCatalogPage() {
 
                     {/* CTA */}
                     <div className="mt-auto">
-                      <Button className="w-full bg-primary text-white hover:bg-primary/90" asChild>
+                      <Button className="bg-primary hover:bg-primary/90 w-full text-white" asChild>
                         <Link href={`/dealer/publicidad/nueva?product=${product.slug}`}>
                           Contratar
                         </Link>

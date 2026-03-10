@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Suspense } from 'react';
 import { BrandVehiclesClient } from './brand-vehicles-client';
 import { generateBreadcrumbJsonLd } from '@/lib/seo';
 
-// Top 10 marcas en RD
+// Top 18 marcas en RD (matches sitemap + static makes)
 const TOP_BRANDS = [
   'Toyota',
   'Honda',
@@ -15,6 +16,14 @@ const TOP_BRANDS = [
   'Chevrolet',
   'Ford',
   'Jeep',
+  'Mazda',
+  'BMW',
+  'Mercedes-Benz',
+  'Audi',
+  'Volkswagen',
+  'Lexus',
+  'Subaru',
+  'Dodge',
 ];
 
 // Brand-specific descriptions for SEO
@@ -36,6 +45,20 @@ const BRAND_DESCRIPTIONS: Record<string, string> = {
     'Chevrolet tiene una larga historia en RD. Descubre Tracker, Onix, Captiva, Silverado y más modelos Chevrolet.',
   ford: 'Ford ofrece pickups y SUV robustos. Encuentra Ranger, Explorer, Escape, Bronco Sport y más modelos Ford.',
   jeep: 'Jeep es sinónimo de aventura y off-road. Descubre Wrangler, Grand Cherokee, Compass, Renegade y más modelos Jeep.',
+  mazda:
+    'Mazda combina diseño Kodo con ingeniería SkyActiv. Encuentra CX-5, Mazda3, CX-30, CX-9 y más modelos Mazda en RD.',
+  bmw: 'BMW es sinónimo de rendimiento deportivo y lujo. Encuentra X3, X5, Serie 3, Serie 5 y más modelos BMW usados y nuevos en RD.',
+  'mercedes-benz':
+    'Mercedes-Benz representa el máximo lujo automotriz. Descubre Clase C, GLC, GLE, Clase E y más modelos Mercedes en República Dominicana.',
+  audi: 'Audi ofrece tecnología quattro y diseño vanguardista. Encuentra Q5, A4, Q7, A3 y más modelos Audi en venta en RD.',
+  volkswagen:
+    'Volkswagen combina ingeniería alemana con accesibilidad. Encuentra Tiguan, Jetta, Taos, Golf y más modelos VW en República Dominicana.',
+  lexus:
+    'Lexus ofrece lujo japonés con confiabilidad superior. Encuentra RX, NX, ES, IS y más modelos Lexus en RD.',
+  subaru:
+    'Subaru destaca por su tracción integral simétrica. Encuentra Forester, Outback, Crosstrek, WRX y más modelos Subaru en RD.',
+  dodge:
+    'Dodge combina potencia americana con estilo. Encuentra Charger, Challenger, Durango, Ram y más modelos Dodge en República Dominicana.',
 };
 
 interface PageProps {
@@ -116,13 +139,13 @@ export default async function BrandPage({ params }: PageProps) {
         <div className="container mx-auto px-4">
           {/* Breadcrumbs */}
           <nav className="mb-6 text-sm text-white/60">
-            <a href="/" className="hover:text-white/80">
+            <Link href="/" className="hover:text-white/80">
               Inicio
-            </a>
+            </Link>
             <span className="mx-2">›</span>
-            <a href="/marcas" className="hover:text-white/80">
+            <Link href="/marcas" className="hover:text-white/80">
               Marcas
-            </a>
+            </Link>
             <span className="mx-2">›</span>
             <span className="text-white">{brandName}</span>
           </nav>

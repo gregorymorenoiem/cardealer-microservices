@@ -30,6 +30,7 @@ import { toast } from 'sonner';
 import { useCurrentDealer, useDealerStats } from '@/hooks/use-dealers';
 import { useTrends, useExportReport, useMonthlyReport } from '@/hooks/use-dealer-analytics';
 import { PlanGate } from '@/components/plan/plan-gate';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 import { formatPrice } from '@/lib/format';
 
 // =============================================================================
@@ -181,7 +182,10 @@ function DealerReportsContent() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div>
-          <h1 className="text-foreground text-2xl font-bold">Reportes</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground text-2xl font-bold">Reportes</h1>
+            <VideoHelpButton sectionKey="reportes" variant="icon" />
+          </div>
           <p className="text-muted-foreground">Análisis de rendimiento y estadísticas</p>
         </div>
         <div className="flex gap-2">
@@ -242,7 +246,7 @@ function DealerReportsContent() {
               {getChangeIndicator(stats?.inquiriesChange || 0)}
             </div>
             <p className="text-2xl font-bold">{formatNumber(stats?.totalInquiries || 0)}</p>
-            <p className="text-muted-foreground text-sm">Leads Generados</p>
+            <p className="text-muted-foreground text-sm">Personas interesadas</p>
           </CardContent>
         </Card>
         <Card>
@@ -327,7 +331,7 @@ function DealerReportsContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="h-5 w-5" />
-              Embudo de Conversión
+              ¿Cómo llegan a comprarte?
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -408,7 +412,7 @@ function DealerReportsContent() {
               <p className="text-3xl font-bold text-purple-700">
                 {formatNumber(stats?.inquiriesThisMonth || 0)}
               </p>
-              <p className="text-sm text-purple-600">Leads Este Mes</p>
+              <p className="text-sm text-purple-600">Interesados este mes</p>
             </div>
             <div className="bg-primary/10 rounded-lg p-4 text-center">
               <DollarSign className="text-primary mx-auto mb-2 h-8 w-8" />

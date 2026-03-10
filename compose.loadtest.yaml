@@ -1,0 +1,53 @@
+# =============================================================================
+# Docker Compose Override for Load Testing with Pre-built GHCR Images
+# =============================================================================
+# Usage:
+#   docker compose -f compose.docker.yaml -f compose.loadtest.yaml up -d
+# =============================================================================
+
+services:
+  gateway:
+    image: ghcr.io/gregorymorenoiem/cardealer-gateway:latest
+    build: !override {}
+    container_name: gateway-loadtest
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      Jwt__Key: "TM9Gd7Kh3r31M8alRKbZr+SkXMALx7SJmVxWeBbyUCrI5oTilVoeaooMZSc3KzGF"
+      Jwt__Issuer: "CarDealer"
+      Jwt__Audience: "CarDealerApp"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - consul
+      - redis
+    networks:
+      - cardealer-net
+
+  authservice:
+    image: ghcr.io/gregorymorenoiem/cardealer-authservice:latest
+    build: !override {}
+    container_name: authservice-loadtest
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: authservice
+      DB_USERNAME: postgres
+      DB_PASSWORD: "CarDealerDBPassword2026Secure!"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USERNAME: cardealer
+      RABBITMQ_PASSWORD: "guest"
+      CONSUL_ADDRESS: "http://consul:8500"
+      Jwt__Key: "TM9Gd7Kh3r31M8alRKbZr+SkXMALx7SJmVxWeBbyUCrI5oTilVoeaooMZSc3KzGF"
+      Jwt__Issuer: "CarDealer"
+      Jwt__Audience: "CarDealerApp"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - cardealer-net

@@ -36,9 +36,9 @@ import { csrfFetch } from '@/lib/security/csrf';
 
 function AppointmentScheduler({
   dealerName,
-  dealerId,
-  dealerEmail,
-  vehicleTitle,
+  dealerId: _dealerId,
+  dealerEmail: _dealerEmail,
+  vehicleTitle: _vehicleTitle,
   onSchedule,
   onClose,
 }: {

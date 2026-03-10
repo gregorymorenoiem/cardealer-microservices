@@ -683,6 +683,9 @@ services:
       Jwt__Audience: "OKLA-Dev"
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
+      RabbitMQ__Enabled: "true"
+      RabbitMQ__Username: "guest"
+      RabbitMQ__Password: "guest"
       Redis__Host: "redis:6379"
       Consul__Host: "http://consul:8500"
     ports:

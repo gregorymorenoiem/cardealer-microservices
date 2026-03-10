@@ -212,6 +212,26 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
       setIsLoading(true);
       setError(null);
 
+      // SEM FIX: Attach persisted UTM params to chat session for lead attribution
+      let utmFields: Record<string, string | undefined> = {};
+      try {
+        const { getAdParams } = await import('@/lib/ad-params');
+        const adParams = getAdParams();
+        if (adParams) {
+          utmFields = {
+            utmSource: adParams.utm_source,
+            utmMedium: adParams.utm_medium,
+            utmCampaign: adParams.utm_campaign,
+            utmTerm: adParams.utm_term,
+            utmContent: adParams.utm_content,
+            gclid: adParams.gclid,
+            landingPage: adParams.landing_page,
+          };
+        }
+      } catch {
+        /* ad-params not available */
+      }
+
       const result: StartSessionResponse = await startChatSession({
         sessionType: 'WebChat',
         channel: 'web',
@@ -219,6 +239,7 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
         dealerId: dealerId,
         deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
         userAgent: navigator.userAgent,
+        ...utmFields,
       });
 
       const resolvedBotName = result.botName || '';
@@ -228,6 +249,15 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
       setRemainingInteractions(result.remainingInteractions);
       setIsConnected(true);
       saveSession(result.sessionToken, resolvedBotName);
+
+      // REMARKETING FIX: Fire pixel events on chat session start.
+      // Creates remarketing audiences of "high-intent users who started a chat".
+      try {
+        const { trackChatStart } = await import('@/lib/retargeting-pixels');
+        trackChatStart({ dealerId, channel: 'web' });
+      } catch {
+        /* silently fail */
+      }
 
       // Add welcome message
       const welcomeMsg: ChatMessage = {

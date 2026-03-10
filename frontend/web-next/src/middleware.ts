@@ -288,7 +288,10 @@ function addSecurityHeaders(response: NextResponse): void {
  */
 function clearAuthAndRedirect(request: NextRequest, pathname: string): NextResponse {
   const loginUrl = new URL(LOGIN_PATH, request.url);
-  loginUrl.searchParams.set('callbackUrl', pathname);
+  // SEM FIX: Preserve query params (including UTMs) in callbackUrl during auth redirects
+  const searchParams = request.nextUrl.searchParams.toString();
+  const callbackPath = searchParams ? `${pathname}?${searchParams}` : pathname;
+  loginUrl.searchParams.set('callbackUrl', callbackPath);
   loginUrl.searchParams.set('reason', 'session_expired');
 
   const response = NextResponse.redirect(loginUrl);

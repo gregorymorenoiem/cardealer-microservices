@@ -162,9 +162,11 @@ export async function POST(request: NextRequest) {
 
     // Call ChatbotService via gateway to extract vehicle data using Claude AI
     // AUDIT FIX: Include the dedicated extraction system prompt instead of a generic message.
-    // This ensures structured JSON output with DR market normalization.
+    // Send listing text as user message with the extraction prompt as system prompt.
+    // NOTE: The extraction prompt is only in systemPrompt (not duplicated in message)
+    // to avoid wasting tokens and confusing the AI.
     const chatPayload = {
-      message: `${_EXTRACTION_PROMPT}\n\n--- ANUNCIO A PROCESAR ---\n\n${listingText.slice(0, 4000)}`,
+      message: `Extrae los datos del siguiente anuncio de vehículo:\n\n--- ANUNCIO A PROCESAR ---\n\n${listingText.slice(0, 4000)}`,
       sessionId: `import-${Date.now()}`,
       context: 'vehicle_import',
       systemPrompt: _EXTRACTION_PROMPT,

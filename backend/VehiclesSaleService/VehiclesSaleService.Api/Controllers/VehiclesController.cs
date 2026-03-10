@@ -9,8 +9,10 @@ using CarDealer.Contracts.Events.Vehicle;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.Caching.Interfaces;
 using System.Security.Claims;
+using System.Text.Json;
 using Entities = VehiclesSaleService.Domain.Entities;
 using Microsoft.AspNetCore.RateLimiting;
+using VehiclesSaleService.Infrastructure.External;
 
 namespace VehiclesSaleService.Api.Controllers;
 
@@ -29,6 +31,9 @@ public class VehiclesController : ControllerBase
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly VehiclesSaleService.Application.Interfaces.IDealerVerificationClient _dealerVerificationClient;
     private readonly ICacheService _cache;
+    private readonly INhtsaVehicleDataService? _nhtsaService;
+    private readonly VehiclesSaleService.Application.Interfaces.IVehicleHistoryService? _vehicleHistoryService;
+    private readonly VehiclesSaleService.Infrastructure.Services.SitemapRevalidationService? _sitemapRevalidation;
 
     public VehiclesController(
         IVehicleRepository vehicleRepository,
@@ -39,7 +44,10 @@ public class VehiclesController : ControllerBase
         IConfigurationServiceClient configClient,
         IHttpClientFactory httpClientFactory,
         VehiclesSaleService.Application.Interfaces.IDealerVerificationClient dealerVerificationClient,
-        ICacheService cache)
+        ICacheService cache,
+        INhtsaVehicleDataService? nhtsaService = null,
+        VehiclesSaleService.Application.Interfaces.IVehicleHistoryService? vehicleHistoryService = null,
+        VehiclesSaleService.Infrastructure.Services.SitemapRevalidationService? sitemapRevalidation = null)
     {
         _vehicleRepository = vehicleRepository;
         _categoryRepository = categoryRepository;
@@ -50,6 +58,9 @@ public class VehiclesController : ControllerBase
         _httpClientFactory = httpClientFactory;
         _dealerVerificationClient = dealerVerificationClient;
         _cache = cache;
+        _nhtsaService = nhtsaService;
+        _vehicleHistoryService = vehicleHistoryService;
+        _sitemapRevalidation = sitemapRevalidation;
     }
 
     /// <summary>
@@ -291,28 +302,28 @@ public class VehiclesController : ControllerBase
 
         var (vehicles, totalCount) = await _vehicleRepository.GetBySellerAsync(sellerId, page, pageSize, statusFilter);
         var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-        
+
         var pagedVehicles = vehicles.Select(v => new SellerVehicleDto
-            {
-                Id = v.Id,
-                Title = v.Title,
-                Slug = GenerateSlug(v),
-                Price = v.Price,
-                Currency = v.Currency,
-                Status = v.Status.ToString(),
-                MainImageUrl = v.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url,
-                Year = v.Year,
-                Make = v.Make,
-                Model = v.Model,
-                Mileage = v.Mileage,
-                Transmission = v.Transmission.ToString(),
-                FuelType = v.FuelType.ToString(),
-                Views = v.ViewCount,
-                Favorites = v.FavoriteCount,
-                CreatedAt = v.CreatedAt
-            })
+        {
+            Id = v.Id,
+            Title = v.Title,
+            Slug = GenerateSlug(v),
+            Price = v.Price,
+            Currency = v.Currency,
+            Status = v.Status.ToString(),
+            MainImageUrl = v.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url,
+            Year = v.Year,
+            Make = v.Make,
+            Model = v.Model,
+            Mileage = v.Mileage,
+            Transmission = v.Transmission.ToString(),
+            FuelType = v.FuelType.ToString(),
+            Views = v.ViewCount,
+            Favorites = v.FavoriteCount,
+            CreatedAt = v.CreatedAt
+        })
             .ToList();
-        
+
         return Ok(new SellerVehiclesResponse
         {
             Data = pagedVehicles,
@@ -331,7 +342,7 @@ public class VehiclesController : ControllerBase
     public async Task<ActionResult<SellerVehicleStats>> GetSellerStats(Guid sellerId)
     {
         var stats = await _vehicleRepository.GetSellerStatsAsync(sellerId);
-        
+
         return Ok(new SellerVehicleStats
         {
             TotalListings = stats.TotalListings,
@@ -344,7 +355,8 @@ public class VehiclesController : ControllerBase
     }
 
     /// <summary>
-    /// Compare multiple vehicles by their IDs
+    /// Compare multiple vehicles by their IDs.
+    /// Results are cached in Redis for 60 s keyed by sorted ID set.
     /// </summary>
     [HttpPost("compare")]
     [AllowAnonymous]
@@ -357,70 +369,153 @@ public class VehiclesController : ControllerBase
         if (request.VehicleIds.Count > defaultMaxCompare)
             return BadRequest(new { message = $"Cannot compare more than {defaultMaxCompare} vehicles at once" });
 
-        var vehicles = (await _vehicleRepository.GetByIdsAsync(request.VehicleIds))
-            .Where(v => !v.IsDeleted && v.Status != VehicleStatus.Archived)
-            .ToList();
+        // Build a deterministic cache key from sorted IDs
+        var sortedIds = request.VehicleIds.OrderBy(id => id).ToList();
+        var cacheKey = $"vehiclessale:compare:{string.Join(",", sortedIds)}";
 
-        if (!vehicles.Any())
+        var vehicles = await _cache.GetOrSetAsync<List<Vehicle>>(
+            cacheKey,
+            async () =>
+            {
+                return (await _vehicleRepository.GetByIdsAsync(sortedIds))
+                    .Where(v => !v.IsDeleted && v.Status != VehicleStatus.Archived)
+                    .ToList();
+            },
+            ttlSeconds: 60);
+
+        if (vehicles == null || !vehicles.Any())
             return NotFound(new { message = "No vehicles found with the provided IDs" });
 
         return Ok(vehicles);
     }
 
     /// <summary>
-    /// Get similar vehicles (same make, similar price range, active status)
+    /// Get similar vehicles: same body type/segment, ±20% price, ±2 years, verified availability.
+    /// Falls back gracefully: segment+price+year → segment+price → segment → same make.
     /// </summary>
     [HttpGet("{id:guid}/similar")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<object>>> GetSimilar(Guid id, [FromQuery] int limit = 4)
+    public async Task<ActionResult<IEnumerable<object>>> GetSimilar(Guid id, [FromQuery] int limit = 6)
     {
         var vehicle = await _vehicleRepository.GetByIdAsync(id);
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
+        // Clamp limit to 4–6 as per spec
+        limit = Math.Clamp(limit, 4, 6);
+
+        // Price range: ±20%
+        var priceMargin = vehicle.Price * 0.20m;
+        var minPrice = vehicle.Price - priceMargin;
+        var maxPrice = vehicle.Price + priceMargin;
+
+        // Year range: ±2
+        var minYear = vehicle.Year - 2;
+        var maxYear = vehicle.Year + 2;
+
+        // ── Strategy 1: Same body type + price range + year range ──────────
         var parameters = new VehicleSearchParameters
         {
-            Make = vehicle.Make,
+            BodyStyle = vehicle.BodyStyle,
+            MinPrice = minPrice > 0 ? minPrice : 0,
+            MaxPrice = maxPrice,
+            MinYear = minYear,
+            MaxYear = maxYear,
             Skip = 0,
-            Take = limit + 1, // +1 to exclude the current vehicle
+            Take = limit + 5, // fetch extra to filter out current + ensure enough
             SortBy = "CreatedAt",
             SortDescending = true
         };
 
-        var similar = await _vehicleRepository.SearchAsync(parameters);
-        var results = similar
+        var candidates = await _vehicleRepository.SearchAsync(parameters);
+        var results = candidates
             .Where(v => v.Id != id && v.Status == VehicleStatus.Active)
             .Take(limit)
-            .Select(v => new
-            {
-                v.Id,
-                Slug = GenerateSlug(v),
-                v.Title,
-                v.Make,
-                v.Model,
-                v.Year,
-                v.Trim,
-                v.Price,
-                v.Currency,
-                v.Mileage,
-                v.MileageUnit,
-                v.Transmission,
-                v.FuelType,
-                v.City,
-                v.State,
-                v.Status,
-                v.Condition,
-                v.IsFeatured,
-                v.ViewCount,
-                v.FavoriteCount,
-                v.CreatedAt,
-                Images = v.Images.OrderBy(i => i.SortOrder).Select(i => new
-                {
-                    i.Id, i.Url, i.ThumbnailUrl, i.SortOrder, i.IsPrimary
-                })
-            });
+            .ToList();
 
-        return Ok(results);
+        // ── Strategy 2: Relax year range if not enough results ──────────
+        if (results.Count < limit)
+        {
+            parameters.MinYear = null;
+            parameters.MaxYear = null;
+            parameters.Take = limit + 5;
+            candidates = await _vehicleRepository.SearchAsync(parameters);
+            results = candidates
+                .Where(v => v.Id != id && v.Status == VehicleStatus.Active)
+                .Take(limit)
+                .ToList();
+        }
+
+        // ── Strategy 3: Relax price range if still not enough ──────────
+        if (results.Count < limit)
+        {
+            parameters.MinPrice = null;
+            parameters.MaxPrice = null;
+            parameters.Make = vehicle.Make; // same make at least
+            parameters.Take = limit + 5;
+            candidates = await _vehicleRepository.SearchAsync(parameters);
+            results = candidates
+                .Where(v => v.Id != id && v.Status == VehicleStatus.Active)
+                .Take(limit)
+                .ToList();
+        }
+
+        // ── Strategy 4: Same condition, any make/body, most recent ──────────
+        if (results.Count < limit)
+        {
+            var fallbackParams = new VehicleSearchParameters
+            {
+                Condition = vehicle.Condition,
+                MinPrice = minPrice > 0 ? minPrice : 0,
+                MaxPrice = maxPrice,
+                Skip = 0,
+                Take = limit + 5,
+                SortBy = "CreatedAt",
+                SortDescending = true
+            };
+            candidates = await _vehicleRepository.SearchAsync(fallbackParams);
+            var existingIds = results.Select(r => r.Id).ToHashSet();
+            var extra = candidates
+                .Where(v => v.Id != id && v.Status == VehicleStatus.Active && !existingIds.Contains(v.Id))
+                .Take(limit - results.Count)
+                .ToList();
+            results.AddRange(extra);
+        }
+
+        var response = results.Select(v => new
+        {
+            v.Id,
+            Slug = GenerateSlug(v),
+            v.Title,
+            v.Make,
+            v.Model,
+            v.Year,
+            v.Trim,
+            v.Price,
+            v.Currency,
+            v.Mileage,
+            v.MileageUnit,
+            v.Transmission,
+            v.FuelType,
+            v.City,
+            v.State,
+            v.Status,
+            v.Condition,
+            v.IsFeatured,
+            v.ViewCount,
+            v.FavoriteCount,
+            v.CreatedAt,
+            Images = v.Images.OrderBy(i => i.SortOrder).Select(i => new
+            {
+                i.Id,
+                i.Url,
+                i.ThumbnailUrl,
+                i.SortOrder,
+                i.IsPrimary
+            })
+        });
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -738,7 +833,33 @@ public class VehiclesController : ControllerBase
 
         await _vehicleRepository.UpdateAsync(vehicle);
 
-        // Invalidate cache for this vehicle
+        // ═══════════════════════════════════════════════════════════════
+        // OKLA PLATFORM SCORE: Persist price change to VehiclePriceHistory
+        // This creates the transparency trail visible to buyers and
+        // accumulates switching cost for the dealer.
+        // ═══════════════════════════════════════════════════════════════
+        if (request.Price.HasValue && oldPrice != vehicle.Price)
+        {
+            var sellerId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var sid) ? sid : Guid.Empty;
+            var priceHistoryEntry = new VehiclePriceHistory
+            {
+                Id = Guid.NewGuid(),
+                DealerId = vehicle.DealerId,
+                VehicleId = vehicle.Id,
+                OldPrice = oldPrice,
+                NewPrice = vehicle.Price,
+                Currency = vehicle.Currency ?? "DOP",
+                ChangedBy = sellerId,
+                ChangeType = IsAdmin() ? PriceChangeType.AdminAdjustment : PriceChangeType.Manual,
+                ChangedAt = DateTime.UtcNow
+            };
+            _context.VehiclePriceHistories.Add(priceHistoryEntry);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "OKLA Platform Score: Price change recorded for vehicle {VehicleId}: {OldPrice} → {NewPrice} ({ChangeType})",
+                id, oldPrice, vehicle.Price, priceHistoryEntry.ChangeType);
+        }
         await InvalidateVehicleCacheAsync(id);
 
         _logger.LogInformation("Vehicle updated: {VehicleId}", id);
@@ -801,7 +922,289 @@ public class VehiclesController : ControllerBase
 
         _logger.LogInformation("Vehicle deleted: {VehicleId}", id);
 
+        // ═══════════════════════════════════════════════════════════════
+        // SITEMAP FIX: Trigger ISR revalidation + Google URL_DELETED
+        // ═══════════════════════════════════════════════════════════════
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var slug = $"{vehicle.Make}-{vehicle.Model}-{vehicle.Year}-{vehicle.Id}".ToLowerInvariant();
+                if (_sitemapRevalidation != null)
+                    await _sitemapRevalidation.OnVehicleUnpublishedAsync(slug);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Sitemap revalidation failed for deleted vehicle {VehicleId}", vehicle.Id);
+            }
+        });
+
         return NoContent();
+    }
+
+    // ========================================
+    // OKLA PLATFORM SCORE — Buyer Transparency & Switching Cost
+    // ========================================
+
+    /// <summary>
+    /// Get the price change history of a vehicle.
+    /// Public endpoint — buyers can see the full price history for transparency.
+    /// This is a KEY component of the OKLA Platform Score switching cost.
+    /// </summary>
+    [HttpGet("{id:guid}/price-history")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(VehiclePriceHistoryResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehiclePriceHistoryResponse>> GetPriceHistory(Guid id)
+    {
+        var vehicle = await _context.Vehicles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        var priceHistory = await _context.VehiclePriceHistories
+            .Where(ph => ph.VehicleId == id)
+            .OrderByDescending(ph => ph.ChangedAt)
+            .Select(ph => new PriceChangeRecord
+            {
+                OldPrice = ph.OldPrice,
+                NewPrice = ph.NewPrice,
+                PriceDifference = ph.NewPrice - ph.OldPrice,
+                ChangePercentage = ph.OldPrice > 0
+                    ? Math.Round((ph.NewPrice - ph.OldPrice) / ph.OldPrice * 100, 2) : 0,
+                Currency = ph.Currency,
+                ChangeType = ph.ChangeType.ToString(),
+                ChangedAt = ph.ChangedAt,
+                Reason = ph.Reason
+            })
+            .ToListAsync();
+
+        var currentPrice = vehicle.Price;
+        var originalPrice = priceHistory.LastOrDefault()?.OldPrice ?? vehicle.Price;
+        var totalVariation = originalPrice > 0
+            ? Math.Round((currentPrice - originalPrice) / originalPrice * 100, 2) : 0;
+
+        return Ok(new VehiclePriceHistoryResponse
+        {
+            VehicleId = id,
+            CurrentPrice = currentPrice,
+            OriginalListingPrice = originalPrice,
+            TotalPriceChanges = priceHistory.Count,
+            TotalVariationPercent = totalVariation,
+            PriceTrend = totalVariation < -5 ? "Decreasing" : totalVariation > 5 ? "Increasing" : "Stable",
+            Currency = vehicle.Currency ?? "DOP",
+            History = priceHistory
+        });
+    }
+
+    /// <summary>
+    /// Get the OKLA Platform Score for a vehicle.
+    /// Public endpoint — shows buyers the accumulated engagement and transparency metrics.
+    /// This score is unique to OKLA and creates switching cost for dealers.
+    /// </summary>
+    [HttpGet("{id:guid}/platform-score")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(OklaPlatformScore), StatusCodes.Status200OK)]
+    public async Task<ActionResult<OklaPlatformScore>> GetPlatformScore(Guid id)
+    {
+        var vehicle = await _context.Vehicles
+            .AsNoTracking()
+            .Include(v => v.Images)
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        var priceHistoryCount = await _context.VehiclePriceHistories
+            .Where(ph => ph.VehicleId == id)
+            .CountAsync();
+
+        var firstPrice = await _context.VehiclePriceHistories
+            .Where(ph => ph.VehicleId == id)
+            .OrderBy(ph => ph.ChangedAt)
+            .Select(ph => (decimal?)ph.OldPrice)
+            .FirstOrDefaultAsync();
+
+        var daysOnPlatform = vehicle.PublishedAt.HasValue
+            ? (int)(DateTime.UtcNow - vehicle.PublishedAt.Value).TotalDays : 0;
+
+        var totalPriceVariation = firstPrice.HasValue && firstPrice.Value > 0
+            ? Math.Round((vehicle.Price - firstPrice.Value) / firstPrice.Value * 100, 2) : 0;
+
+        var score = new OklaPlatformScore
+        {
+            // D1: Antigüedad (25 pts max)
+            DaysOnPlatform = daysOnPlatform,
+            AntiquityPoints = daysOnPlatform switch
+            {
+                >= 31 => 25,
+                >= 8 => 15,
+                >= 1 => 5,
+                _ => 0
+            },
+
+            // D2: Buyer Engagement (30 pts max)
+            TotalViews = vehicle.ViewCount,
+            TotalFavorites = vehicle.FavoriteCount,
+            TotalInquiries = vehicle.InquiryCount,
+            BuyerEngagementPoints = Math.Min(30,
+                Math.Min(10, vehicle.ViewCount / 10) +    // max 10 pts for views (100+ views)
+                Math.Min(10, vehicle.FavoriteCount * 2) +  // max 10 pts for favorites (5+ favs)
+                Math.Min(10, vehicle.InquiryCount * 3)),   // max 10 pts for inquiries (4+ inquiries)
+
+            // D3: Price Transparency (20 pts max)
+            PriceChangeCount = priceHistoryCount,
+            TotalPriceVariation = totalPriceVariation,
+            PriceTrend = totalPriceVariation < -5 ? PriceTrend.Decreasing
+                : totalPriceVariation > 5 ? PriceTrend.Increasing : PriceTrend.Stable,
+            PriceTransparencyPoints = priceHistoryCount switch
+            {
+                0 => 10,   // No changes = stable = 10 pts base
+                1 => 15,   // One change = some transparency
+                >= 2 => 20, // Multiple changes = full transparency
+                _ => 10
+            },
+
+            // D4: Seller Reputation (15 pts max)
+            SellerRating = vehicle.SellerRating,
+            SellerReviewCount = vehicle.SellerReviewCount,
+            SellerVerified = vehicle.SellerVerified,
+            SellerReputationPoints =
+                (vehicle.SellerVerified ? 5 : 0) +
+                (vehicle.SellerRating.HasValue ? Math.Min(5, (int)(vehicle.SellerRating.Value)) : 0) +
+                (vehicle.SellerReviewCount.HasValue && vehicle.SellerReviewCount.Value >= 5 ? 5 : 0),
+
+            // D5: Completeness (10 pts max)
+            PhotoCount = vehicle.Images?.Count ?? 0,
+            DescriptionLength = vehicle.Description?.Length ?? 0,
+            HasVerifiedVin = !string.IsNullOrEmpty(vehicle.VIN),
+            HasExternalHistory = !string.IsNullOrEmpty(vehicle.CarfaxReportUrl),
+            CompletenessPoints =
+                ((vehicle.Images?.Count ?? 0) >= 5 ? 3 : (vehicle.Images?.Count ?? 0) >= 3 ? 2 : 0) +
+                ((vehicle.Description?.Length ?? 0) >= 100 ? 2 : (vehicle.Description?.Length ?? 0) >= 50 ? 1 : 0) +
+                (!string.IsNullOrEmpty(vehicle.VIN) ? 3 : 0) +
+                (!string.IsNullOrEmpty(vehicle.CarfaxReportUrl) ? 2 : 0),
+
+            // Switching Cost
+            SwitchingCost = new SwitchingCostSummary
+            {
+                DaysAccumulated = daysOnPlatform,
+                ViewsAccumulated = vehicle.ViewCount,
+                InquiriesAccumulated = vehicle.InquiryCount,
+                FavoritesAccumulated = vehicle.FavoriteCount,
+                PriceHistoryRecords = priceHistoryCount
+            }
+        };
+
+        return Ok(score);
+    }
+
+    /// <summary>
+    /// Get the switching cost preview for a vehicle before unpublish/delete.
+    /// Dealer-only endpoint — shows what they'd lose if they remove this vehicle from OKLA.
+    /// </summary>
+    [HttpGet("{id:guid}/switching-cost")]
+    [ProducesResponseType(typeof(SwitchingCostSummary), StatusCodes.Status200OK)]
+    public async Task<ActionResult<SwitchingCostSummary>> GetSwitchingCost(Guid id)
+    {
+        var vehicle = await _context.Vehicles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        if (!IsOwnerOrAdmin(vehicle))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "No tienes permiso." });
+
+        var priceHistoryCount = await _context.VehiclePriceHistories
+            .Where(ph => ph.VehicleId == id)
+            .CountAsync();
+
+        var daysOnPlatform = vehicle.PublishedAt.HasValue
+            ? (int)(DateTime.UtcNow - vehicle.PublishedAt.Value).TotalDays : 0;
+
+        // Calculate platform score level for the warning
+        var viewPts = Math.Min(10, vehicle.ViewCount / 10);
+        var favPts = Math.Min(10, vehicle.FavoriteCount * 2);
+        var inqPts = Math.Min(10, vehicle.InquiryCount * 3);
+        var engagementPts = Math.Min(30, viewPts + favPts + inqPts);
+        var antiquityPts = daysOnPlatform >= 31 ? 25 : daysOnPlatform >= 8 ? 15 : daysOnPlatform >= 1 ? 5 : 0;
+        var totalScore = antiquityPts + engagementPts + 10 + 5; // base transparency + base seller
+
+        var summary = new SwitchingCostSummary
+        {
+            DaysAccumulated = daysOnPlatform,
+            ViewsAccumulated = vehicle.ViewCount,
+            InquiriesAccumulated = vehicle.InquiryCount,
+            FavoritesAccumulated = vehicle.FavoriteCount,
+            PriceHistoryRecords = priceHistoryCount,
+            CurrentPlatformScore = totalScore,
+            CurrentLevel = totalScore >= 85 ? PlatformScoreLevel.Platinum
+                : totalScore >= 65 ? PlatformScoreLevel.Gold
+                : totalScore >= 45 ? PlatformScoreLevel.Silver
+                : totalScore >= 25 ? PlatformScoreLevel.Bronze
+                : PlatformScoreLevel.New
+        };
+
+        return Ok(summary);
+    }
+
+    // ========================================
+    // AUTO-SUSPEND (called by ReportsService after ≥3 buyer reports)
+    // ========================================
+
+    /// <summary>
+    /// Suspend a vehicle listing due to buyer reports.
+    /// Internal endpoint — called by ReportsService when report count reaches threshold.
+    /// Changes status to Suspended, records reason and timestamp.
+    /// </summary>
+    [HttpPatch("{id:guid}/suspend")]
+    [AllowAnonymous] // Internal service-to-service call
+    public async Task<IActionResult> Suspend(
+        Guid id,
+        [FromBody] SuspendVehicleRequest request)
+    {
+        var vehicle = await _context.Vehicles
+            .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+        if (vehicle == null)
+            return NotFound(new { message = "Vehicle not found" });
+
+        // Only suspend Active vehicles
+        if (vehicle.Status != VehicleStatus.Active)
+        {
+            _logger.LogInformation(
+                "Vehicle {VehicleId} is not Active (status: {Status}) — skipping suspend",
+                id, vehicle.Status);
+            return Ok(new { message = $"Vehicle is {vehicle.Status}, not Active. No action taken." });
+        }
+
+        vehicle.Status = VehicleStatus.Suspended;
+        vehicle.SuspendedAt = DateTime.UtcNow;
+        vehicle.SuspendedReason = request.Reason;
+        vehicle.ReportCount = request.ReportCount;
+        vehicle.ModerationNotes = $"[AUTO-SUSPEND {DateTime.UtcNow:yyyy-MM-dd HH:mm}] {request.Reason}";
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        // Invalidate cache
+        await InvalidateVehicleCacheAsync(id);
+
+        _logger.LogWarning(
+            "🚨 Vehicle {VehicleId} AUTO-SUSPENDED — {ReportCount} reports. Reason: {Reason}",
+            id, request.ReportCount, request.Reason);
+
+        return Ok(new
+        {
+            message = "Listing suspended pending dealer review.",
+            vehicleId = id,
+            status = "Suspended",
+            suspendedAt = vehicle.SuspendedAt,
+            reportCount = vehicle.ReportCount
+        });
     }
 
     // ========================================
@@ -857,7 +1260,8 @@ public class VehiclesController : ControllerBase
         // Validate status - only Draft, Archived, or Rejected can be submitted for review
         if (vehicle.Status != VehicleStatus.Draft && vehicle.Status != VehicleStatus.Archived && vehicle.Status != VehicleStatus.Rejected)
         {
-            return BadRequest(new { 
+            return BadRequest(new
+            {
                 message = $"Vehicle cannot be submitted from status '{vehicle.Status}'. Only Draft, Archived, or Rejected vehicles can be submitted for review.",
                 currentStatus = vehicle.Status.ToString()
             });
@@ -915,13 +1319,170 @@ public class VehiclesController : ControllerBase
             _logger.LogWarning("Vehicle {VehicleId} submitted for review without VIN", id);
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // VIN CROSS-REFERENCE: Verify VIN data matches declared attributes
+        // Calls NHTSA vPIC to decode the VIN and compares make/model/year/body
+        // ═══════════════════════════════════════════════════════════════
+        VehiclesSaleService.Application.Services.VinVerificationResult? vinVerification = null;
+        if (!string.IsNullOrWhiteSpace(vehicle.VIN) && _nhtsaService != null)
+        {
+            try
+            {
+                var nhtsaResult = await _nhtsaService.DecodeVinAsync(vehicle.VIN);
+                if (nhtsaResult != null && nhtsaResult.ErrorCode == "0")
+                {
+                    vinVerification = VehiclesSaleService.Application.Services.VinVerificationService.Verify(
+                        nhtsaMake: nhtsaResult.Make,
+                        nhtsaModel: nhtsaResult.Model,
+                        nhtsaYear: nhtsaResult.ModelYear,
+                        nhtsaBodyClass: nhtsaResult.BodyClass,
+                        declaredMake: vehicle.Make ?? string.Empty,
+                        declaredModel: vehicle.Model ?? string.Empty,
+                        declaredYear: vehicle.Year,
+                        declaredBodyType: vehicle.BodyStyle.ToString());
+
+                    if (vinVerification.HasDiscrepancies)
+                    {
+                        _logger.LogWarning(
+                            "VIN mismatch for vehicle {VehicleId}: {Discrepancies}",
+                            id, string.Join("; ", vinVerification.Discrepancies.Select(d => d.Message)));
+
+                        // Store discrepancy details in moderation notes for reviewer
+                        vehicle.ModerationNotes = (vehicle.ModerationNotes ?? string.Empty)
+                            + $"\n[VIN VERIFICACIÓN] {vinVerification.DealerMessage}";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // NHTSA failure should NOT block publish — degrade gracefully
+                _logger.LogWarning(ex, "NHTSA VIN verification failed for vehicle {VehicleId}. Proceeding without cross-reference.", id);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // ODOMETER ROLLBACK DETECTION: Cross-reference declared mileage
+        // with VinAudit/CARFAX historical odometer readings
+        // ═══════════════════════════════════════════════════════════════
+        bool odometerRollbackDetected = false;
+        if (!string.IsNullOrWhiteSpace(vehicle.VIN) && _vehicleHistoryService != null && vehicle.Mileage > 0)
+        {
+            try
+            {
+                var historySummary = await _vehicleHistoryService.GetSummaryByVinAsync(vehicle.VIN);
+                if (historySummary != null)
+                {
+                    vehicle.OdometerVerifiedAt = DateTime.UtcNow;
+                    vehicle.HistoricalMileage = historySummary.LastReportedMileage;
+
+                    // Check 1: VinAudit/CARFAX already flags rollback
+                    if (historySummary.OdometerRollback)
+                    {
+                        odometerRollbackDetected = true;
+                    }
+
+                    // Check 2: Declared mileage < last reported mileage (>500 km tolerance)
+                    if (historySummary.LastReportedMileage.HasValue
+                        && vehicle.Mileage < (int)(historySummary.LastReportedMileage.Value - 500))
+                    {
+                        odometerRollbackDetected = true;
+                        _logger.LogWarning(
+                            "ODOMETER ROLLBACK detected for vehicle {VehicleId}: declared={Declared}km, historical={Historical}km (VIN={VIN})",
+                            id, vehicle.Mileage, historySummary.LastReportedMileage.Value, vehicle.VIN);
+                    }
+
+                    if (odometerRollbackDetected)
+                    {
+                        vehicle.OdometerRollbackDetected = true;
+                        vehicle.ModerationNotes = (vehicle.ModerationNotes ?? string.Empty)
+                            + $"\n[ODÓMETRO] ⚠️ Posible rollback detectado: declarado={vehicle.Mileage}km, historial={historySummary.LastReportedMileage?.ToString("N0") ?? "N/A"}km. Requiere revisión manual.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // History service failure should NOT block publish
+                _logger.LogWarning(ex, "Vehicle history odometer check failed for vehicle {VehicleId}. Proceeding without odometer verification.", id);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PHOTO MODERATION: Validate images for quality & content
+        // Rejects: watermarks, stock photos, low resolution, documents
+        // ═══════════════════════════════════════════════════════════════
+        VehiclesSaleService.Application.Services.PhotoModerationResult? photoModeration = null;
+        if (vehicle.Images.Count > 0)
+        {
+            photoModeration = VehiclesSaleService.Application.Services.PhotoModerationService.EvaluateAll(vehicle.Images);
+
+            // Apply moderation results to each image entity
+            foreach (var imgResult in photoModeration.ImageResults)
+            {
+                var img = vehicle.Images.FirstOrDefault(i => i.Id == imgResult.ImageId);
+                if (img != null)
+                {
+                    img.ModerationStatus = imgResult.Status;
+                    img.ModerationRejectionReason = imgResult.RejectionReason;
+                    img.ModerationFlags = imgResult.Flags.Count > 0 ? string.Join(",", imgResult.Flags) : null;
+                    img.ModeratedAt = DateTime.UtcNow;
+                    img.ModeratedBy = "PhotoModerationService";
+                }
+            }
+
+            if (photoModeration.HasRejections)
+            {
+                _logger.LogWarning(
+                    "Photo moderation for vehicle {VehicleId}: {RejectedCount}/{TotalImages} photos rejected",
+                    id, photoModeration.RejectedCount, photoModeration.TotalImages);
+
+                // Add per-image rejection details as validation errors
+                foreach (var rejected in photoModeration.ImageResults.Where(r => r.Status == Domain.Entities.ImageModerationStatus.Rejected))
+                {
+                    validationErrors.Add(rejected.DealerMessage ?? "Foto rechazada por moderación");
+                }
+
+                // Add moderation note for reviewer
+                vehicle.ModerationNotes = (vehicle.ModerationNotes ?? string.Empty)
+                    + $"\n[FOTOS] {photoModeration.RejectedCount}/{photoModeration.TotalImages} fotos rechazadas por moderación automática.";
+            }
+        }
+
         if (validationErrors.Any())
         {
-            return BadRequest(new { 
+            return BadRequest(new
+            {
                 message = "Vehicle cannot be published due to validation errors",
-                errors = validationErrors 
+                errors = validationErrors
             });
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // DISCLAIMER VALIDATION — Ley 172-13 + TOS Compliance
+        // The dealer/seller MUST explicitly confirm information accuracy
+        // via a mandatory unchecked checkbox. This is a legal requirement.
+        // ═══════════════════════════════════════════════════════════════
+        if (request == null || !request.DisclaimerAccepted)
+        {
+            return BadRequest(new
+            {
+                message = "Debes confirmar que la información del vehículo es exacta y de tu propiedad antes de publicar.",
+                error = "DISCLAIMER_NOT_ACCEPTED",
+                requiresDisclaimer = true
+            });
+        }
+
+        // Record disclaimer acceptance with timestamp and IP for legal audit trail
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString()
+            ?? HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',').First().Trim()
+            ?? "Unknown";
+
+        vehicle.DisclaimerAcceptedAt = DateTime.UtcNow;
+        vehicle.DisclaimerAcceptedFromIp = clientIp;
+        vehicle.DisclaimerTosVersion = request.TosVersion ?? "2026.1";
+
+        _logger.LogInformation(
+            "Disclaimer accepted for vehicle {VehicleId} by seller {SellerId} from IP {ClientIP} (TOS v{TosVersion})",
+            id, vehicle.SellerId, clientIp, vehicle.DisclaimerTosVersion);
 
         // ═══════════════════════════════════════════════════════════════
         // FRAUD SCORING: Evaluate listing for fraud signals
@@ -934,9 +1495,15 @@ public class VehiclesController : ControllerBase
                 id, fraudEvaluation.FraudScore, fraudEvaluation.RiskLevel, fraudEvaluation.Signals.Count);
         }
 
+        // Add VIN cross-reference fraud points if discrepancies found
+        var vinFraudPoints = vinVerification?.FraudPointsAdded ?? 0;
+        // Add odometer rollback fraud points (+30 for confirmed rollback)
+        var odometerFraudPoints = odometerRollbackDetected ? 30 : 0;
+        var totalFraudScore = Math.Min(fraudEvaluation.FraudScore + vinFraudPoints + odometerFraudPoints, 100);
+
         // Update status → PendingReview (requires staff approval before visible)
         vehicle.Status = VehicleStatus.PendingReview;
-        vehicle.FraudScore = fraudEvaluation.FraudScore;
+        vehicle.FraudScore = totalFraudScore;
         vehicle.SubmittedForReviewAt = DateTime.UtcNow;
         vehicle.UpdatedAt = DateTime.UtcNow;
         // Clear any previous rejection data if re-submitting
@@ -957,8 +1524,8 @@ public class VehiclesController : ControllerBase
             await _eventPublisher.PublishAsync(new VehicleCreatedEvent
             {
                 VehicleId = vehicle.Id,
-                Make = vehicle.Make,
-                Model = vehicle.Model,
+                Make = vehicle.Make ?? string.Empty,
+                Model = vehicle.Model ?? string.Empty,
                 Year = vehicle.Year,
                 Price = vehicle.Price,
                 VIN = vehicle.VIN ?? string.Empty,
@@ -971,13 +1538,41 @@ public class VehiclesController : ControllerBase
             _logger.LogError(ex, "Failed to publish event for {VehicleId}", id);
         }
 
+        // Build response message — include VIN discrepancy explanation if applicable
+        var responseMessage = photoModeration?.HasRejections == true
+            ? $"⚠️ {photoModeration.RejectedCount} foto(s) fueron rechazadas por moderación automática. Reemplaza las fotos señaladas y vuelve a publicar."
+            : odometerRollbackDetected
+            ? "⚠️ Se detectó una posible discrepancia en el odómetro. El kilometraje declarado es menor al registrado en el historial del vehículo. Tu listado será revisado manualmente y los compradores verán una alerta de verificación."
+            : vinVerification?.HasDiscrepancies == true
+            ? vinVerification.DealerMessage + " Tu listado será revisado manualmente."
+            : "Tu vehículo ha sido enviado a revisión. Nuestro equipo lo revisará en las próximas 24 horas y recibirás una notificación cuando sea aprobado.";
+
         return Ok(new PublishVehicleResponse
         {
             Id = vehicle.Id,
             Status = vehicle.Status,
             PublishedAt = null,
             ExpiresAt = expiresAt,
-            Message = "Tu vehículo ha sido enviado a revisión. Nuestro equipo lo revisará en las próximas 24 horas y recibirás una notificación cuando sea aprobado."
+            Message = responseMessage,
+            VinDiscrepancies = vinVerification?.HasDiscrepancies == true
+                ? vinVerification.Discrepancies.Select(d => new VinDiscrepancyDto
+                {
+                    Field = d.Field,
+                    DeclaredValue = d.DeclaredValue,
+                    VinValue = d.VinValue,
+                    Severity = d.Severity.ToString()
+                }).ToList()
+                : null,
+            PhotoModeration = photoModeration?.ImageResults
+                .Where(r => r.Status == Domain.Entities.ImageModerationStatus.Rejected)
+                .Select(r => new PhotoModerationDto
+                {
+                    ImageId = r.ImageId,
+                    Status = r.Status.ToString(),
+                    Flags = r.Flags,
+                    RejectionReason = r.RejectionReason,
+                    DealerMessage = r.DealerMessage
+                }).ToList() is { Count: > 0 } rejectedPhotos ? rejectedPhotos : null
         });
     }
 
@@ -1003,7 +1598,8 @@ public class VehiclesController : ControllerBase
         // Only Active or Reserved vehicles can be unpublished
         if (vehicle.Status != VehicleStatus.Active && vehicle.Status != VehicleStatus.Reserved)
         {
-            return BadRequest(new { 
+            return BadRequest(new
+            {
                 message = $"Vehicle cannot be unpublished from status '{vehicle.Status}'. Only Active or Reserved vehicles can be unpublished.",
                 currentStatus = vehicle.Status.ToString()
             });
@@ -1014,14 +1610,58 @@ public class VehiclesController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Vehicle unpublished: {VehicleId}, Reason: {Reason}", id, request?.Reason ?? "Not specified");
+        // ═══════════════════════════════════════════════════════════════
+        // OKLA PLATFORM SCORE: Calculate switching cost on unpublish
+        // Shows the dealer what accumulated value they're losing.
+        // ═══════════════════════════════════════════════════════════════
+        var priceHistoryCount = await _context.VehiclePriceHistories
+            .Where(ph => ph.VehicleId == id)
+            .CountAsync();
+
+        var switchingCost = new SwitchingCostSummary
+        {
+            DaysAccumulated = vehicle.PublishedAt.HasValue
+                ? (int)(DateTime.UtcNow - vehicle.PublishedAt.Value).TotalDays : 0,
+            ViewsAccumulated = vehicle.ViewCount,
+            InquiriesAccumulated = vehicle.InquiryCount,
+            FavoritesAccumulated = vehicle.FavoriteCount,
+            PriceHistoryRecords = priceHistoryCount
+        };
+
+        _logger.LogInformation(
+            "Vehicle unpublished: {VehicleId}, Reason: {Reason}, SwitchingCost: {Days}d/{Views}v/{Inquiries}i",
+            id, request?.Reason ?? "Not specified",
+            switchingCost.DaysAccumulated, switchingCost.ViewsAccumulated, switchingCost.InquiriesAccumulated);
+
+        // ═══════════════════════════════════════════════════════════════
+        // SITEMAP FIX: Trigger ISR revalidation + Google URL_DELETED
+        // ═══════════════════════════════════════════════════════════════
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var slug = $"{vehicle.Make}-{vehicle.Model}-{vehicle.Year}-{vehicle.Id}".ToLowerInvariant();
+                if (_sitemapRevalidation != null)
+                    await _sitemapRevalidation.OnVehicleUnpublishedAsync(slug);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Sitemap revalidation failed for unpublished vehicle {VehicleId}", vehicle.Id);
+            }
+        });
 
         return Ok(new UnpublishVehicleResponse
         {
             Id = vehicle.Id,
             Status = vehicle.Status,
             UpdatedAt = vehicle.UpdatedAt,
-            Message = "Vehicle unpublished successfully. It is no longer visible to buyers."
+            Message = "Vehicle unpublished successfully. It is no longer visible to buyers.",
+            SwitchingCostWarning = switchingCost.HasSignificantCost ? switchingCost.WarningMessage : null,
+            AccumulatedDays = switchingCost.DaysAccumulated,
+            AccumulatedViews = switchingCost.ViewsAccumulated,
+            AccumulatedInquiries = switchingCost.InquiriesAccumulated,
+            AccumulatedFavorites = switchingCost.FavoritesAccumulated,
+            PriceHistoryRecords = switchingCost.PriceHistoryRecords
         });
     }
 
@@ -1070,7 +1710,84 @@ public class VehiclesController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        // ═══════════════════════════════════════════════════════════════
+        // OKLA PLATFORM SCORE: Record initial listing price
+        // This is the baseline for the price transparency timeline.
+        // ═══════════════════════════════════════════════════════════════
+        var initialPriceRecord = new VehiclePriceHistory
+        {
+            Id = Guid.NewGuid(),
+            DealerId = vehicle.DealerId,
+            VehicleId = vehicle.Id,
+            OldPrice = 0, // First listing — no previous price
+            NewPrice = vehicle.Price,
+            Currency = vehicle.Currency ?? "DOP",
+            ChangedBy = vehicle.SellerId,
+            ChangeType = PriceChangeType.InitialListing,
+            ChangedAt = DateTime.UtcNow
+        };
+        _context.VehiclePriceHistories.Add(initialPriceRecord);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "OKLA Platform Score: Initial price {Price} {Currency} recorded for vehicle {VehicleId}",
+            vehicle.Price, vehicle.Currency, vehicle.Id);
+
+        // ── Publish VehiclePublishedEvent para alertas y notificaciones ──
+        try
+        {
+            var mainImage = vehicle.Images?.FirstOrDefault(i => i.IsPrimary) ?? vehicle.Images?.FirstOrDefault();
+            await _eventPublisher.PublishAsync(new VehiclePublishedEvent
+            {
+                VehicleId = vehicle.Id,
+                SellerId = vehicle.SellerId,
+                DealerId = vehicle.DealerId == Guid.Empty ? null : vehicle.DealerId,
+                SellerType = vehicle.SellerType.ToString(),
+                Title = vehicle.Title,
+                Price = vehicle.Price,
+                Currency = vehicle.Currency ?? "DOP",
+                IsFeatured = vehicle.IsFeatured,
+                PublishedAt = vehicle.PublishedAt ?? DateTime.UtcNow,
+                Make = vehicle.Make,
+                Model = vehicle.Model,
+                Year = vehicle.Year,
+                BodyType = vehicle.BodyStyle.ToString(),
+                FuelType = vehicle.FuelType.ToString(),
+                Transmission = vehicle.Transmission.ToString(),
+                City = vehicle.City,
+                State = vehicle.State,
+                Mileage = vehicle.Mileage,
+                Condition = vehicle.Condition.ToString(),
+                Slug = $"{vehicle.Make}-{vehicle.Model}-{vehicle.Year}-{vehicle.Id}".ToLowerInvariant(),
+                ImageUrl = mainImage?.Url
+            });
+
+            _logger.LogInformation("VehiclePublishedEvent emitted for {VehicleId}", vehicle.Id);
+        }
+        catch (Exception ex)
+        {
+            // Event publishing should not block the approval flow
+            _logger.LogWarning(ex, "Failed to publish VehiclePublishedEvent for {VehicleId}. Alert matching may be delayed.", vehicle.Id);
+        }
+
         _logger.LogInformation("Vehicle approved: {VehicleId} by moderator {ModeratorId}", id, request?.ModeratorId);
+
+        // ═══════════════════════════════════════════════════════════════
+        // SITEMAP FIX: Trigger ISR revalidation + Google Indexing API
+        // ═══════════════════════════════════════════════════════════════
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var slug = $"{vehicle.Make}-{vehicle.Model}-{vehicle.Year}-{vehicle.Id}".ToLowerInvariant();
+                if (_sitemapRevalidation != null)
+                    await _sitemapRevalidation.OnVehiclePublishedAsync(slug);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Sitemap revalidation failed for approved vehicle {VehicleId}", vehicle.Id);
+            }
+        });
 
         return Ok(new
         {
@@ -1293,7 +2010,8 @@ public class VehiclesController : ControllerBase
         // Only Active or Reserved vehicles can be marked as sold
         if (vehicle.Status != VehicleStatus.Active && vehicle.Status != VehicleStatus.Reserved)
         {
-            return BadRequest(new { 
+            return BadRequest(new
+            {
                 message = $"Vehicle cannot be marked as sold from status '{vehicle.Status}'. Only Active or Reserved vehicles can be sold.",
                 currentStatus = vehicle.Status.ToString()
             });
@@ -1358,7 +2076,7 @@ public class VehiclesController : ControllerBase
             _logger.LogWarning(ex, "Failed to publish VehicleSoldEvent for vehicle {VehicleId} — sale still recorded", id);
         }
 
-        _logger.LogInformation("Vehicle marked as sold: {VehicleId}, SalePrice: {SalePrice}, TransactionId: {TransactionId}", 
+        _logger.LogInformation("Vehicle marked as sold: {VehicleId}, SalePrice: {SalePrice}, TransactionId: {TransactionId}",
             id, request?.SalePrice, transaction.Id);
 
         return Ok(new MarkVehicleSoldResponse
@@ -1402,7 +2120,7 @@ public class VehiclesController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Vehicle feature status changed: {VehicleId}, IsFeatured: {IsFeatured}, Sections: {Sections}", 
+        _logger.LogInformation("Vehicle feature status changed: {VehicleId}, IsFeatured: {IsFeatured}, Sections: {Sections}",
             id, request.IsFeatured, vehicle.HomepageSections);
 
         return Ok(new FeatureVehicleResponse
@@ -1410,8 +2128,8 @@ public class VehiclesController : ControllerBase
             Id = vehicle.Id,
             IsFeatured = vehicle.IsFeatured,
             HomepageSections = vehicle.HomepageSections,
-            Message = request.IsFeatured 
-                ? "Vehicle featured successfully." 
+            Message = request.IsFeatured
+                ? "Vehicle featured successfully."
                 : "Vehicle unfeatured successfully."
         });
     }
@@ -1437,7 +2155,7 @@ public class VehiclesController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        _logger.LogDebug("View registered for vehicle: {VehicleId}, TotalViews: {ViewCount}, UserId: {UserId}", 
+        _logger.LogDebug("View registered for vehicle: {VehicleId}, TotalViews: {ViewCount}, UserId: {UserId}",
             id, vehicle.ViewCount, request?.UserId);
 
         return Ok(new RegisterViewResponse
@@ -1578,7 +2296,7 @@ public class VehiclesController : ControllerBase
             .ToLowerInvariant()
             .Replace(" ", "-")
             .Replace("--", "-");
-        
+
         // Add short ID to ensure uniqueness
         var shortId = vehicle.Id.ToString("N")[..8];
         return $"{baseSlug}-{shortId}";
@@ -1842,6 +2560,18 @@ public record PublishVehicleRequest
     /// Optional: Set expiration date for the listing
     /// </summary>
     public DateTime? ExpiresAt { get; init; }
+
+    /// <summary>
+    /// REQUIRED — Dealer/seller must confirm information accuracy.
+    /// This checkbox must NOT be pre-checked; it must be manually activated.
+    /// Legal requirement per Ley 172-13 and OKLA Terms of Service.
+    /// </summary>
+    public bool DisclaimerAccepted { get; init; } = false;
+
+    /// <summary>
+    /// Version of the Terms of Service accepted (e.g., "2026.1").
+    /// </summary>
+    public string? TosVersion { get; init; }
 }
 
 public record PublishVehicleResponse
@@ -1851,6 +2581,33 @@ public record PublishVehicleResponse
     public DateTime? PublishedAt { get; init; }
     public DateTime? ExpiresAt { get; init; }
     public string Message { get; init; } = string.Empty;
+    /// <summary>
+    /// VIN cross-reference discrepancies (null if no VIN or no discrepancies).
+    /// Present when NHTSA-decoded data doesn't match dealer-declared attributes.
+    /// </summary>
+    public List<VinDiscrepancyDto>? VinDiscrepancies { get; init; }
+    /// <summary>
+    /// Photo moderation results (null if no images). Each rejected image
+    /// includes a dealer-facing message explaining the rejection reason.
+    /// </summary>
+    public List<PhotoModerationDto>? PhotoModeration { get; init; }
+}
+
+public record PhotoModerationDto
+{
+    public Guid ImageId { get; init; }
+    public string Status { get; init; } = string.Empty;
+    public List<string> Flags { get; init; } = new();
+    public string? RejectionReason { get; init; }
+    public string? DealerMessage { get; init; }
+}
+
+public record VinDiscrepancyDto
+{
+    public string Field { get; init; } = string.Empty;
+    public string DeclaredValue { get; init; } = string.Empty;
+    public string VinValue { get; init; } = string.Empty;
+    public string Severity { get; init; } = string.Empty;
 }
 
 public record UnpublishVehicleRequest
@@ -1867,6 +2624,20 @@ public record UnpublishVehicleResponse
     public VehicleStatus Status { get; init; }
     public DateTime UpdatedAt { get; init; }
     public string Message { get; init; } = string.Empty;
+
+    // ── OKLA Platform Score: Switching Cost Data ──
+    /// <summary>Warning message showing what the dealer is losing (null if no significant history)</summary>
+    public string? SwitchingCostWarning { get; init; }
+    /// <summary>Days the vehicle was published on OKLA</summary>
+    public int AccumulatedDays { get; init; }
+    /// <summary>Total views accumulated</summary>
+    public int AccumulatedViews { get; init; }
+    /// <summary>Total inquiries accumulated</summary>
+    public int AccumulatedInquiries { get; init; }
+    /// <summary>Total favorites accumulated</summary>
+    public int AccumulatedFavorites { get; init; }
+    /// <summary>Number of price change records in history</summary>
+    public int PriceHistoryRecords { get; init; }
 }
 
 public record MarkVehicleSoldRequest
@@ -1875,12 +2646,12 @@ public record MarkVehicleSoldRequest
     /// Optional: Final sale price
     /// </summary>
     public decimal? SalePrice { get; init; }
-    
+
     /// <summary>
     /// Optional: Buyer email for sale confirmation tracking
     /// </summary>
     public string? BuyerEmail { get; init; }
-    
+
     /// <summary>
     /// Optional: Buyer notes
     /// </summary>
@@ -1902,7 +2673,7 @@ public record FeatureVehicleRequest
     /// True to feature, false to unfeature
     /// </summary>
     public bool IsFeatured { get; init; }
-    
+
     /// <summary>
     /// Optional: Homepage sections to display the vehicle in
     /// </summary>
@@ -1923,12 +2694,12 @@ public record RegisterViewRequest
     /// Optional: User ID if authenticated
     /// </summary>
     public Guid? UserId { get; init; }
-    
+
     /// <summary>
     /// Optional: Session ID for anonymous users
     /// </summary>
     public string? SessionId { get; init; }
-    
+
     /// <summary>
     /// Optional: Referrer URL
     /// </summary>
@@ -2002,4 +2773,273 @@ public record RejectVehicleRequest
     public string? Notes { get; init; }
 }
 
+/// <summary>
+/// Request to suspend a vehicle listing due to buyer reports.
+/// Called by ReportsService when report count reaches auto-suspend threshold.
+/// </summary>
+public record SuspendVehicleRequest
+{
+    public string Reason { get; init; } = string.Empty;
+    public int ReportCount { get; init; }
+}
+
 #endregion
+
+// ========================================
+// DEALER SWITCHING COST CONTROLLER
+// Shows dealer what they'd lose if they cancel their OKLA account.
+// Reviews, badges, reputation, engagement — all non-portable.
+// ========================================
+
+[ApiController]
+[Route("api/dealer")]
+[Authorize]
+public class DealerSwitchingCostController : ControllerBase
+{
+    private readonly VehiclesSaleService.Infrastructure.Persistence.ApplicationDbContext _context;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<DealerSwitchingCostController> _logger;
+
+    public DealerSwitchingCostController(
+        VehiclesSaleService.Infrastructure.Persistence.ApplicationDbContext context,
+        IHttpClientFactory httpClientFactory,
+        ILogger<DealerSwitchingCostController> logger)
+    {
+        _context = context;
+        _httpClientFactory = httpClientFactory;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Get the complete switching cost summary for a dealer.
+    /// Shows everything they'd lose by cancelling their OKLA account:
+    /// reviews, badges, views, inquiries, favorites, sales, platform score.
+    /// 
+    /// Used in:
+    /// - Dealer dashboard ("Your OKLA Value" widget)
+    /// - Account cancellation confirmation screen
+    /// - Retention emails and campaigns
+    /// </summary>
+    [HttpGet("{dealerId:guid}/switching-cost")]
+    [ProducesResponseType(typeof(DealerSwitchingCostSummary), StatusCodes.Status200OK)]
+    public async Task<ActionResult<DealerSwitchingCostSummary>> GetDealerSwitchingCost(Guid dealerId)
+    {
+        // Vehicle-level metrics aggregation
+        var vehicleStats = await _context.Vehicles
+            .Where(v => v.DealerId == dealerId && !v.IsDeleted)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                ActiveVehicles = g.Count(v => v.Status == VehicleStatus.Active),
+                TotalVehicles = g.Count(),
+                TotalViews = g.Sum(v => v.ViewCount),
+                TotalInquiries = g.Sum(v => v.InquiryCount),
+                TotalFavorites = g.Sum(v => v.FavoriteCount),
+                AvgSellerRating = g.Average(v => (decimal?)v.SellerRating) ?? 0,
+                AvgSellerReviewCount = (int)(g.Average(v => (decimal?)v.SellerReviewCount) ?? 0)
+            })
+            .FirstOrDefaultAsync();
+
+        var priceHistoryCount = await _context.VehiclePriceHistories
+            .Where(ph => ph.DealerId == dealerId)
+            .CountAsync();
+
+        var leadCount = await _context.Leads
+            .Where(l => l.DealerId == dealerId)
+            .CountAsync();
+
+        var salesCount = await _context.SaleTransactions
+            .Where(s => s.SellerId == dealerId || s.SellerType == "Dealer")
+            .CountAsync();
+
+        // Try to get review data from ReviewService
+        int totalReviews = 0;
+        decimal averageRating = 0;
+        int verifiedReviews = 0;
+        int totalBadges = 0;
+        var activeBadges = new List<string>();
+
+        try
+        {
+            var reviewClient = _httpClientFactory.CreateClient("ReviewService");
+            var summaryResponse = await reviewClient.GetAsync($"/api/reviews/seller/{dealerId}/summary");
+            if (summaryResponse.IsSuccessStatusCode)
+            {
+                var summaryJson = await summaryResponse.Content.ReadFromJsonAsync<JsonElement>();
+                totalReviews = summaryJson.TryGetProperty("totalReviews", out var tr) ? tr.GetInt32() : 0;
+                averageRating = summaryJson.TryGetProperty("averageRating", out var ar) ? ar.GetDecimal() : 0;
+                verifiedReviews = summaryJson.TryGetProperty("verifiedPurchaseReviews", out var vr) ? vr.GetInt32() : 0;
+            }
+
+            var badgesResponse = await reviewClient.GetAsync($"/api/reviews/seller/{dealerId}/badges");
+            if (badgesResponse.IsSuccessStatusCode)
+            {
+                var badgesJson = await badgesResponse.Content.ReadFromJsonAsync<JsonElement>();
+                if (badgesJson.ValueKind == JsonValueKind.Array)
+                {
+                    totalBadges = badgesJson.GetArrayLength();
+                    foreach (var badge in badgesJson.EnumerateArray().Take(5))
+                    {
+                        if (badge.TryGetProperty("title", out var title))
+                            activeBadges.Add(title.GetString() ?? "Badge");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not fetch review data from ReviewService for dealer {DealerId}", dealerId);
+            // Fallback to vehicle entity data
+            totalReviews = vehicleStats?.AvgSellerReviewCount ?? 0;
+            averageRating = vehicleStats?.AvgSellerRating ?? 0;
+        }
+
+        var summary = new DealerSwitchingCostSummary
+        {
+            DealerId = dealerId,
+            TotalReviews = totalReviews,
+            VerifiedPurchaseReviews = verifiedReviews,
+            AverageRating = averageRating,
+            TotalBadges = totalBadges,
+            ActiveBadges = activeBadges,
+            ActiveVehicles = vehicleStats?.ActiveVehicles ?? 0,
+            TotalVehiclesEverPublished = vehicleStats?.TotalVehicles ?? 0,
+            TotalViewsAcrossVehicles = vehicleStats?.TotalViews ?? 0,
+            TotalInquiriesAcrossVehicles = vehicleStats?.TotalInquiries ?? 0,
+            TotalFavoritesAcrossVehicles = vehicleStats?.TotalFavorites ?? 0,
+            TotalPriceHistoryRecords = priceHistoryCount,
+            TotalLeadsReceived = leadCount,
+            TotalSalesCompleted = salesCount,
+        };
+
+        _logger.LogInformation(
+            "Dealer {DealerId} switching cost queried: {Reviews} reviews, {Views} views, {Sales} sales, Retention={Level}",
+            dealerId, summary.TotalReviews, summary.TotalViewsAcrossVehicles,
+            summary.TotalSalesCompleted, summary.RetentionPriority);
+
+        return Ok(summary);
+    }
+}
+
+// ========================================
+// SEO AUDIT FIX: Sitemap endpoint for dynamic sitemap generation
+// ========================================
+
+/// <summary>
+/// Sitemap controller — public, no auth required.
+/// Returns lightweight vehicle data for sitemap.xml generation.
+/// 
+/// SEO AUDIT: The frontend sitemap.ts was calling /api/vehicles/sitemap
+/// but this endpoint didn't exist, resulting in zero dynamic vehicle URLs
+/// in the sitemap. Google was only indexing static pages.
+/// </summary>
+[ApiController]
+[Route("api/vehicles")]
+public class VehicleSitemapController : ControllerBase
+{
+    private readonly VehiclesSaleService.Infrastructure.Persistence.ApplicationDbContext _context;
+    private readonly ILogger<VehicleSitemapController> _logger;
+
+    public VehicleSitemapController(
+        VehiclesSaleService.Infrastructure.Persistence.ApplicationDbContext context,
+        ILogger<VehicleSitemapController> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Get all active vehicles for sitemap generation.
+    /// Returns slug and updatedAt for each vehicle.
+    /// No pagination — sitemaps need all URLs.
+    /// Public endpoint — no auth required.
+    /// </summary>
+    [HttpGet("sitemap")]
+    [AllowAnonymous]
+    [ResponseCache(Duration = 300)] // SITEMAP FIX: Reduced from 3600→300s (5min) to match ISR revalidation cycle
+    public async Task<IActionResult> GetSitemapData(CancellationToken ct)
+    {
+        try
+        {
+            var vehicles = await _context.Vehicles
+                .Where(v => v.Status == Entities.VehicleStatus.Active)
+                .OrderByDescending(v => v.UpdatedAt)
+                .Select(v => new
+                {
+                    v.Id,
+                    v.Year,
+                    v.Make,
+                    v.Model,
+                    v.UpdatedAt,
+                    v.CreatedAt,
+                    v.IsFeatured,
+                })
+                .AsNoTracking()
+                .ToListAsync(ct);
+
+            var sitemapItems = vehicles.Select(v =>
+            {
+                var baseSlug = $"{v.Year}-{v.Make}-{v.Model}"
+                    .ToLowerInvariant()
+                    .Replace(" ", "-")
+                    .Replace("--", "-");
+                var shortId = v.Id.ToString("N")[..8];
+
+                return new
+                {
+                    slug = $"{baseSlug}-{shortId}",
+                    updatedAt = v.UpdatedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    priority = v.IsFeatured ? 0.9 : 0.7,
+                };
+            });
+
+            _logger.LogInformation("Sitemap endpoint served {Count} vehicle URLs", vehicles.Count);
+
+            return Ok(new
+            {
+                items = sitemapItems,
+                total = vehicles.Count,
+                generatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate sitemap data");
+            return StatusCode(500, new { error = "Failed to generate sitemap data" });
+        }
+    }
+}
+
+// ========================================
+// OKLA PLATFORM SCORE — DTOs
+// ========================================
+
+/// <summary>
+/// Response for the price history endpoint — shows full price change timeline
+/// </summary>
+public record VehiclePriceHistoryResponse
+{
+    public Guid VehicleId { get; init; }
+    public decimal CurrentPrice { get; init; }
+    public decimal OriginalListingPrice { get; init; }
+    public int TotalPriceChanges { get; init; }
+    public decimal TotalVariationPercent { get; init; }
+    public string PriceTrend { get; init; } = "Stable";
+    public string Currency { get; init; } = "DOP";
+    public List<PriceChangeRecord> History { get; init; } = new();
+}
+
+/// <summary>
+/// Individual price change record visible to the buyer
+/// </summary>
+public record PriceChangeRecord
+{
+    public decimal OldPrice { get; init; }
+    public decimal NewPrice { get; init; }
+    public decimal PriceDifference { get; init; }
+    public decimal ChangePercentage { get; init; }
+    public string Currency { get; init; } = "DOP";
+    public string ChangeType { get; init; } = "Manual";
+    public DateTime ChangedAt { get; init; }
+    public string? Reason { get; init; }
+}

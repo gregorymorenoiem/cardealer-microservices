@@ -1,27 +1,49 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Registry;
 using Stripe;
 using BillingService.Domain.Interfaces;
 
 namespace BillingService.Infrastructure.Services;
 
 /// <summary>
-/// Implementación del servicio de Stripe
+/// Implementación del servicio de Stripe con circuit breaker.
+/// All Stripe SDK calls are wrapped in a ResiliencePipeline that provides
+/// retry (2 attempts) + circuit breaker (opens at 50% failure rate in 60s).
+/// Degraded behavior: throws BrokenCircuitException → caller returns 503.
 /// </summary>
 public class StripeService : IStripeService
 {
     private readonly ILogger<StripeService> _logger;
     private readonly StripeSettings _settings;
+    private readonly ResiliencePipeline _resiliencePipeline;
 
     public StripeService(
         ILogger<StripeService> logger,
-        IOptions<StripeSettings> settings)
+        IOptions<StripeSettings> settings,
+        ResiliencePipelineProvider<string> resiliencePipelineProvider)
     {
         _logger = logger;
         _settings = settings.Value;
+        _resiliencePipeline = resiliencePipelineProvider.GetPipeline("stripe-circuit-breaker");
 
         // Configurar Stripe con la API key
         StripeConfiguration.ApiKey = _settings.SecretKey;
+    }
+
+    // ========================================
+    // RESILIENCE WRAPPER
+    // ========================================
+
+    /// <summary>
+    /// Wraps a Stripe SDK call in the circuit breaker pipeline.
+    /// When the circuit is open, throws BrokenCircuitException immediately
+    /// instead of sending requests to a degraded Stripe API.
+    /// </summary>
+    private async Task<T> ExecuteWithResilienceAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken = default)
+    {
+        return await _resiliencePipeline.ExecuteAsync(async ct => await action(ct), cancellationToken);
     }
 
     // ========================================
@@ -54,7 +76,9 @@ public class StripeService : IStripeService
             };
 
             var service = new CustomerService();
-            var customer = await service.CreateAsync(options, cancellationToken: cancellationToken);
+            var customer = await ExecuteWithResilienceAsync(
+                async ct => await service.CreateAsync(options, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation("Created Stripe customer {CustomerId} for {Email}", customer.Id, email);
 
@@ -74,7 +98,9 @@ public class StripeService : IStripeService
         try
         {
             var service = new CustomerService();
-            var customer = await service.GetAsync(customerId, cancellationToken: cancellationToken);
+            var customer = await ExecuteWithResilienceAsync(
+                async ct => await service.GetAsync(customerId, cancellationToken: ct),
+                cancellationToken);
 
             return customer.Deleted == true ? null : MapToCustomerResult(customer);
         }
@@ -107,7 +133,9 @@ public class StripeService : IStripeService
             if (metadata != null) options.Metadata = metadata;
 
             var service = new CustomerService();
-            var customer = await service.UpdateAsync(customerId, options, cancellationToken: cancellationToken);
+            var customer = await ExecuteWithResilienceAsync(
+                async ct => await service.UpdateAsync(customerId, options, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation("Updated Stripe customer {CustomerId}", customerId);
 
@@ -127,7 +155,9 @@ public class StripeService : IStripeService
         try
         {
             var service = new CustomerService();
-            var customer = await service.DeleteAsync(customerId, cancellationToken: cancellationToken);
+            var customer = await ExecuteWithResilienceAsync(
+                async ct => await service.DeleteAsync(customerId, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation("Deleted Stripe customer {CustomerId}", customerId);
 
@@ -175,7 +205,9 @@ public class StripeService : IStripeService
             }
 
             var service = new SubscriptionService();
-            var subscription = await service.CreateAsync(options, cancellationToken: cancellationToken);
+            var subscription = await ExecuteWithResilienceAsync(
+                async ct => await service.CreateAsync(options, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation(
                 "Created Stripe subscription {SubscriptionId} for customer {CustomerId} with {TrialDays} trial days",
@@ -197,7 +229,9 @@ public class StripeService : IStripeService
         try
         {
             var service = new SubscriptionService();
-            var subscription = await service.GetAsync(subscriptionId, cancellationToken: cancellationToken);
+            var subscription = await ExecuteWithResilienceAsync(
+                async ct => await service.GetAsync(subscriptionId, cancellationToken: ct),
+                cancellationToken);
 
             return MapToSubscriptionResult(subscription);
         }
@@ -222,7 +256,9 @@ public class StripeService : IStripeService
         {
             // Primero obtenemos la suscripción actual para obtener el item ID
             var getService = new SubscriptionService();
-            var currentSubscription = await getService.GetAsync(subscriptionId, cancellationToken: cancellationToken);
+            var currentSubscription = await ExecuteWithResilienceAsync(
+                async ct => await getService.GetAsync(subscriptionId, cancellationToken: ct),
+                cancellationToken);
             var currentItemId = currentSubscription.Items.Data.First().Id;
 
             var options = new SubscriptionUpdateOptions
@@ -238,7 +274,9 @@ public class StripeService : IStripeService
                 ProrationBehavior = prorationBehavior ? "create_prorations" : "none"
             };
 
-            var subscription = await getService.UpdateAsync(subscriptionId, options, cancellationToken: cancellationToken);
+            var subscription = await ExecuteWithResilienceAsync(
+                async ct => await getService.UpdateAsync(subscriptionId, options, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation(
                 "Updated Stripe subscription {SubscriptionId} to price {PriceId}",
@@ -269,11 +307,15 @@ public class StripeService : IStripeService
                 {
                     CancelAtPeriodEnd = true
                 };
-                subscription = await service.UpdateAsync(subscriptionId, options, cancellationToken: cancellationToken);
+                subscription = await ExecuteWithResilienceAsync(
+                    async ct => await service.UpdateAsync(subscriptionId, options, cancellationToken: ct),
+                    cancellationToken);
             }
             else
             {
-                subscription = await service.CancelAsync(subscriptionId, cancellationToken: cancellationToken);
+                subscription = await ExecuteWithResilienceAsync(
+                    async ct => await service.CancelAsync(subscriptionId, cancellationToken: ct),
+                    cancellationToken);
             }
 
             _logger.LogInformation(
@@ -301,7 +343,9 @@ public class StripeService : IStripeService
             };
 
             var service = new SubscriptionService();
-            var subscription = await service.UpdateAsync(subscriptionId, options, cancellationToken: cancellationToken);
+            var subscription = await ExecuteWithResilienceAsync(
+                async ct => await service.UpdateAsync(subscriptionId, options, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation("Reactivated Stripe subscription {SubscriptionId}", subscriptionId);
 
@@ -331,7 +375,9 @@ public class StripeService : IStripeService
             };
 
             var service = new PaymentMethodService();
-            var paymentMethod = await service.AttachAsync(paymentMethodId, options, cancellationToken: cancellationToken);
+            var paymentMethod = await ExecuteWithResilienceAsync(
+                async ct => await service.AttachAsync(paymentMethodId, options, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation(
                 "Attached payment method {PaymentMethodId} to customer {CustomerId}",
@@ -362,7 +408,9 @@ public class StripeService : IStripeService
             };
 
             var service = new CustomerService();
-            await service.UpdateAsync(customerId, options, cancellationToken: cancellationToken);
+            await ExecuteWithResilienceAsync(
+                async ct => await service.UpdateAsync(customerId, options, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation(
                 "Set default payment method {PaymentMethodId} for customer {CustomerId}",
@@ -390,11 +438,15 @@ public class StripeService : IStripeService
             };
 
             var service = new PaymentMethodService();
-            var paymentMethods = await service.ListAsync(options, cancellationToken: cancellationToken);
+            var paymentMethods = await ExecuteWithResilienceAsync(
+                async ct => await service.ListAsync(options, cancellationToken: ct),
+                cancellationToken);
 
             // Obtener el método de pago por defecto del customer
             var customerService = new CustomerService();
-            var customer = await customerService.GetAsync(customerId, cancellationToken: cancellationToken);
+            var customer = await ExecuteWithResilienceAsync(
+                async ct => await customerService.GetAsync(customerId, cancellationToken: ct),
+                cancellationToken);
             var defaultPaymentMethodId = customer.InvoiceSettings?.DefaultPaymentMethodId;
 
             return paymentMethods.Data.Select(pm =>
@@ -414,7 +466,9 @@ public class StripeService : IStripeService
         try
         {
             var service = new PaymentMethodService();
-            await service.DetachAsync(paymentMethodId, cancellationToken: cancellationToken);
+            await ExecuteWithResilienceAsync(
+                async ct => await service.DetachAsync(paymentMethodId, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation("Detached payment method {PaymentMethodId}", paymentMethodId);
 
@@ -438,7 +492,9 @@ public class StripeService : IStripeService
         try
         {
             var service = new InvoiceService();
-            var invoice = await service.GetAsync(invoiceId, cancellationToken: cancellationToken);
+            var invoice = await ExecuteWithResilienceAsync(
+                async ct => await service.GetAsync(invoiceId, cancellationToken: ct),
+                cancellationToken);
 
             return MapToInvoiceResult(invoice);
         }
@@ -467,7 +523,9 @@ public class StripeService : IStripeService
             };
 
             var service = new InvoiceService();
-            var invoices = await service.ListAsync(options, cancellationToken: cancellationToken);
+            var invoices = await ExecuteWithResilienceAsync(
+                async ct => await service.ListAsync(options, cancellationToken: ct),
+                cancellationToken);
 
             return invoices.Data.Select(MapToInvoiceResult);
         }
@@ -485,7 +543,9 @@ public class StripeService : IStripeService
         try
         {
             var service = new InvoiceService();
-            var invoice = await service.PayAsync(invoiceId, cancellationToken: cancellationToken);
+            var invoice = await ExecuteWithResilienceAsync(
+                async ct => await service.PayAsync(invoiceId, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation("Paid invoice {InvoiceId}", invoiceId);
 
@@ -539,7 +599,9 @@ public class StripeService : IStripeService
             }
 
             var service = new Stripe.Checkout.SessionService();
-            var session = await service.CreateAsync(options, cancellationToken: cancellationToken);
+            var session = await ExecuteWithResilienceAsync(
+                async ct => await service.CreateAsync(options, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation(
                 "Created checkout session {SessionId} for customer {CustomerId}",
@@ -568,7 +630,9 @@ public class StripeService : IStripeService
             };
 
             var service = new Stripe.BillingPortal.SessionService();
-            var session = await service.CreateAsync(options, cancellationToken: cancellationToken);
+            var session = await ExecuteWithResilienceAsync(
+                async ct => await service.CreateAsync(options, cancellationToken: ct),
+                cancellationToken);
 
             _logger.LogInformation(
                 "Created billing portal session for customer {CustomerId}",

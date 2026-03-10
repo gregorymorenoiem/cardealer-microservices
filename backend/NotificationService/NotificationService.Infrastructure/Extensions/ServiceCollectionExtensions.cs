@@ -14,6 +14,7 @@ using NotificationService.Infrastructure.BackgroundServices;
 using NotificationService.Infrastructure.External;
 using NotificationService.Shared;
 using CarDealer.Shared.MultiTenancy;
+using CarDealer.Shared.Resilience.Extensions;
 
 namespace NotificationService.Infrastructure.Extensions;
 
@@ -45,7 +46,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserNotificationService, UserNotificationService>();
 
         // ── Email Providers ───────────────────────────────────
-        services.AddHttpClient("Resend");
+        services.AddHttpClient("Resend").AddStandardResilience(configuration);
         services.AddScoped<IEmailProvider, ResendEmailService>();
         services.AddScoped<IEmailService, EmailService>();
 
@@ -67,8 +68,8 @@ public static class ServiceCollectionExtensions
         });
 
         // ── Webhook Providers (Teams + Slack) ─────────────────
-        services.AddHttpClient<ITeamsProvider, TeamsProvider>();
-        services.AddHttpClient<ISlackProvider, SlackProvider>();
+        services.AddHttpClient<ITeamsProvider, TeamsProvider>().AddStandardResilience(configuration);
+        services.AddHttpClient<ISlackProvider, SlackProvider>().AddStandardResilience(configuration);
 
         // ── Admin Alert Service ───────────────────────────────
         services.AddScoped<IAdminAlertService, AdminAlertService>();
@@ -80,7 +81,7 @@ public static class ServiceCollectionExtensions
             client.BaseAddress = new Uri(configServiceUrl);
             client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
             client.Timeout = TimeSpan.FromSeconds(5);
-        });
+        }).AddStandardResilience(configuration);
         services.AddScoped<IConfigurationServiceClient>(sp =>
             sp.GetRequiredService<ConfigurationServiceClient>());
 
@@ -89,14 +90,51 @@ public static class ServiceCollectionExtensions
         {
             client.DefaultRequestHeaders.Add("User-Agent", "OKLA-NotificationService");
             client.Timeout = TimeSpan.FromSeconds(10);
-        });
+        }).AddStandardResilience(configuration);
 
         // ── ErrorService Client ───────────────────────────────
         services.AddHttpClient<ErrorServiceClient>(client =>
         {
             client.BaseAddress = new Uri(configuration["Services:ErrorService"] ?? "http://errorservice:8080");
             client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
-        });
+        }).AddStandardResilience(configuration);
+
+        // ── Inter-Service Named HTTP Clients (UserService, ContactService, DealerAnalyticsService) ──
+        services.AddHttpClient("UserService", client =>
+        {
+            client.BaseAddress = new Uri(configuration["Services:UserService"] ?? "http://userservice:80");
+            client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
+            client.Timeout = TimeSpan.FromSeconds(10);
+        }).AddStandardResilience(configuration);
+
+        services.AddHttpClient("ContactService", client =>
+        {
+            client.BaseAddress = new Uri(configuration["Services:ContactService"] ?? "http://contactservice:80");
+            client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
+            client.Timeout = TimeSpan.FromSeconds(10);
+        }).AddStandardResilience(configuration);
+
+        services.AddHttpClient("DealerAnalyticsService", client =>
+        {
+            client.BaseAddress = new Uri(configuration["Services:DealerAnalyticsService"] ?? "http://dealeranalyticsservice:80");
+            client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
+            client.Timeout = TimeSpan.FromSeconds(10);
+        }).AddStandardResilience(configuration);
+
+        services.AddHttpClient("VehiclesSaleService", client =>
+        {
+            client.BaseAddress = new Uri(configuration["Services:VehiclesSaleService"] ?? "http://vehiclessaleservice:80");
+            client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
+            client.Timeout = TimeSpan.FromSeconds(15);
+        }).AddStandardResilience(configuration);
+
+        // ── AnalyticsAgent HTTP Client (LLM insight generation for weekly recommendations) ──
+        services.AddHttpClient("AnalyticsAgentService", client =>
+        {
+            client.BaseAddress = new Uri(configuration["Services:AnalyticsAgentService"] ?? "http://analyticsagent:8080");
+            client.DefaultRequestHeaders.Add("User-Agent", "NotificationService");
+            client.Timeout = TimeSpan.FromSeconds(30); // LLM calls can be slower
+        }).AddStandardResilience(configuration);
 
         // ── Template Engine & Services ────────────────────────
         services.AddScoped<ITemplateEngine, TemplateEngine>();

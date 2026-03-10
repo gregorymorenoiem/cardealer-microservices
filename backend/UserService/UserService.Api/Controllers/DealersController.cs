@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using UserService.Application.DTOs;
+using UserService.Application.Interfaces;
 using UserService.Application.UseCases.Dealers.CreateDealer;
 using UserService.Application.UseCases.Dealers.GetDealer;
 using UserService.Application.UseCases.Dealers.UpdateDealer;
@@ -129,6 +130,49 @@ public class DealersController : ControllerBase
     }
 
     /// <summary>
+    /// Get dealer by URL-friendly slug. Public endpoint for dealer profile pages.
+    /// Route: GET /api/dealers/slug/{slug}
+    /// Example: GET /api/dealers/slug/auto-plaza-santo-domingo
+    /// </summary>
+    [HttpGet("slug/{slug}")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(DealerDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetDealerBySlug(string slug)
+    {
+        var query = new GetDealerBySlugQuery(slug);
+        var result = await _mediator.Send(query);
+
+        if (result == null)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Type = "https://okla.com/errors/not-found",
+                Title = "Dealer Not Found",
+                Status = 404,
+                Detail = $"Dealer con slug '{slug}' no fue encontrado."
+            });
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get all active dealers for XML sitemap generation. Returns minimal data (slug + updatedAt).
+    /// Public endpoint — no auth required.
+    /// </summary>
+    [HttpGet("sitemap")]
+    [AllowAnonymous]
+    [ResponseCache(Duration = 900)] // 15 min cache — matches frontend revalidate interval
+    [ProducesResponseType(typeof(IEnumerable<DealerSitemapEntry>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetDealersSitemap()
+    {
+        var query = new GetDealersSitemapQuery();
+        var items = await _mediator.Send(query);
+        return Ok(new { items, total = items.Count(), generatedAt = DateTime.UtcNow });
+    }
+
+    /// <summary>
     /// Get dealer by owner user ID. Used to check if current user already has a dealer account.
     /// </summary>
     [HttpGet("owner/{userId:guid}")]
@@ -184,6 +228,35 @@ public class DealersController : ControllerBase
         }
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Get badge verification status for a dealer (public endpoint).
+    /// Returns the 4 criteria evaluation for the "Dealer Verificado OKLA" badge.
+    /// </summary>
+    [HttpGet("{dealerId:guid}/badge-status")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(DealerBadgeEvaluation), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetBadgeStatus(
+        Guid dealerId,
+        [FromServices] IDealerBadgeEvaluator badgeEvaluator)
+    {
+        try
+        {
+            var evaluation = await badgeEvaluator.EvaluateAsync(dealerId);
+            return Ok(evaluation);
+        }
+        catch (Exception ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+        {
+            return NotFound(new ProblemDetails
+            {
+                Type = "https://okla.com/errors/not-found",
+                Title = "Dealer Not Found",
+                Status = 404,
+                Detail = $"Dealer {dealerId} no encontrado."
+            });
+        }
     }
 
     /// <summary>

@@ -37,7 +37,16 @@ public class ContactRequestsController : ControllerBase
             BuyerName = dto.BuyerName,
             BuyerEmail = dto.BuyerEmail,
             BuyerPhone = dto.BuyerPhone,
-            Message = dto.Message
+            Message = dto.Message,
+            // SEM FIX: Forward UTM attribution from frontend
+            UtmSource = dto.UtmSource,
+            UtmMedium = dto.UtmMedium,
+            UtmCampaign = dto.UtmCampaign,
+            UtmTerm = dto.UtmTerm,
+            UtmContent = dto.UtmContent,
+            Gclid = dto.Gclid,
+            Fbclid = dto.Fbclid,
+            LandingPage = dto.LandingPage
         };
 
         var result = await _mediator.Send(command);
@@ -148,6 +157,64 @@ public class ContactRequestsController : ControllerBase
         return NoContent();
     }
 
+    // ========================================================================
+    // OVERAGE REPORT — CONTRA #5 / OVERAGE BILLING FIX
+    // ========================================================================
+
+    /// <summary>
+    /// Get the conversation overage report for the current dealer.
+    /// Returns a detailed breakdown of each overage conversation with date/time.
+    /// Downloadable by the dealer for billing reconciliation.
+    /// </summary>
+    /// <param name="period">Billing period in YYYY-MM format. Defaults to current month.</param>
+    [HttpGet("overage-report")]
+    public async Task<IActionResult> GetOverageReport([FromQuery] string? period = null)
+    {
+        var dealerId = GetCurrentUserId();
+        var result = await _mediator.Send(new GetConversationOverageReportQuery
+        {
+            DealerId = dealerId,
+            BillingPeriod = period
+        });
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Download the conversation overage report as CSV.
+    /// Contains: ConversationNumber, DateTime, ContactRequestId, Subject, UnitCost
+    /// </summary>
+    /// <param name="period">Billing period in YYYY-MM format. Defaults to current month.</param>
+    [HttpGet("overage-report/csv")]
+    public async Task<IActionResult> DownloadOverageReportCsv([FromQuery] string? period = null)
+    {
+        var dealerId = GetCurrentUserId();
+        var report = await _mediator.Send(new GetConversationOverageReportQuery
+        {
+            DealerId = dealerId,
+            BillingPeriod = period
+        });
+
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("ConversationNumber,DateTime(UTC),ContactRequestId,Subject,UnitCost(USD)");
+        foreach (var detail in report.Details)
+        {
+            var subject = detail.Subject.Replace(",", " ").Replace("\"", "'");
+            csv.AppendLine($"{detail.ConversationNumber},{detail.OccurredAtUtc:yyyy-MM-dd HH:mm:ss},{detail.ContactRequestId},{subject},{detail.UnitCost:F2}");
+        }
+        csv.AppendLine();
+        csv.AppendLine($"# Period: {report.BillingPeriod}");
+        csv.AppendLine($"# Plan: {report.DealerPlan}");
+        csv.AppendLine($"# Included Limit: {report.IncludedLimit}");
+        csv.AppendLine($"# Overage Count: {report.OverageCount}");
+        csv.AppendLine($"# Total Overage Cost: ${report.TotalOverageCost:F2} {report.Currency}");
+
+        var fileName = $"overage-report-{report.BillingPeriod}.csv";
+        return File(
+            System.Text.Encoding.UTF8.GetBytes(csv.ToString()),
+            "text/csv",
+            fileName);
+    }
+
     private Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
@@ -164,7 +231,16 @@ public record CreateContactRequestInputDto(
     string BuyerName,
     string BuyerEmail,
     string? BuyerPhone,
-    string Message
+    string Message,
+    // SEM FIX: UTM attribution fields for lead tracking
+    string? UtmSource = null,
+    string? UtmMedium = null,
+    string? UtmCampaign = null,
+    string? UtmTerm = null,
+    string? UtmContent = null,
+    string? Gclid = null,
+    string? Fbclid = null,
+    string? LandingPage = null
 );
 
 /// <summary>Input DTO for replying to a contact request.</summary>

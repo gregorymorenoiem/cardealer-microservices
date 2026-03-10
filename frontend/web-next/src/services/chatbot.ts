@@ -72,6 +72,14 @@ export interface StartSessionRequest {
   deviceType?: string;
   language?: string;
   dealerId?: string;
+  // SEM FIX: UTM attribution so chat-generated leads can be traced to campaigns
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+  gclid?: string;
+  landingPage?: string;
 }
 
 export interface SendMessageRequest {

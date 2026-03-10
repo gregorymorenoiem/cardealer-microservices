@@ -32,6 +32,7 @@ import { useCurrentDealer, useDealerStats } from '@/hooks/use-dealers';
 import { useVehiclesByDealer } from '@/hooks/use-vehicles';
 import { useEngagement, useTrends, useExportReport } from '@/hooks/use-dealer-analytics';
 import { PlanGate } from '@/components/plan/plan-gate';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 
 // Skeleton for stats loading
 function StatsSkeleton() {
@@ -150,7 +151,7 @@ function AnalyticsPageContent() {
           period: 'vs mes anterior',
         },
         {
-          label: 'Leads Generados',
+          label: 'Personas interesadas',
           value: stats.inquiriesThisMonth.toString(),
           change: stats.inquiriesChange
             ? `${stats.inquiriesChange > 0 ? '+' : ''}${stats.inquiriesChange.toFixed(1)}%`
@@ -188,8 +189,10 @@ function AnalyticsPageContent() {
       <div className="space-y-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row">
           <div>
-            <h1 className="text-foreground text-2xl font-bold">Analytics</h1>
-            <p className="text-muted-foreground">Métricas y rendimiento de tu dealer</p>
+            <h1 className="text-foreground text-2xl font-bold">¿Cómo va tu negocio?</h1>
+            <p className="text-muted-foreground">
+              Aquí ves cómo están funcionando tus publicaciones
+            </p>
           </div>
         </div>
         <Card className="border-red-200 bg-red-50">
@@ -213,8 +216,11 @@ function AnalyticsPageContent() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div>
-          <h1 className="text-foreground text-2xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground">Métricas y rendimiento de tu dealer</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground text-2xl font-bold">¿Cómo va tu negocio?</h1>
+            <VideoHelpButton sectionKey="analytics" variant="icon" />
+          </div>
+          <p className="text-muted-foreground">Aquí ves cómo están funcionando tus publicaciones</p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={() => refetch()}>
@@ -273,7 +279,7 @@ function AnalyticsPageContent() {
           <TabsTrigger value="overview">Resumen</TabsTrigger>
           <TabsTrigger value="vehicles">Vehículos</TabsTrigger>
           <TabsTrigger value="traffic">Tráfico</TabsTrigger>
-          <TabsTrigger value="leads">Leads</TabsTrigger>
+          <TabsTrigger value="leads">Interesados</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -326,7 +332,7 @@ function AnalyticsPageContent() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-3 rounded-full bg-blue-400" />
-                    <span className="text-muted-foreground text-sm">Leads</span>
+                    <span className="text-muted-foreground text-sm">Interesados</span>
                   </div>
                 </div>
               </CardContent>
@@ -464,9 +470,9 @@ function AnalyticsPageContent() {
           <Card>
             <CardContent className="p-8 text-center">
               <Users className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-              <h3 className="text-foreground mb-2 font-medium">Analytics de Leads</h3>
+              <h3 className="text-foreground mb-2 font-medium">Personas Interesadas</h3>
               <p className="text-muted-foreground mb-4">
-                Análisis de conversión y calidad de leads
+                Análisis de las personas que preguntan por tus vehículos
               </p>
               <Button variant="outline" asChild>
                 <Link href="/dealer/analytics/ventas">Ver Analytics de Ventas</Link>

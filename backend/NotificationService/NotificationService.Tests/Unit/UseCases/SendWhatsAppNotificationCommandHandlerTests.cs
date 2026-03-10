@@ -17,6 +17,7 @@ public class SendWhatsAppNotificationCommandHandlerTests
     private readonly Mock<IWhatsAppProvider> _whatsAppProviderMock;
     private readonly Mock<INotificationRepository> _notificationRepoMock;
     private readonly Mock<INotificationLogRepository> _logRepoMock;
+    private readonly Mock<IUserConsentClient> _consentClientMock;
     private readonly Mock<ILogger<SendWhatsAppNotificationCommandHandler>> _loggerMock;
     private readonly SendWhatsAppNotificationCommandHandler _handler;
 
@@ -26,6 +27,7 @@ public class SendWhatsAppNotificationCommandHandlerTests
         _whatsAppProviderMock = new Mock<IWhatsAppProvider>();
         _notificationRepoMock = new Mock<INotificationRepository>();
         _logRepoMock = new Mock<INotificationLogRepository>();
+        _consentClientMock = new Mock<IUserConsentClient>();
         _loggerMock = new Mock<ILogger<SendWhatsAppNotificationCommandHandler>>();
 
         _whatsAppProviderMock.Setup(x => x.ProviderName).Returns("TwilioWhatsApp");
@@ -37,6 +39,7 @@ public class SendWhatsAppNotificationCommandHandlerTests
             _whatsAppProviderMock.Object,
             _notificationRepoMock.Object,
             _logRepoMock.Object,
+            _consentClientMock.Object,
             _loggerMock.Object);
     }
 

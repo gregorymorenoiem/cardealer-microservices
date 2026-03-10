@@ -33,12 +33,9 @@ import {
   useUnreadCount,
 } from '@/hooks/use-contact';
 import { sanitizeText } from '@/lib/security/sanitize';
-import {
-  formatRelativeTime,
-  getStatusColor,
-  getStatusLabel,
-} from '@/services/contact';
+import { formatRelativeTime, getStatusColor, getStatusLabel } from '@/services/contact';
 import { toast } from 'sonner';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 
 // Skeleton for conversations list
 function ConversationsSkeleton() {
@@ -174,7 +171,10 @@ export default function DealerMessagesPage() {
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-foreground text-2xl font-bold">Mensajes</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-foreground text-2xl font-bold">Mensajes</h1>
+              <VideoHelpButton sectionKey="mensajes" variant="icon" />
+            </div>
             <p className="text-muted-foreground">Conversaciones con clientes interesados</p>
           </div>
           <Button
@@ -226,7 +226,7 @@ export default function DealerMessagesPage() {
                   onClick={() => setSelectedConversation(convo.id)}
                   className={`border-border hover:bg-muted/50 w-full border-b p-4 text-left transition-colors ${
                     selectedConversation === convo.id
-                      ? 'border-l-2 border-l-primary bg-primary/10'
+                      ? 'border-l-primary bg-primary/10 border-l-2'
                       : ''
                   }`}
                 >
@@ -314,7 +314,7 @@ export default function DealerMessagesPage() {
                     <div
                       className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                         !message.isFromBuyer
-                          ? 'rounded-br-sm bg-primary text-white'
+                          ? 'bg-primary rounded-br-sm text-white'
                           : 'bg-muted text-foreground rounded-bl-sm'
                       }`}
                     >
@@ -322,7 +322,7 @@ export default function DealerMessagesPage() {
                       <div
                         className={`mt-1 flex items-center gap-1 text-xs ${
                           !message.isFromBuyer
-                            ? 'justify-end text-primary-foreground'
+                            ? 'text-primary-foreground justify-end'
                             : 'text-muted-foreground'
                         }`}
                       >

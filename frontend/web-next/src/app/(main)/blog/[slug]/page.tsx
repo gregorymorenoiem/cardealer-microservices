@@ -8,9 +8,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ArrowLeft, Calendar, Clock, User, Share2, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { blogPosts, getPostBySlug, getRelatedPosts } from '../blog-data';
 import { ShareButtons } from './share-buttons';
@@ -148,7 +147,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute right-0 bottom-0 left-0 p-6 md:p-10">
           <div className="container mx-auto">
-            <Badge className="mb-3 bg-primary text-white hover:bg-primary/90">
+            <Badge className="bg-primary hover:bg-primary/90 mb-3 text-white">
               {post.category}
             </Badge>
             <h1 className="max-w-3xl text-2xl font-bold text-white md:text-4xl">{post.title}</h1>
@@ -282,14 +281,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </div>
 
               {/* CTA */}
-              <div className="mt-8 rounded-xl bg-gradient-to-r from-primary to-primary/80 p-6 text-white md:p-8">
+              <div className="from-primary to-primary/80 mt-8 rounded-xl bg-gradient-to-r p-6 text-white md:p-8">
                 <h3 className="text-xl font-bold">¿Buscas tu próximo vehículo?</h3>
                 <p className="mt-2 text-white/90">
                   Explora miles de vehículos verificados en el marketplace más completo de República
                   Dominicana.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
-                  <Button asChild className="bg-white text-primary hover:bg-white/90">
+                  <Button asChild className="text-primary bg-white hover:bg-white/90">
                     <Link href="/vehiculos">Explorar Vehículos</Link>
                   </Button>
                   <Button

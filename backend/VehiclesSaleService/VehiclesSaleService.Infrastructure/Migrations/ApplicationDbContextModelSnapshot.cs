@@ -626,6 +626,17 @@ namespace VehiclesSaleService.Infrastructure.Migrations
                         .HasMaxLength(10000)
                         .HasColumnType("character varying(10000)");
 
+                    b.Property<DateTime?>("DisclaimerAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisclaimerAcceptedFromIp")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("DisclaimerTosVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<int>("Doors")
                         .HasColumnType("integer");
 

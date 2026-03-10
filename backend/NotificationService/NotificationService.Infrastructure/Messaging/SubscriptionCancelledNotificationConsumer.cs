@@ -170,7 +170,7 @@ public class SubscriptionCancelledNotificationConsumer : BackgroundService
                 { "PlanName", eventData.PreviousPlan ?? "Plan" },
                 { "MonthlyAmount", $"US${eventData.MonthlyAmount:N2}" },
                 { "DaysOnPlan", eventData.DaysOnPlan.ToString() },
-                { "EffectiveAt", eventData.EffectiveAt?.ToString("dd/MM/yyyy") ?? "Inmediata" },
+                { "EffectiveAt", eventData.EffectiveAt.ToString("dd/MM/yyyy") },
                 { "ReactivateUrl", "https://okla.do/dashboard/billing/reactivate" },
                 { "FeedbackUrl", $"https://okla.do/feedback/cancellation?dealerId={eventData.DealerId}" },
                 { "Year", DateTime.UtcNow.Year.ToString() },
@@ -197,7 +197,7 @@ public class SubscriptionCancelledNotificationConsumer : BackgroundService
                     userId: eventData.DealerId,
                     type: "subscription_cancelled",
                     title: "Suscripción cancelada",
-                    message: $"Tu suscripción {eventData.PreviousPlan} ha sido cancelada. Mantienes acceso hasta {eventData.EffectiveAt?.ToString("dd/MM/yyyy") ?? "ahora"}.",
+                    message: $"Tu suscripción {eventData.PreviousPlan} ha sido cancelada. Mantienes acceso hasta {eventData.EffectiveAt:dd/MM/yyyy}.",
                     link: "/dashboard/billing");
             }
 

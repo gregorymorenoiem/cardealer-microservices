@@ -72,9 +72,11 @@ export default function RoiCalculatorPage() {
               <Calculator className="h-6 w-6 text-emerald-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Calculadora de ROI Publicitario</h1>
+              <h1 className="text-2xl font-bold text-slate-900">
+                ¿Cuánto puedo ganar con publicidad?
+              </h1>
               <p className="mt-0.5 text-sm text-slate-500">
-                Estima el retorno de inversión de tu publicidad en OKLA
+                Calcula cuánto dinero puedes ganar invirtiendo en publicidad en OKLA
               </p>
             </div>
           </div>
@@ -133,7 +135,7 @@ export default function RoiCalculatorPage() {
               <CardContent className="space-y-4">
                 <div>
                   <label className="mb-1 block text-xs text-slate-500">
-                    Tasa de clics (CTR): {ctr}%
+                    De cada 100 que ven tu anuncio, ¿cuántos tocan? {ctr}%
                   </label>
                   <input
                     type="range"
@@ -153,7 +155,7 @@ export default function RoiCalculatorPage() {
 
                 <div>
                   <label className="mb-1 block text-xs text-slate-500">
-                    Tasa de leads: {leadRate}%
+                    De los que tocan, ¿cuántos te contactan? {leadRate}%
                   </label>
                   <input
                     type="range"
@@ -168,7 +170,7 @@ export default function RoiCalculatorPage() {
 
                 <div>
                   <label className="mb-1 block text-xs text-slate-500">
-                    Tasa de conversión: {convRate}%
+                    De los que te contactan, ¿cuántos compran? {convRate}%
                   </label>
                   <input
                     type="range"
@@ -204,10 +206,12 @@ export default function RoiCalculatorPage() {
             {/* ROI Hero */}
             <Card className="overflow-hidden">
               <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white">
-                <p className="text-sm font-medium text-white/80">Retorno de inversión estimado</p>
+                <p className="text-sm font-medium text-white/80">
+                  Tu ganancia estimada por cada peso invertido
+                </p>
                 <div className="mt-2 flex items-end gap-3">
                   <span className="text-5xl font-bold">{roi.roi.toLocaleString()}%</span>
-                  <span className="mb-1 text-lg text-white/80">ROI</span>
+                  <span className="mb-1 text-lg text-white/80">de retorno</span>
                 </div>
                 <p className="mt-2 text-sm text-white/70">
                   Por cada RD$1 invertido, recibes{' '}
@@ -221,7 +225,7 @@ export default function RoiCalculatorPage() {
               <Card className="p-4">
                 <div className="mb-2 flex items-center gap-2 text-slate-500">
                   <Eye className="h-4 w-4" />
-                  <span className="text-xs font-medium">Impresiones</span>
+                  <span className="text-xs font-medium">Apariciones del anuncio</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-900">
                   {roi.estimatedImpressions.toLocaleString()}
@@ -230,22 +234,26 @@ export default function RoiCalculatorPage() {
               <Card className="p-4">
                 <div className="mb-2 flex items-center gap-2 text-slate-500">
                   <MousePointerClick className="h-4 w-4" />
-                  <span className="text-xs font-medium">Clics</span>
+                  <span className="text-xs font-medium">Personas que tocan</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-900">
                   {roi.estimatedClicks.toLocaleString()}
                 </p>
-                <p className="text-xs text-slate-400">CPC: {formatCurrency(roi.estimatedCpc)}</p>
+                <p className="text-xs text-slate-400">
+                  Costo por toque: {formatCurrency(roi.estimatedCpc)}
+                </p>
               </Card>
               <Card className="p-4">
                 <div className="mb-2 flex items-center gap-2 text-slate-500">
                   <Phone className="h-4 w-4" />
-                  <span className="text-xs font-medium">Leads</span>
+                  <span className="text-xs font-medium">Personas interesadas</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-900">
                   {roi.estimatedLeads.toLocaleString()}
                 </p>
-                <p className="text-xs text-slate-400">CPL: {formatCurrency(roi.estimatedCpl)}</p>
+                <p className="text-xs text-slate-400">
+                  Costo por interesado: {formatCurrency(roi.estimatedCpl)}
+                </p>
               </Card>
               <Card className="p-4">
                 <div className="mb-2 flex items-center gap-2 text-emerald-600">
@@ -253,7 +261,9 @@ export default function RoiCalculatorPage() {
                   <span className="text-xs font-medium">Ventas Estimadas</span>
                 </div>
                 <p className="text-2xl font-bold text-emerald-600">{roi.estimatedSales}</p>
-                <p className="text-xs text-slate-400">CAC: {formatCurrency(roi.estimatedCac)}</p>
+                <p className="text-xs text-slate-400">
+                  Costo por venta: {formatCurrency(roi.estimatedCac)}
+                </p>
               </Card>
             </div>
 
@@ -262,7 +272,7 @@ export default function RoiCalculatorPage() {
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="flex items-center gap-2 font-semibold text-slate-900">
                   <BarChart3 className="h-5 w-5 text-emerald-600" />
-                  Resumen de Revenue
+                  Resumen de Ganancias
                 </h3>
               </div>
               <div className="space-y-3">
@@ -274,7 +284,7 @@ export default function RoiCalculatorPage() {
                 </div>
                 <div className="flex items-center justify-between border-b border-slate-100 py-2">
                   <span className="text-sm text-slate-600">
-                    Revenue por ventas ({roi.estimatedSales} ventas)
+                    Ganancias por ventas ({roi.estimatedSales} ventas)
                   </span>
                   <span className="font-semibold text-emerald-600">
                     +{formatCurrency(roi.totalRevenue)}

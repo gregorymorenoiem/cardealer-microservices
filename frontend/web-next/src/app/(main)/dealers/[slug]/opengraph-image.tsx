@@ -70,7 +70,7 @@ function getDealerTypeLabel(type: string): string {
   return labels[type] || type;
 }
 
-function formatRating(rating: number | null): string {
+function _formatRating(rating: number | null): string {
   if (rating === null || rating === 0) return 'Sin calificación';
   return `★ ${rating.toFixed(1)}`;
 }

@@ -599,7 +599,7 @@ export async function searchVehicles(
  */
 export async function getSimilarVehicles(
   vehicleId: string,
-  limit: number = 4
+  limit: number = 6
 ): Promise<VehicleCardData[]> {
   const response = await apiClient.get<VehicleDto[]>(`/api/vehicles/${vehicleId}/similar`, {
     params: { limit },
@@ -676,18 +676,18 @@ export async function getVehiclesByDealer(
 
 /**
  * Get vehicles by IDs (for comparison)
+ * Uses POST /api/vehicles/compare which accepts { vehicleIds: Guid[] }
  */
 export async function getVehiclesByIds(ids: string[]): Promise<VehicleCardData[]> {
   if (ids.length === 0) return [];
 
-  // Use the compare endpoint which accepts vehicle IDs
   try {
-    const response = await apiClient.post<VehicleDto[]>('/api/vehicles/batch', {
-      ids,
+    const response = await apiClient.post<VehicleDto[]>('/api/vehicles/compare', {
+      vehicleIds: ids,
     });
     return response.data.map(transformToCardData);
   } catch {
-    // Fallback: Fetch each vehicle individually
+    // Fallback: Fetch each vehicle individually (parallel)
     const vehicles = await Promise.all(
       ids.map(async id => {
         try {
@@ -699,6 +699,34 @@ export async function getVehiclesByIds(ids: string[]): Promise<VehicleCardData[]
       })
     );
     return vehicles.filter((v): v is VehicleCardData => v !== null);
+  }
+}
+
+/**
+ * Get FULL vehicle DTOs for comparison page (includes specs, features, etc.)
+ * Returns VehicleDto[] without stripping to VehicleCardData.
+ */
+export async function getVehicleDtosForComparison(ids: string[]): Promise<VehicleDto[]> {
+  if (ids.length === 0) return [];
+
+  try {
+    const response = await apiClient.post<VehicleDto[]>('/api/vehicles/compare', {
+      vehicleIds: ids,
+    });
+    return response.data;
+  } catch {
+    // Fallback: Fetch each vehicle individually (parallel)
+    const vehicles = await Promise.all(
+      ids.map(async id => {
+        try {
+          const response = await apiClient.get<VehicleDto>(`/api/vehicles/${id}`);
+          return response.data;
+        } catch {
+          return null;
+        }
+      })
+    );
+    return vehicles.filter((v): v is VehicleDto => v !== null);
   }
 }
 
@@ -994,6 +1022,35 @@ export interface CreateVehicleResponse {
 }
 
 /**
+ * Photo moderation result returned from publish endpoint.
+ */
+export interface PhotoModerationDto {
+  imageId: string;
+  status: string;
+  flags: string[];
+  rejectionReason?: string;
+  dealerMessage?: string;
+}
+
+/**
+ * Response from the publish endpoint with extended moderation data.
+ */
+export interface PublishVehicleResponse {
+  id: string;
+  status: string;
+  publishedAt?: string;
+  expiresAt?: string;
+  message: string;
+  vinDiscrepancies?: Array<{
+    field: string;
+    declaredValue: string;
+    vinValue: string;
+    severity: string;
+  }>;
+  photoModeration?: PhotoModerationDto[];
+}
+
+/**
  * Update vehicle request - extends CreateVehicleRequest with status management
  */
 export interface UpdateVehicleRequest extends Partial<CreateVehicleRequest> {
@@ -1118,8 +1175,14 @@ export async function createVehicle(data: CreateVehicleRequest): Promise<CreateV
  * Must be called after createVehicle once all required fields are filled.
  * The vehicle will be reviewed by staff before becoming visible.
  */
-export async function publishVehicle(id: string): Promise<CreateVehicleResponse> {
-  const response = await apiClient.post<CreateVehicleResponse>(`/api/vehicles/${id}/publish`);
+export async function publishVehicle(
+  id: string,
+  body?: { disclaimerAccepted: boolean; tosVersion?: string }
+): Promise<PublishVehicleResponse> {
+  const response = await apiClient.post<PublishVehicleResponse>(
+    `/api/vehicles/${id}/publish`,
+    body ?? { disclaimerAccepted: true }
+  );
   return response.data;
 }
 

@@ -102,6 +102,7 @@ builder.Services.AddScoped<RecordDownstreamCallMetricsUseCase>();
 // ============================================================================
 builder.Services.AddStandardObservability("Gateway", options =>
 {
+    options.ServiceVersion = ServiceVersion;
     options.TracingEnabled = true;
     options.MetricsEnabled = true;
     options.OtlpEndpoint = builder.Configuration["Observability:Otlp:Endpoint"] ?? "http://jaeger:4317";

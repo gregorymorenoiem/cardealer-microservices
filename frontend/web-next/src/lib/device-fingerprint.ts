@@ -296,9 +296,11 @@ export function getUtmParams(): Record<string, string> | undefined {
   const params = new URLSearchParams(window.location.search);
   const utm: Record<string, string> = {};
 
+  // UTM FIX: Keep standard 'utm_*' key format for consistency with GA4 and ad-params.ts.
+  // Previously stripped the prefix (e.g., 'source' instead of 'utm_source') which broke attribution.
   for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']) {
     const value = params.get(key);
-    if (value) utm[key.replace('utm_', '')] = value;
+    if (value) utm[key] = value;
   }
 
   return Object.keys(utm).length > 0 ? utm : undefined;

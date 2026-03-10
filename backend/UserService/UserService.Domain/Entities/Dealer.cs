@@ -39,6 +39,7 @@ public class Dealer
     // ========================================
     public string BusinessName { get; set; } = string.Empty;
     public string? TradeName { get; set; } // Nombre comercial si es diferente
+    public string? Slug { get; set; } // URL-friendly identifier: "auto-plaza-santo-domingo"
     public string? Description { get; set; }
     public DealerType DealerType { get; set; } = DealerType.Independent;
 
@@ -85,6 +86,42 @@ public class Dealer
     public Guid? VerifiedByUserId { get; set; }
     public string? VerificationNotes { get; set; }
     public string? RejectionReason { get; set; }
+
+    // ════════════════════════════════════════════
+    // BADGE "DEALER VERIFICADO OKLA" — 4 criterios
+    // Ref: okla.do/verificacion
+    // ════════════════════════════════════════════
+    /// <summary>Criterio 1: RNC validado contra DGII (API o manual)</summary>
+    public bool IsRncVerified { get; set; } = false;
+    /// <summary>Timestamp de verificación del RNC en DGII</summary>
+    public DateTime? RncVerifiedAt { get; set; }
+    /// <summary>Estado del contribuyente según DGII (Activo, Suspendido, etc.)</summary>
+    public string? DgiiTaxpayerStatus { get; set; }
+
+    /// <summary>Criterio 2: WhatsApp verificado por OTP</summary>
+    public bool IsWhatsAppVerified { get; set; } = false;
+    /// <summary>Timestamp de verificación del WhatsApp</summary>
+    public DateTime? WhatsAppVerifiedAt { get; set; }
+
+    /// <summary>Criterio 3: ≥10 listings con fotos procesadas por ModerationAgent</summary>
+    public int ModeratedListingsCount { get; set; } = 0;
+    /// <summary>Última vez que se recalculó el conteo de listings moderados</summary>
+    public DateTime? ModeratedListingsUpdatedAt { get; set; }
+
+    /// <summary>Criterio 4: Sin reportes de fraude en los últimos 90 días</summary>
+    public bool HasRecentFraudReports { get; set; } = false;
+    /// <summary>Última vez que se verificó el historial de fraude</summary>
+    public DateTime? FraudCheckAt { get; set; }
+
+    /// <summary>
+    /// Computed: true when ALL 4 criteria are met.
+    /// This drives the "Dealer Verificado OKLA" badge display.
+    /// </summary>
+    public bool IsOklaVerified =>
+        IsRncVerified &&
+        IsWhatsAppVerified &&
+        ModeratedListingsCount >= 10 &&
+        !HasRecentFraudReports;
 
     // ========================================
     // MÉTRICAS

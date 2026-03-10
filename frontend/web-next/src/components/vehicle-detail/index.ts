@@ -8,3 +8,5 @@ export { VehicleHeader } from './vehicle-header';
 export { SellerCard } from './seller-card';
 export { VehicleTabs } from './vehicle-tabs';
 export { SimilarVehicles } from './similar-vehicles';
+export { ReportVehicleModal } from './report-vehicle-modal';
+export { OdometerAlert } from './odometer-alert';

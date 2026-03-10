@@ -120,8 +120,8 @@ public class LlmService : ILlmService
 
                     // Construir mensajes con contexto de sesión
                     // Use per-dealer system prompt if provided, otherwise fall back to settings
-                    var effectiveSystemPrompt = !string.IsNullOrWhiteSpace(systemPrompt) 
-                        ? systemPrompt 
+                    var effectiveSystemPrompt = !string.IsNullOrWhiteSpace(systemPrompt)
+                        ? systemPrompt
                         : _settings.SystemPrompt;
                     var messages = new List<LlmChatMessage>
                     {
@@ -243,9 +243,11 @@ public class LlmService : ILlmService
     /// <summary>
     /// Returns a context-aware fallback response based on the user's message.
     /// Instead of a generic "try again", attempts to route the user appropriately.
+    /// Includes contact CTA so users can reach a human agent when AI is unavailable.
     /// </summary>
     private static string GetIntelligentFallback(string userMessage)
     {
+        const string contactCta = "\n\nSi necesitas ayuda inmediata, visita https://okla.do/contacto o escríbenos por WhatsApp. 💬";
         var lower = userMessage.ToLowerInvariant();
 
         // Pricing / budget related
@@ -253,25 +255,25 @@ public class LlmService : ILlmService
             lower.Contains("presupuesto") || lower.Contains("financ"))
             return "No pude procesar tu consulta de precio en este momento. " +
                    "¿Podrías indicarme tu presupuesto aproximado y el tipo de vehículo que te interesa? " +
-                   "Así puedo ayudarte mejor cuando me recupere. 💰";
+                   "Así puedo ayudarte mejor cuando me recupere. 💰" + contactCta;
 
         // Vehicle search
         if (lower.Contains("suv") || lower.Contains("sedan") || lower.Contains("camioneta") ||
             lower.Contains("carro") || lower.Contains("yipeta") || lower.Contains("pickup"))
             return "Estoy teniendo dificultades técnicas, pero tenemos un amplio inventario. " +
                    "¿Podrías intentar de nuevo en unos segundos? Mientras tanto, puedes revisar " +
-                   "nuestro catálogo en la sección de vehículos. 🚗";
+                   "nuestro catálogo en la sección de vehículos. 🚗" + contactCta;
 
         // Contact / appointment
         if (lower.Contains("contacto") || lower.Contains("llamar") || lower.Contains("visitar") ||
             lower.Contains("cita") || lower.Contains("agente") || lower.Contains("persona"))
             return "No pude procesar tu mensaje, pero puedo transferirte a un agente humano. " +
-                   "¿Te gustaría hablar con un asesor de ventas directamente? 📞";
+                   "¿Te gustaría hablar con un asesor de ventas directamente? 📞" + contactCta;
 
         // Default
         return "Disculpa, estoy experimentando dificultades técnicas momentáneas. " +
                "¿Podrías reformular tu pregunta? Estoy aquí para ayudarte con " +
-               "información sobre vehículos, precios y financiamiento. 😊";
+               "información sobre vehículos, precios y financiamiento. 😊" + contactCta;
     }
 
     public async Task<LlmModelInfo> GetModelInfoAsync(CancellationToken ct = default)

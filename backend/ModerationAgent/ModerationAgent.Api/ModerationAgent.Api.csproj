@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ModerationAgent.Application/ModerationAgent.Application.csproj" />
+    <ProjectReference Include="../ModerationAgent.Domain/ModerationAgent.Domain.csproj" />
+    <ProjectReference Include="../ModerationAgent.Infrastructure/ModerationAgent.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
+  </ItemGroup>
+</Project>

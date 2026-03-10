@@ -20,6 +20,7 @@
     <ProjectReference Include="../../_Shared/CarDealer.Shared/CarDealer.Shared.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
   </ItemGroup>
 
 </Project>

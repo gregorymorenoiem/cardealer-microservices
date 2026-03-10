@@ -64,6 +64,11 @@ public class RabbitMQAuditConsumer : BackgroundService
 
     private void ConfigureMessagingTopology()
     {
+        if (_channel is null)
+        {
+            throw new InvalidOperationException("Cannot configure messaging topology — channel is not initialized. Call InitializeConnection first.");
+        }
+
         _channel.ExchangeDeclare(
             exchange: _settings.ExchangeName,
             type: ExchangeType.Topic,

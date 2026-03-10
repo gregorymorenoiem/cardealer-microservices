@@ -253,9 +253,9 @@ function SalesAnalyticsContent() {
                 <Target className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-muted-foreground text-sm">Conversión</p>
+                <p className="text-muted-foreground text-sm">¿Cuántos compran?</p>
                 <p className="text-2xl font-bold">{(kpis?.conversionRate ?? 0).toFixed(1)}%</p>
-                <p className="text-muted-foreground text-xs">leads → ventas</p>
+                <p className="text-muted-foreground text-xs">de interesados a ventas</p>
               </div>
             </div>
           </CardContent>
@@ -311,7 +311,7 @@ function SalesAnalyticsContent() {
         <Card>
           <CardHeader>
             <CardTitle>Vehículos Mejor Rendimiento</CardTitle>
-            <CardDescription>Top vehículos por vistas y engagement</CardDescription>
+            <CardDescription>Tus vehículos que más llaman la atención</CardDescription>
           </CardHeader>
           <CardContent>
             {isPerformersLoading ? (
@@ -363,9 +363,9 @@ function SalesAnalyticsContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Métricas de Engagement
+              Interacción con tus publicaciones
             </CardTitle>
-            <CardDescription>Métricas de contacto por canal</CardDescription>
+            <CardDescription>Cómo interactúa la gente contigo</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -381,7 +381,7 @@ function SalesAnalyticsContent() {
                   change: kpis?.contactsChange || 0,
                 },
                 {
-                  name: 'Leads',
+                  name: 'Personas interesadas',
                   value: kpis?.totalLeads || 0,
                   change: kpis?.leadsChange || 0,
                 },

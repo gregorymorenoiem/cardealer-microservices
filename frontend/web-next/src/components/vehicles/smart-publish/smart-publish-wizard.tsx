@@ -16,12 +16,12 @@ import { CsvImportWizard } from './csv-import-wizard';
 import { useCreateVehicle, usePublishVehicle } from '@/hooks/use-vehicles';
 import { useSellerByUserId } from '@/hooks/use-seller';
 import { useAuth } from '@/hooks/use-auth';
-import { DEALER_PLAN_LIMITS, SELLER_PLAN_LIMITS, DealerPlan, SellerPlan } from '@/lib/plan-config';
+import { DEALER_PLAN_LIMITS, DealerPlan, SellerPlan } from '@/lib/plan-config';
 import type { SmartVinDecodeResult, CreateVehicleRequest } from '@/services/vehicles';
 import type { CsvVehicleRow } from './csv-import-wizard';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, Clock, Sparkles } from 'lucide-react';
 
 // ============================================================
 // Types
@@ -349,6 +349,7 @@ export function SmartPublishWizard({
   const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [isFirstListing, setIsFirstListing] = useState(false);
 
   const createVehicle = useCreateVehicle();
   const publishVehicle = usePublishVehicle();
@@ -383,6 +384,18 @@ export function SmartPublishWizard({
     setProfileLoaded(true);
   }, [sellerProfile, sellerProfileLoading, user, userId, profileLoaded]);
 
+  // Detect first-time publisher (no previous listing published)
+  useEffect(() => {
+    try {
+      const hasPublished = localStorage.getItem('okla_has_published');
+      if (!hasPublished) {
+        setIsFirstListing(true);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   // Check for existing draft on mount
   useEffect(() => {
     let hasDraft = false;
@@ -402,6 +415,89 @@ export function SmartPublishWizard({
       requestAnimationFrame(() => setShowDraftPrompt(true));
     }
   }, [draftKey]);
+
+  // ── Import from Facebook Marketplace / external listing ──────────────
+  // When the user comes from /vender/importar, imported vehicle data is
+  // stored in sessionStorage under 'importedVehicle'. We read it once on
+  // mount, map it to VehicleFormData, pre-fill the form, skip the method
+  // selection step, and clear sessionStorage to avoid stale data.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('importedVehicle');
+      if (!raw) return;
+
+      const imported = JSON.parse(raw) as Record<string, unknown>;
+      if (!imported || typeof imported !== 'object') return;
+
+      const updates: Partial<VehicleFormData> = {};
+
+      // ── Basic info ─────────────────────────────────────────────────
+      if (imported.make && typeof imported.make === 'string') updates.make = imported.make;
+      if (imported.model && typeof imported.model === 'string') updates.model = imported.model;
+      if (imported.year && typeof imported.year === 'number') updates.year = imported.year;
+      if (imported.vin && typeof imported.vin === 'string') updates.vin = imported.vin;
+
+      // ── Specs ──────────────────────────────────────────────────────
+      if (imported.bodyType && typeof imported.bodyType === 'string')
+        updates.bodyStyle = imported.bodyType;
+      if (imported.transmission && typeof imported.transmission === 'string')
+        updates.transmission = imported.transmission;
+      if (imported.fuelType && typeof imported.fuelType === 'string')
+        updates.fuelType = imported.fuelType;
+      if (imported.driveType && typeof imported.driveType === 'string')
+        updates.driveType = imported.driveType;
+      if (imported.engineSize && typeof imported.engineSize === 'string')
+        updates.engineSize = imported.engineSize;
+      if (imported.doors && typeof imported.doors === 'number') updates.doors = imported.doors;
+
+      // ── Condition ──────────────────────────────────────────────────
+      if (imported.mileage && typeof imported.mileage === 'number')
+        updates.mileage = imported.mileage;
+      if (imported.condition && typeof imported.condition === 'string')
+        updates.condition = imported.condition;
+      if (imported.color && typeof imported.color === 'string')
+        updates.exteriorColor = imported.color;
+
+      // ── Pricing ────────────────────────────────────────────────────
+      if (imported.price && typeof imported.price === 'number') updates.price = imported.price;
+      if (imported.currency && typeof imported.currency === 'string') {
+        const cur = imported.currency.toUpperCase();
+        if (cur === 'DOP' || cur === 'USD') updates.currency = cur as 'DOP' | 'USD';
+        if (cur === 'RD$' || cur === 'RD' || cur === 'PESOS') updates.currency = 'DOP';
+        if (cur === 'US$' || cur === 'US') updates.currency = 'USD';
+      }
+
+      // ── Description ────────────────────────────────────────────────
+      if (imported.description && typeof imported.description === 'string')
+        updates.description = imported.description;
+
+      // ── Location ───────────────────────────────────────────────────
+      if (imported.province && typeof imported.province === 'string')
+        updates.province = imported.province;
+      if (imported.location && typeof imported.location === 'string' && !updates.province) {
+        updates.province = imported.location;
+      }
+
+      // ── Features ───────────────────────────────────────────────────
+      if (Array.isArray(imported.features) && imported.features.length > 0) {
+        updates.features = imported.features.filter((f): f is string => typeof f === 'string');
+      }
+
+      if (Object.keys(updates).length > 0) {
+        setFormData(prev => ({ ...prev, ...updates }));
+        setCurrentStep('info'); // Skip method selection — go straight to form
+        toast.success('Datos importados correctamente', {
+          description: `${updates.make ?? ''} ${updates.model ?? ''} ${updates.year ?? ''} — revisa y completa los campos faltantes.`,
+        });
+      }
+
+      // Clear sessionStorage to avoid re-importing on page refresh
+      sessionStorage.removeItem('importedVehicle');
+    } catch {
+      /* ignore corrupt data */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Auto-save to localStorage on step change
   useEffect(() => {
@@ -617,9 +713,28 @@ export function SmartPublishWizard({
       const created = await createVehicle.mutateAsync(request);
 
       // Step 2: Submit for review (Draft → PendingReview)
-      await publishVehicle.mutateAsync(created.id);
+      // Send mandatory disclaimer acceptance for Ley 172-13 compliance
+      const publishResult = await publishVehicle.mutateAsync({
+        id: created.id,
+        body: { disclaimerAccepted: true, tosVersion: '2026.1' },
+      });
+
+      // Check for photo moderation rejections
+      if (publishResult.photoModeration && publishResult.photoModeration.length > 0) {
+        const rejectedMessages = publishResult.photoModeration
+          .map(p => p.dealerMessage || p.rejectionReason || 'Foto rechazada')
+          .join('\n• ');
+        toast.error(
+          `⚠️ ${publishResult.photoModeration.length} foto(s) rechazada(s):\n• ${rejectedMessages}\n\nReemplaza las fotos y vuelve a publicar.`,
+          { duration: 12000 }
+        );
+        router.push(`/cuenta/mis-vehiculos/${created.id}/editar`);
+        return;
+      }
 
       localStorage.removeItem(draftKey);
+      localStorage.setItem('okla_has_published', '1');
+      setIsFirstListing(false);
       toast.success(
         '¡Tu vehículo ha sido enviado a revisión! Te notificaremos cuando sea aprobado.',
         {
@@ -686,6 +801,49 @@ export function SmartPublishWizard({
             >
               Empezar de nuevo
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* First-listing welcome banner with time estimate */}
+      {isFirstListing && !showDraftPrompt && currentStep === 'method' && (
+        <div className="mb-6 rounded-lg border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100">
+              <Sparkles className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-emerald-900">
+                ¡Bienvenido! Publica tu primer vehículo
+              </h3>
+              <p className="mt-1 text-xs text-emerald-700">
+                Publicar es fácil y rápido. Solo necesitas 3 pasos:
+              </p>
+              <div className="mt-2 flex flex-wrap gap-3">
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">
+                    1
+                  </span>
+                  Información
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">
+                    2
+                  </span>
+                  Fotos
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white">
+                    3
+                  </span>
+                  Precio y publicar
+                </span>
+              </div>
+              <p className="mt-2 flex items-center gap-1 text-xs text-emerald-600">
+                <Clock className="h-3 w-3" />
+                Tiempo estimado: ~5 minutos
+              </p>
+            </div>
           </div>
         </div>
       )}

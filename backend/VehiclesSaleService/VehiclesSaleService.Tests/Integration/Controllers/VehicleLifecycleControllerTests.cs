@@ -11,6 +11,8 @@ using CarDealer.Shared.MultiTenancy;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.Caching.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using VehicleDriveType = VehiclesSaleService.Domain.Entities.DriveType;
 using System.Net.Http;
 
@@ -80,6 +82,18 @@ public class VehicleLifecycleControllerTests : IDisposable
             _dealerVerificationClientMock.Object,
             _cacheServiceMock.Object
         );
+
+        // Set up HttpContext with Admin role so IsOwnerOrAdmin() succeeds
+        var adminUser = new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.Role, "Admin")
+        }, "TestAuth"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = adminUser }
+        };
     }
 
     public void Dispose()
@@ -113,7 +127,7 @@ public class VehicleLifecycleControllerTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.Publish(vehicleId, null);
+        var result = await _controller.Publish(vehicleId, new PublishVehicleRequest { DisclaimerAccepted = true });
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
@@ -186,7 +200,7 @@ public class VehicleLifecycleControllerTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.Publish(vehicleId, null);
+        var result = await _controller.Publish(vehicleId, new PublishVehicleRequest { DisclaimerAccepted = true });
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();

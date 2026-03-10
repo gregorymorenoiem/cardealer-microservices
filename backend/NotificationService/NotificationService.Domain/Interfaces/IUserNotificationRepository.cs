@@ -48,4 +48,9 @@ public interface IUserNotificationRepository
     /// Cleanup expired notifications across all users.
     /// </summary>
     Task<int> DeleteExpiredAsync();
+
+    /// <summary>
+    /// Deletes all notifications for a user (Ley 172-13 cascade deletion).
+    /// </summary>
+    Task<int> DeleteByUserIdAsync(Guid userId);
 }

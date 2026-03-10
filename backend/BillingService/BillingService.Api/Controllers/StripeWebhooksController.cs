@@ -400,7 +400,7 @@ public class StripeWebhooksController : ControllerBase
                 {
                     DealerId = existingSubscription.DealerId,
                     DealerEmail = customer?.Email ?? "",
-                    DealerName = customer?.FullName ?? "",
+                    DealerName = customer?.Name ?? "",
                     OldPlan = previousPlan.ToString(),
                     NewPlan = newPlan.ToString(),
                     PriceDifference = newPrice - previousPrice,
@@ -414,7 +414,7 @@ public class StripeWebhooksController : ControllerBase
                 {
                     DealerId = existingSubscription.DealerId,
                     DealerEmail = customer?.Email ?? "",
-                    DealerName = customer?.FullName ?? "",
+                    DealerName = customer?.Name ?? "",
                     OldPlan = previousPlan.ToString(),
                     NewPlan = newPlan.ToString(),
                     PriceDifference = newPrice - previousPrice,
@@ -471,7 +471,7 @@ public class StripeWebhooksController : ControllerBase
         {
             DealerId = existingSubscription.DealerId,
             DealerEmail = customer?.Email ?? "",
-            DealerName = customer?.FullName ?? "",
+            DealerName = customer?.Name ?? "",
             PreviousPlan = previousPlan.ToString(),
             CancellationReasonType = "Other",
             CancellationReasonDetails = "Subscription deleted in Stripe",
@@ -517,7 +517,7 @@ public class StripeWebhooksController : ControllerBase
         {
             DealerId = existingSubscription?.DealerId ?? Guid.Empty,
             DealerEmail = customer?.Email ?? "",
-            DealerName = customer?.FullName ?? "",
+            DealerName = customer?.Name ?? "",
             TrialPlan = plan.ToString(),
             TrialEndsAt = subscription.TrialEnd ?? DateTime.UtcNow.AddDays(3),
             DaysRemaining = daysRemaining,
@@ -672,11 +672,11 @@ public class StripeWebhooksController : ControllerBase
         {
             DealerId = subscription?.DealerId ?? Guid.Empty,
             DealerEmail = customer?.Email ?? "",
-            DealerName = customer?.FullName ?? "",
+            DealerName = customer?.Name ?? "",
             Plan = subscription?.Plan.ToString() ?? "Unknown",
-            Amount = (invoice.AmountDue ?? 0) / 100m,
+            Amount = invoice.AmountDue / 100m,
             Currency = invoice.Currency?.ToUpper() ?? "USD",
-            AttemptNumber = invoice.AttemptCount ?? 1,
+            AttemptNumber = (int)invoice.AttemptCount,
             NextRetryAt = invoice.NextPaymentAttempt,
             FailureReason = invoice.LastFinalizationError?.Message ?? "Payment method declined",
             StripeInvoiceId = invoice.Id,
@@ -704,14 +704,17 @@ public class StripeWebhooksController : ControllerBase
         await _eventPublisher.PublishAsync(new InvoiceGeneratedEvent
         {
             InvoiceId = Guid.NewGuid(),
+            InvoiceNumber = $"UPCOMING-{invoice.Id[..8].ToUpper()}",
+            PaymentTransactionId = Guid.Empty,
             UserId = subscription?.DealerId ?? Guid.Empty,
-            UserEmail = customer?.Email ?? "",
-            UserName = customer?.FullName ?? "",
-            Amount = (invoice.AmountDue ?? 0) / 100m,
+            DealerId = subscription?.DealerId,
+            BuyerName = customer?.Name ?? "",
+            BuyerEmail = customer?.Email ?? "",
+            TotalAmount = invoice.AmountDue / 100m,
             Currency = invoice.Currency?.ToUpper() ?? "USD",
             Description = $"Renovación de suscripción {subscription?.Plan.ToString() ?? ""} — próxima factura",
-            DueDate = invoice.DueDate ?? DateTime.UtcNow.AddDays(7),
-            StripeInvoiceId = invoice.Id,
+            PdfUrl = null,
+            IssuedAt = invoice.DueDate ?? DateTime.UtcNow.AddDays(7),
         });
 
         _logger.LogInformation("Published InvoiceUpcoming event for customer {CustomerId}", invoice.CustomerId);

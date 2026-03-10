@@ -160,6 +160,7 @@ public record CommunicationPreferencesDto(
     EmailPreferencesDto Email,
     SmsPreferencesDto Sms,
     PushPreferencesDto Push,
+    WhatsAppPreferencesDto WhatsApp,
     PrivacyPreferencesDto Privacy,
     DateTime LastUpdated
 );
@@ -182,6 +183,12 @@ public record PushPreferencesDto(
     bool NewMessages,
     bool PriceChanges,
     bool Recommendations
+);
+
+public record WhatsAppPreferencesDto(
+    bool Transactional,  // Leads, confirmaciones (siempre activo)
+    bool Marketing,      // Promociones (opt-in voluntario)
+    bool PriceAlerts     // Alertas de precio (opt-in voluntario)
 );
 
 public record PrivacyPreferencesDto(
@@ -208,6 +215,10 @@ public record UpdateCommunicationPreferencesDto(
     bool? PushNewMessages = null,
     bool? PushPriceChanges = null,
     bool? PushRecommendations = null,
+    // WhatsApp
+    bool? WhatsAppTransactional = null,
+    bool? WhatsAppMarketing = null,
+    bool? WhatsAppPriceAlerts = null,
     // Privacy
     bool? AllowProfiling = null,
     bool? AllowThirdPartySharing = null,

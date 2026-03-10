@@ -12,6 +12,7 @@
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="xunit" Version="2.6.2" />
@@ -25,6 +26,9 @@
     <ProjectReference Include="../ContactService.Api/ContactService.Api.csproj" />
     <ProjectReference Include="../ContactService.Application/ContactService.Application.csproj" />
     <ProjectReference Include="../ContactService.Domain/ContactService.Domain.csproj" />
+    <ProjectReference Include="../ContactService.Infrastructure/ContactService.Infrastructure.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.LlmGateway/CarDealer.Shared.LlmGateway.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -41,6 +41,28 @@ public record StartSessionResponse
     public int MaxInteractionsPerSession { get; init; }
     public int RemainingInteractions { get; init; }
     public string? ChatMode { get; init; }
+    
+    // ══════════════════════════════════════════════════════════════
+    // BOT DISCLOSURE — Campos obligatorios de identificación de bot
+    // ══════════════════════════════════════════════════════════════
+    
+    /// <summary>
+    /// Mensaje de disclosure obligatorio que incluye: nombre del dealer,
+    /// identificación como asistente virtual de OKLA, y enlace a privacidad.
+    /// El frontend DEBE mostrar este mensaje antes de permitir interacción.
+    /// </summary>
+    public string DisclosureMessage { get; init; } = string.Empty;
+    
+    /// <summary>
+    /// URL de la política de privacidad (okla.do/privacidad).
+    /// </summary>
+    public string PrivacyPolicyUrl { get; init; } = string.Empty;
+    
+    /// <summary>
+    /// Si true, el comprador DEBE aceptar el disclosure antes de enviar mensajes.
+    /// El frontend debe mostrar un botón "Acepto" y llamar POST /api/chat/accept-disclosure.
+    /// </summary>
+    public bool RequiresConsent { get; init; }
 }
 
 /// <summary>
@@ -581,6 +603,25 @@ public record TakeOverRequest
 public record ReturnToBotRequest
 {
     public string SessionToken { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// Request para aceptar el disclosure de bot y política de privacidad.
+/// El comprador DEBE aceptar antes de poder enviar mensajes.
+/// </summary>
+public record AcceptDisclosureRequest
+{
+    public string SessionToken { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// Respuesta al aceptar el disclosure
+/// </summary>
+public record AcceptDisclosureResponse
+{
+    public bool Success { get; init; }
+    public string Message { get; init; } = string.Empty;
+    public DateTime ConsentAcceptedAt { get; init; }
 }
 
 #endregion

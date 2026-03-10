@@ -34,11 +34,9 @@ import {
   useUpdateNotificationSettings,
   useUpdateSecuritySettings,
 } from '@/hooks/use-dealer-settings';
-import {
-  defaultNotificationSettings,
-  type NotificationSettings,
-} from '@/services/dealer-settings';
+import { defaultNotificationSettings, type NotificationSettings } from '@/services/dealer-settings';
 import { toast } from 'sonner';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 
 // ============================================================================
 // Loading Skeleton
@@ -157,7 +155,10 @@ export default function DealerSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-foreground text-2xl font-bold">Configuración</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground text-2xl font-bold">Configuración</h1>
+            <VideoHelpButton sectionKey="configuracion" variant="icon" />
+          </div>
           <p className="text-muted-foreground">Personaliza tu experiencia en OKLA</p>
         </div>
         {hasChanges && (

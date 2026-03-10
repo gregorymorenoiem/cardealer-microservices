@@ -27,6 +27,11 @@ public class CommunicationPreference
     public bool PushPriceChanges { get; set; } = true;                // Cambios en favoritos
     public bool PushRecommendations { get; set; } = false;            // Recomendaciones IA
     
+    // WhatsApp preferences (Ley 172-13 + Meta Business Policy — explicit opt-in required)
+    public bool WhatsAppTransactional { get; set; } = true;           // Leads, confirmaciones (obligatorio)
+    public bool WhatsAppMarketing { get; set; } = false;              // Promociones, ofertas (opt-in voluntario)
+    public bool WhatsAppPriceAlerts { get; set; } = false;            // Alertas de precio por WhatsApp
+    
     // Privacy preferences
     public bool AllowProfiling { get; set; } = true;                  // Recomendaciones personalizadas
     public bool AllowThirdPartySharing { get; set; } = false;         // Compartir con terceros

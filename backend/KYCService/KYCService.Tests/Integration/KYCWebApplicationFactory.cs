@@ -53,10 +53,10 @@ public class KYCWebApplicationFactory : WebApplicationFactory<Program>
 
             // ── Mock ConfigurationService client ───────────────────────
             var configMock = new Mock<IConfigurationServiceClient>();
-            configMock.Setup(c => c.GetIntAsync(It.IsAny<string>(), It.IsAny<int>()))
-                .ReturnsAsync((string _, int defaultValue) => defaultValue);
-            configMock.Setup(c => c.IsEnabledAsync(It.IsAny<string>(), It.IsAny<bool>()))
-                .ReturnsAsync((string _, bool defaultValue) => defaultValue);
+            configMock.Setup(c => c.GetIntAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                       .ReturnsAsync((string _, int defaultValue, CancellationToken __) => defaultValue);
+            configMock.Setup(c => c.IsEnabledAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                       .ReturnsAsync((string _, bool defaultValue, CancellationToken __) => defaultValue);
             ReplaceService(services, configMock.Object);
         });
     }

@@ -22,8 +22,10 @@ using FluentValidation;
 using MediatR;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.Secrets;
+using CarDealer.Shared.Encryption;
 using System.IO.Compression;
 using Microsoft.AspNetCore.ResponseCompression;
+using ContactService.Infrastructure.Messaging;
 
 const string ServiceName = "ContactService";
 const string ServiceVersion = "1.0.2";
@@ -46,6 +48,9 @@ try
 
     // ============= AUDIT (→ AuditService via RabbitMQ) =============
     builder.Services.AddAuditPublisher(builder.Configuration);
+
+    // ============= PII ENCRYPTION — Ley 172-13 =============
+    builder.Services.AddPiiEncryption(builder.Configuration);
 
     // ============= MediatR + FluentValidation =============
     builder.Services.AddMediatR(cfg =>
@@ -75,7 +80,20 @@ builder.Services.AddScoped<ITenantContext, TenantContext>();
 builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();
 builder.Services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
 
-// ============= HTTP CLIENTS WITH RESILIENCE (Retry + Circuit Breaker + Timeout) =============
+    // RabbitMQ Event Publisher — publishes LeadCreatedEvent for dealer notifications (email + WhatsApp)
+    builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
+
+    // ── CONTRA #5 FIX: Conversation limit enforcement services ──────────────
+    builder.Services.AddScoped<IConversationUsageTracker, ContactService.Infrastructure.Services.ConversationUsageTracker>();
+    builder.Services.AddSingleton<IDealerPlanResolver, ContactService.Infrastructure.Services.DealerPlanResolver>();
+
+    // ── CONTRA #5 / OVERAGE BILLING FIX: Overage detail persistence & billing job ──
+    builder.Services.AddScoped<IConversationOverageRepository, ContactService.Infrastructure.Services.ConversationOverageRepository>();
+    builder.Services.AddHostedService<ContactService.Infrastructure.Services.OverageBillingJob>();
+
+    // ── LEY 172-13: User data deletion consumer (cascade anonymization) ──
+    builder.Services.AddHostedService<UserDataDeletionConsumer>();
+
 var gatewayUrl = builder.Configuration["Gateway:Url"] ?? "http://gateway:8080";
 
 builder.Services.AddResilientHttpClient<INotificationServiceClient, NotificationServiceClient>(

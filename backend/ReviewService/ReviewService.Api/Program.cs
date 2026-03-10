@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using ReviewService.Infrastructure.Persistence;
 using ReviewService.Domain.Interfaces;
 using ReviewService.Infrastructure.Persistence.Repositories;
+using ReviewService.Application.Interfaces;
+using ReviewService.Infrastructure.External;
 using FluentValidation;
 using System.Reflection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -55,36 +57,46 @@ try
     builder.Services.AddHttpContextAccessor();
 
     // Entity Framework
-builder.Services.AddDbContext<ReviewDbContext>(options =>
-{
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.MigrationsAssembly("ReviewService.Infrastructure"));
-});
+    builder.Services.AddDbContext<ReviewDbContext>(options =>
+    {
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            b => b.MigrationsAssembly("ReviewService.Infrastructure"));
+    });
 
-// Repositories
-builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-builder.Services.AddScoped<IReviewSummaryRepository, ReviewSummaryRepository>();
-builder.Services.AddScoped<IReviewResponseRepository, ReviewResponseRepository>();
-// Sprint 15 - Repositorios adicionales
-builder.Services.AddScoped<IReviewHelpfulVoteRepository, ReviewHelpfulVoteRepository>();
-builder.Services.AddScoped<ISellerBadgeRepository, SellerBadgeRepository>();
-builder.Services.AddScoped<IReviewRequestRepository, ReviewRequestRepository>();
-builder.Services.AddScoped<IFraudDetectionLogRepository, FraudDetectionLogRepository>();
+    // Repositories
+    builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+    builder.Services.AddScoped<IReviewSummaryRepository, ReviewSummaryRepository>();
+    builder.Services.AddScoped<IReviewResponseRepository, ReviewResponseRepository>();
+    // Sprint 15 - Repositorios adicionales
+    builder.Services.AddScoped<IReviewHelpfulVoteRepository, ReviewHelpfulVoteRepository>();
+    builder.Services.AddScoped<ISellerBadgeRepository, SellerBadgeRepository>();
+    builder.Services.AddScoped<IReviewRequestRepository, ReviewRequestRepository>();
+    builder.Services.AddScoped<IFraudDetectionLogRepository, FraudDetectionLogRepository>();
 
-// MediatR
-builder.Services.AddMediatR(cfg => {
+    // Contact Verification — cross-service call to ContactService (anti-fake review gate)
+    builder.Services.AddHttpClient<IContactVerificationService, ContactVerificationService>(client =>
+    {
+        var contactServiceUrl = builder.Configuration["ServiceUrls:ContactService"] ?? "http://contactservice:8080";
+        client.BaseAddress = new Uri(contactServiceUrl);
+        client.Timeout = TimeSpan.FromSeconds(10);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    });
 
-// SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
-builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ReviewService.Application.Behaviors.ValidationBehavior<,>));
-    cfg.RegisterServicesFromAssembly(Assembly.Load("ReviewService.Application"));
-});
+    // MediatR
+    builder.Services.AddMediatR(cfg =>
+    {
 
-// FluentValidation
-builder.Services.AddValidatorsFromAssembly(Assembly.Load("ReviewService.Application"));
+        // SecurityValidation — ensures FluentValidation validators (NoSqlInjection, NoXss) run in MediatR pipeline
+        builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ReviewService.Application.Behaviors.ValidationBehavior<,>));
+        cfg.RegisterServicesFromAssembly(Assembly.Load("ReviewService.Application"));
+    });
 
-// AutoMapper (si se usa)
-// builder.Services.AddAutoMapper(Assembly.Load("ReviewService.Application"));
+    // FluentValidation
+    builder.Services.AddValidatorsFromAssembly(Assembly.Load("ReviewService.Application"));
+
+    // AutoMapper (si se usa)
+    // builder.Services.AddAutoMapper(Assembly.Load("ReviewService.Application"));
 
     // ========== JWT AUTHENTICATION (from centralized secrets, NOT hardcoded) ==========
     var (jwtKey, jwtIssuer, jwtAudience) = MicroserviceSecretsConfiguration.GetJwtConfig(builder.Configuration);
@@ -159,42 +171,42 @@ builder.Services.AddValidatorsFromAssembly(Assembly.Load("ReviewService.Applicat
     builder.Services.AddHealthChecks()
         .AddDbContextCheck<ReviewDbContext>(tags: new[] { "ready", "external" });
 
-// Swagger/OpenAPI
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
+    // Swagger/OpenAPI
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
     {
-        Title = "ReviewService API",
-        Version = "v1",
-        Description = "API para gestión de reviews de vendedores/dealers en OKLA",
-        Contact = new OpenApiContact
+        c.SwaggerDoc("v1", new OpenApiInfo
         {
-            Name = "OKLA Development Team",
-            Email = "dev@okla.com.do"
+            Title = "ReviewService API",
+            Version = "v1",
+            Description = "API para gestión de reviews de vendedores/dealers en OKLA",
+            Contact = new OpenApiContact
+            {
+                Name = "OKLA Development Team",
+                Email = "dev@okla.com.do"
+            }
+        });
+
+        // Incluir comentarios XML
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            c.IncludeXmlComments(xmlPath);
         }
-    });
 
-    // Incluir comentarios XML
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
-    {
-        c.IncludeXmlComments(xmlPath);
-    }
+        // JWT Bearer configuration
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header using the Bearer scheme",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
 
-    // JWT Bearer configuration
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
         {
             new OpenApiSecurityScheme
             {
@@ -206,8 +218,8 @@ builder.Services.AddSwaggerGen(c =>
             },
             Array.Empty<string>()
         }
+        });
     });
-});
 
     // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
     builder.Services.AddResponseCompression(options =>
@@ -277,19 +289,19 @@ builder.Services.AddSwaggerGen(c =>
     // 10. Endpoints
     app.MapControllers();
 
-// Health Check endpoints
-app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = check => !check.Tags.Contains("external")
-});
-app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = check => check.Tags.Contains("ready")
-});
-app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = _ => false
-});
+    // Health Check endpoints
+    app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => !check.Tags.Contains("external")
+    });
+    app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("ready")
+    });
+    app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
 
     // ============= DATABASE MIGRATION =============
     var autoMigrate = app.Configuration.GetValue<bool>("Database:AutoMigrate", true);

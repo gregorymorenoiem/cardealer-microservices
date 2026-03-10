@@ -21,13 +21,41 @@ import { Suspense } from 'react';
 import { VehicleDetailClient } from './vehicle-detail-client';
 import { vehicleService } from '@/services/vehicles';
 import { formatCurrency } from '@/lib/utils';
-import { JsonLd, generateVehicleJsonLd, generateBreadcrumbJsonLd, VehicleSEO } from '@/lib/seo';
+import {
+  JsonLd,
+  generateVehicleJsonLd,
+  generateBreadcrumbJsonLd,
+  generateFAQJsonLd,
+  VehicleSEO,
+} from '@/lib/seo';
 
 // ISR Configuration: Revalidate every 5 minutes (300 seconds)
 export const revalidate = 300;
 
 // Dynamic params configuration
 export const dynamicParams = true;
+
+// SEO FIX: Pre-generate ALL beta vehicles at build time for faster Googlebot crawling.
+// For the beta launch (1,500 listings), we pre-render all of them to maximize
+// crawl budget efficiency and ensure instant TTFB on first Googlebot visit.
+// After initial indexing wave, reduce to ~500 and rely on on-demand ISR for the rest.
+// New vehicles still use on-demand ISR (dynamicParams: true).
+export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
+  try {
+    const apiUrl =
+      process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:18443';
+    const response = await fetch(`${apiUrl}/api/vehicles/sitemap`, {
+      next: { revalidate: 900 },
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    const items = Array.isArray(data) ? data : (data?.items ?? []);
+    // Pre-generate all beta vehicles (up to 2000) for launch indexing coverage
+    return items.slice(0, 2000).map((v: { slug: string }) => ({ slug: v.slug }));
+  } catch {
+    return [];
+  }
+}
 
 interface VehiclePageProps {
   params: Promise<{ slug: string }>;
@@ -40,35 +68,80 @@ export async function generateMetadata({ params }: VehiclePageProps): Promise<Me
   try {
     const vehicle = await vehicleService.getBySlug(slug);
 
-    const title = `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''} | OKLA`;
-    const description = `Compra ${vehicle.year} ${vehicle.make} ${vehicle.model} en ${vehicle.location.city}. ${formatCurrency(vehicle.price)}. ${vehicle.mileage?.toLocaleString() || 0} km. ${vehicle.condition === 'new' ? 'Nuevo' : 'Usado'}.`;
-    const imageUrl = vehicle.images?.[0]?.url;
+    const priceFormatted = formatCurrency(vehicle.price);
+    const title = `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''} - ${priceFormatted} | OKLA`;
+    const conditionLabel = vehicle.condition === 'new' ? 'Nuevo' : 'Usado';
+    const description = `${conditionLabel} ${vehicle.year} ${vehicle.make} ${vehicle.model} en ${vehicle.location.city} por ${priceFormatted}. ${vehicle.mileage?.toLocaleString() || 0} km. ¡Contáctanos hoy para agendar una prueba de manejo! Ver fotos, especificaciones y financiamiento en OKLA.`;
+    const _imageUrl = vehicle.images?.[0]?.url;
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://okla.com.do';
+    const vehicleUrl = `${siteUrl}/vehiculos/${slug}`;
+
+    // INDEXATION FIX C3: Only active vehicles should be indexed by Google.
+    // Draft, pending, rejected, sold, and inactive vehicles get noindex.
+    const isIndexable = vehicle.status === 'active';
+
+    // SEO FIX: Extract vehicle data for updatedAt/createdAt
+    const vehicleData = vehicle as unknown as Record<string, unknown>;
+    const updatedAt = (vehicleData.updatedAt as string) || undefined;
+    const createdAt = (vehicleData.createdAt as string) || undefined;
+
+    // SEO FIX: Keywords meta with brand/model/year/condition/location for Bing/Yandex
+    const keywords = [
+      vehicle.make,
+      vehicle.model,
+      `${vehicle.year}`,
+      conditionLabel.toLowerCase(),
+      'venta',
+      'comprar',
+      vehicle.location?.city || '',
+      vehicle.location?.province || '',
+      vehicle.fuelType || '',
+      vehicle.transmission || '',
+      'OKLA',
+      'República Dominicana',
+    ].filter(Boolean);
 
     return {
       title,
       description,
+      keywords,
       alternates: {
-        canonical: `${siteUrl}/vehiculos/${slug}`,
+        canonical: vehicleUrl,
       },
+      // INDEXATION FIX C3: Prevent non-active vehicles from being indexed
+      robots: isIndexable
+        ? { index: true, follow: true, 'max-image-preview': 'large' as const, 'max-snippet': -1 }
+        : { index: false, follow: false },
       openGraph: {
         title,
         description,
-        // OG image is generated dynamically by opengraph-image.tsx (branded overlay)
-        type: 'website',
+        url: vehicleUrl,
+        // SEO FIX: Use 'article' type for product pages (richer than 'website')
+        type: 'article',
         siteName: 'OKLA',
         locale: 'es_DO',
+        // SEO FIX: publishedTime + modifiedTime for Google freshness signals
+        ...(createdAt && { publishedTime: createdAt }),
+        ...(updatedAt && { modifiedTime: updatedAt }),
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description,
+        site: '@okla',
         // Twitter image is generated dynamically by twitter-image.tsx
       },
       other: {
         'og:price:amount': vehicle.price.toString(),
-        'og:price:currency': vehicle.currency,
+        'og:price:currency': vehicle.currency || 'DOP',
+        // SEO FIX: og:updated_time for Facebook crawler freshness
+        ...(updatedAt && { 'og:updated_time': updatedAt }),
+        // SEO FIX: product:availability for social commerce
+        'product:availability': 'in stock',
+        'product:condition': vehicle.condition === 'new' ? 'new' : 'used',
+        'product:price:amount': vehicle.price.toString(),
+        'product:price:currency': vehicle.currency || 'DOP',
       },
     };
   } catch {
@@ -132,6 +205,16 @@ export default async function VehiclePage({ params }: VehiclePageProps) {
       country: 'DO',
     },
     availability: 'InStock',
+    createdAt: (vehicleData.createdAt as string) || undefined,
+    updatedAt: (vehicleData.updatedAt as string) || undefined,
+    // SEO AUDIT FIX: Pass new JSON-LD fields for Google Rich Results
+    vin: (vehicleData.vin as string) || undefined,
+    bodyType: (vehicleData.bodyType as string) || undefined,
+    numberOfDoors: (vehicleData.numberOfDoors as number) || undefined,
+    driveWheelConfiguration: (vehicleData.driveWheelConfiguration as string) || undefined,
+    engineSize: (vehicleData.engineSize as string) || undefined,
+    // OKLA Score for Google structured data
+    oklaScore: (vehicleData.oklaScore as number) || undefined,
   };
 
   // Breadcrumb data
@@ -140,6 +223,30 @@ export default async function VehiclePage({ params }: VehiclePageProps) {
     { name: 'Vehículos', url: '/vehiculos' },
     { name: vehicle.make, url: `/vehiculos?make=${vehicle.make.toLowerCase()}` },
     { name: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, url: `/vehiculos/${slug}` },
+  ];
+
+  // SEO FIX: FAQ schema for Google Rich Results — auto-generated per vehicle
+  const priceFormatted = formatCurrency(vehicle.price);
+  const conditionLabel = vehicle.condition === 'new' ? 'Nuevo' : 'Usado';
+  const vehicleFAQs = [
+    {
+      question: `¿Cuánto cuesta el ${vehicle.year} ${vehicle.make} ${vehicle.model}?`,
+      answer: `El precio del ${vehicle.year} ${vehicle.make} ${vehicle.model} ${conditionLabel.toLowerCase()} es ${priceFormatted} (${vehicle.currency || 'DOP'}). Disponible en ${vehicle.location?.city || 'República Dominicana'}. Contáctanos en OKLA para opciones de financiamiento.`,
+    },
+    {
+      question: `¿Dónde puedo ver el ${vehicle.year} ${vehicle.make} ${vehicle.model}?`,
+      answer: `Este vehículo está disponible en ${vehicle.location?.city || 'República Dominicana'}${vehicle.location?.province ? `, ${vehicle.location.province}` : ''}. Agenda una cita de prueba de manejo directamente desde OKLA.`,
+    },
+    {
+      question: `¿El ${vehicle.year} ${vehicle.make} ${vehicle.model} tiene garantía?`,
+      answer: `Contacta al vendedor en OKLA para conocer las condiciones de garantía de este ${vehicle.year} ${vehicle.make} ${vehicle.model}. Los vehículos verificados en OKLA pasan por inspección de calidad.`,
+    },
+    {
+      question: `¿Cuántos kilómetros tiene el ${vehicle.year} ${vehicle.make} ${vehicle.model}?`,
+      answer: vehicle.mileage
+        ? `Este ${vehicle.year} ${vehicle.make} ${vehicle.model} tiene ${vehicle.mileage.toLocaleString()} km registrados. Historial completo disponible en OKLA.`
+        : `Consulta el kilometraje actualizado contactando al vendedor en OKLA.`,
+    },
   ];
 
   // Status banner config for non-active vehicles
@@ -179,6 +286,8 @@ export default async function VehiclePage({ params }: VehiclePageProps) {
       {/* Structured Data */}
       <JsonLd data={generateVehicleJsonLd(vehicleSEO)} />
       <JsonLd data={generateBreadcrumbJsonLd(breadcrumbs)} />
+      {/* SEO FIX: FAQ schema for Google Rich Results — unique per listing */}
+      <JsonLd data={generateFAQJsonLd(vehicleFAQs)} />
 
       {/* Status banner for non-active vehicles (visible only to the owner) */}
       {banner && (

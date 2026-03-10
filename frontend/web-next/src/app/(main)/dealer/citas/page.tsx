@@ -43,6 +43,7 @@ import {
   type AppointmentType,
 } from '@/services/appointments';
 import { toast } from 'sonner';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 
 // ============================================================================
 // Skeleton Components
@@ -239,7 +240,7 @@ export default function DealerAppointmentsPage() {
       <div className="space-y-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Citas</h1>
+            <h1 className="text-foreground text-2xl font-bold">Citas</h1>
             <p className="text-muted-foreground">Gestiona tus citas y test drives</p>
           </div>
         </div>
@@ -263,7 +264,7 @@ export default function DealerAppointmentsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Citas</h1>
+          <h1 className="text-foreground text-2xl font-bold">Citas</h1>
           <p className="text-muted-foreground">Gestiona tus citas y test drives</p>
         </div>
         <Card className="border-red-200 bg-red-50">
@@ -295,7 +296,10 @@ export default function DealerAppointmentsPage() {
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Citas</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-foreground text-2xl font-bold">Citas</h1>
+              <VideoHelpButton sectionKey="citas" variant="icon" />
+            </div>
             <p className="text-muted-foreground">Gestiona tus citas y test drives</p>
           </div>
           <Button variant="ghost" size="icon" onClick={() => refetch()} title="Actualizar">
@@ -313,8 +317,8 @@ export default function DealerAppointmentsPage() {
         {statsCards.map(stat => (
           <Card key={stat.label}>
             <CardContent className="p-4 text-center">
-              <p className="text-3xl font-bold text-primary">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-primary text-3xl font-bold">{stat.value}</p>
+              <p className="text-muted-foreground text-sm">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -338,7 +342,7 @@ export default function DealerAppointmentsPage() {
             {/* Calendar Header */}
             <div className="mb-2 grid grid-cols-7 gap-1">
               {calendarDays.map(day => (
-                <div key={day} className="py-1 text-center text-xs text-muted-foreground">
+                <div key={day} className="text-muted-foreground py-1 text-center text-xs">
                   {day}
                 </div>
               ))}
@@ -365,13 +369,13 @@ export default function DealerAppointmentsPage() {
                       isSelected
                         ? 'bg-primary text-white'
                         : isToday
-                          ? 'bg-primary/10 font-semibold text-primary'
+                          ? 'bg-primary/10 text-primary font-semibold'
                           : 'hover:bg-muted'
                     }`}
                   >
                     {day}
                     {hasAppointments && !isSelected && (
-                      <div className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />
+                      <div className="bg-primary absolute bottom-1 h-1 w-1 rounded-full" />
                     )}
                   </button>
                 );
@@ -419,7 +423,7 @@ export default function DealerAppointmentsPage() {
                             {getStatusBadge(appointment.status)}
                           </div>
 
-                          <div className="space-y-1 text-sm text-muted-foreground">
+                          <div className="text-muted-foreground space-y-1 text-sm">
                             {appointment.relatedEntityDescription && (
                               <p className="flex items-center gap-2">
                                 <Car className="h-4 w-4" />
@@ -449,7 +453,7 @@ export default function DealerAppointmentsPage() {
                           </div>
 
                           {appointment.clientNotes && (
-                            <p className="mt-2 text-sm text-muted-foreground italic">
+                            <p className="text-muted-foreground mt-2 text-sm italic">
                               &ldquo;{appointment.clientNotes}&rdquo;
                             </p>
                           )}

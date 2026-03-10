@@ -78,4 +78,19 @@ public class EfPriceAlertRepository : IPriceAlertRepository
     public async Task<bool> ExistsAsync(Guid id, Guid userId)
         => await _context.PriceAlerts
             .AnyAsync(pa => pa.Id == id && pa.UserId == userId);
+
+    public async Task<int> DeleteByUserIdAsync(Guid userId)
+    {
+        var alerts = await _context.PriceAlerts
+            .Where(pa => pa.UserId == userId)
+            .ToListAsync();
+
+        if (alerts.Count > 0)
+        {
+            _context.PriceAlerts.RemoveRange(alerts);
+            await _context.SaveChangesAsync();
+        }
+
+        return alerts.Count;
+    }
 }

@@ -96,7 +96,10 @@ export function UpgradeBanner({
   if (isDismissed) return null;
 
   const features = userType === 'dealer' ? DEALER_MISSING_FEATURES : SELLER_MISSING_FEATURES;
-  const defaultUrl = userType === 'dealer' ? '/planes' : '/cuenta/suscripcion';
+  const defaultUrl =
+    userType === 'dealer'
+      ? '/cuenta/upgrade?plan=visible&type=dealer'
+      : '/cuenta/upgrade?plan=premium&type=seller';
   const href = upgradeUrl ?? defaultUrl;
   const planLabel = currentPlan ?? (userType === 'dealer' ? 'Libre' : 'Gratis');
 

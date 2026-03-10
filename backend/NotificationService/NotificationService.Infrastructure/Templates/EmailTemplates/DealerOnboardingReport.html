@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px;">
+    <div style="max-width: 640px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #1a73e8, #0d47a1); padding: 32px 24px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 26px;">📊 Tu Primera Semana en OKLA</h1>
+            <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 15px;">
+                Reporte automático — 7 días desde tu activación
+            </p>
+        </div>
+
+        <!-- Greeting -->
+        <div style="padding: 24px 24px 0;">
+            <p style="font-size: 16px; color: #333;">Hola <strong>{{DealerName}}</strong>,</p>
+            <p style="font-size: 15px; color: #555; line-height: 1.5;">
+                Ya completaste tu primera semana en <strong>OKLA</strong>. Aquí tienes un resumen de cómo se desempeñaron
+                tus publicaciones durante estos primeros 7 días.
+            </p>
+        </div>
+
+        <!-- KPI Cards -->
+        <div style="padding: 16px 24px;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 12px 0;">
+                <tr>
+                    <td style="background: #e3f2fd; border-radius: 8px; padding: 16px; text-align: center; width: 50%;">
+                        <div style="font-size: 28px; font-weight: bold; color: #1a73e8;">{{TotalViews}}</div>
+                        <div style="font-size: 13px; color: #555; margin-top: 4px;">👀 Vistas Totales</div>
+                    </td>
+                    <td style="background: #e8f5e9; border-radius: 8px; padding: 16px; text-align: center; width: 50%;">
+                        <div style="font-size: 28px; font-weight: bold; color: #2e7d32;">{{TotalLeads}}</div>
+                        <div style="font-size: 13px; color: #555; margin-top: 4px;">📩 Consultas Recibidas</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Most Viewed Vehicle -->
+        <div style="padding: 0 24px 16px;">
+            <div style="background: #fff8e1; border-radius: 8px; padding: 16px; border-left: 4px solid #ffa000;">
+                <h3 style="margin: 0 0 8px; color: #e65100; font-size: 15px;">🏆 Tu Vehículo Más Visto</h3>
+                <p style="margin: 0; font-size: 16px; font-weight: bold; color: #333;">{{TopVehicleTitle}}</p>
+                <p style="margin: 4px 0 0; font-size: 13px; color: #666;">
+                    {{TopVehicleViews}} vistas · {{TopVehicleContacts}} consultas
+                </p>
+            </div>
+        </div>
+
+        <!-- Market Comparison -->
+        <div style="padding: 0 24px 16px;">
+            <div style="background: #f3e5f5; border-radius: 8px; padding: 16px; border-left: 4px solid #7b1fa2;">
+                <h3 style="margin: 0 0 12px; color: #4a148c; font-size: 15px;">📈 Comparativa vs. Promedio del Mercado OKLA</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <tr style="border-bottom: 1px solid #e1bee7;">
+                        <td style="padding: 8px 0; color: #666;">Vistas por listing</td>
+                        <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #333;">{{ViewsPerListing}}</td>
+                        <td style="padding: 8px 0; text-align: right; color: #888;">vs. {{MarketAvgViews}} promedio</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e1bee7;">
+                        <td style="padding: 8px 0; color: #666;">Consultas por listing</td>
+                        <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #333;">{{ContactsPerListing}}</td>
+                        <td style="padding: 8px 0; text-align: right; color: #888;">vs. {{MarketAvgContacts}} promedio</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">Tasa de contacto</td>
+                        <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #333;">{{ContactRate}}%</td>
+                        <td style="padding: 8px 0; text-align: right; color: #888;">vs. {{MarketAvgContactRate}}% promedio</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Performance Badge -->
+        <div style="padding: 0 24px 16px; text-align: center;">
+            <div style="background: {{PerformanceBadgeColor}}; border-radius: 8px; padding: 16px; display: inline-block; min-width: 200px;">
+                <div style="font-size: 14px; color: white; font-weight: bold;">{{PerformanceBadge}}</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.85); margin-top: 4px;">{{PerformanceMessage}}</div>
+            </div>
+        </div>
+
+        <!-- Tips -->
+        <div style="padding: 0 24px 16px;">
+            <div style="background: #f5f5f5; border-radius: 8px; padding: 16px;">
+                <h3 style="margin: 0 0 12px; color: #333; font-size: 15px;">💡 Consejos para mejorar tus resultados</h3>
+                <ul style="margin: 0; padding: 0 0 0 20px; color: #555; font-size: 14px; line-height: 1.8;">
+                    <li>Agrega fotos de alta calidad (los listings con 10+ fotos reciben 3x más vistas)</li>
+                    <li>Responde consultas en menos de 5 minutos para 10x más probabilidad de cierre</li>
+                    <li>Actualiza los precios semanalmente para mantener tus listings competitivos</li>
+                    <li>Usa la opción "Destacar" para aparecer primero en las búsquedas</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div style="padding: 0 24px 24px; text-align: center;">
+            <a href="https://okla.com.do/dashboard/analytics"
+               style="background-color: #1a73e8; color: white; padding: 14px 36px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold; display: inline-block;">
+                Ver Dashboard Completo
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f8f9fa; padding: 16px 24px; text-align: center; border-top: 1px solid #e0e0e0;">
+            <p style="color: #9e9e9e; font-size: 12px; margin: 0;">
+                Este reporte se genera automáticamente para todos los dealers de OKLA.
+            </p>
+            <p style="color: #9e9e9e; font-size: 12px; margin: 4px 0 0;">
+                <a href="https://okla.com.do/configuracion/notificaciones" style="color: #1a73e8; text-decoration: none;">
+                    Configurar notificaciones
+                </a> ·
+                <a href="{{UnsubscribeUrl}}" style="color: #1a73e8; text-decoration: none;">
+                    Desuscribirse
+                </a>
+            </p>
+        </div>
+
+    </div>
+</body>
+</html>

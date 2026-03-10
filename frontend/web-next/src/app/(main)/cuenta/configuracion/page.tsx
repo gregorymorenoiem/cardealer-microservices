@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   ShieldAlert,
   Download,
+  Smartphone,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -242,6 +243,16 @@ export default function SettingsPage() {
     setNotifications(prev => ({
       ...prev,
       push: { ...prev.push, [key]: value },
+    }));
+  };
+
+  const updateWhatsAppNotification = (
+    key: keyof NotificationSettings['whatsapp'],
+    value: boolean
+  ) => {
+    setNotifications(prev => ({
+      ...prev,
+      whatsapp: { ...prev.whatsapp, [key]: value },
     }));
   };
 
@@ -564,6 +575,56 @@ export default function SettingsPage() {
             icon={Eye}
           />
         </CardContent>
+      </Card>
+
+      {/* WhatsApp Notifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5" />
+            Notificaciones por WhatsApp
+          </CardTitle>
+          <CardDescription>
+            Controla qué mensajes recibes por WhatsApp. Las notificaciones transaccionales
+            (confirmaciones, leads) siempre están activas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="divide-y divide-gray-100 dark:divide-gray-800">
+          <div className="flex items-start gap-4 py-3">
+            <div className="bg-muted text-muted-foreground dark:text-muted-foreground flex h-10 w-10 items-center justify-center rounded-lg dark:bg-gray-800">
+              <MessageCircle className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <Label className="font-medium">Transaccionales</Label>
+                <Switch checked={true} disabled />
+              </div>
+              <p className="text-muted-foreground dark:text-muted-foreground mt-0.5 text-sm">
+                Confirmaciones de leads, estado de publicaciones y verificaciones (obligatorio)
+              </p>
+            </div>
+          </div>
+          <NotificationToggle
+            label="Ofertas y promociones"
+            description="Información sobre ofertas exclusivas de OKLA por WhatsApp"
+            checked={notifications.whatsapp.marketing}
+            onCheckedChange={v => updateWhatsAppNotification('marketing', v)}
+            icon={Mail}
+          />
+          <NotificationToggle
+            label="Alertas de precio"
+            description="Notificaciones de cambios de precio en vehículos favoritos"
+            checked={notifications.whatsapp.priceAlerts}
+            onCheckedChange={v => updateWhatsAppNotification('priceAlerts', v)}
+            icon={DollarSign}
+          />
+        </CardContent>
+        <div className="border-t px-6 py-3">
+          <p className="text-muted-foreground text-xs">
+            Según Ley 172-13 Art. 27 y Política de WhatsApp Business, solo enviaremos mensajes de
+            marketing si das tu consentimiento explícito. Puedes cambiarlo en cualquier momento.
+          </p>
+        </div>
       </Card>
 
       {/* Data & Privacy */}

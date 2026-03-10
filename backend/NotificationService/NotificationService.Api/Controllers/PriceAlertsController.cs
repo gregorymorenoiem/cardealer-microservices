@@ -89,6 +89,32 @@ public class PriceAlertsController : ControllerBase
         if (userId == Guid.Empty)
             return Unauthorized();
 
+        // ── Server-side validation ──
+        if (request.VehicleId == Guid.Empty)
+            return BadRequest(new { error = "El ID del vehículo es obligatorio." });
+
+        if (request.TargetPrice <= 0)
+            return BadRequest(new { error = "El precio objetivo debe ser mayor a cero." });
+
+        if (request.CurrentPrice.HasValue && request.CurrentPrice <= 0)
+            return BadRequest(new { error = "El precio actual debe ser mayor a cero." });
+
+        if (request.PriceDropPercentage.HasValue && (request.PriceDropPercentage < 0 || request.PriceDropPercentage > 100))
+            return BadRequest(new { error = "El porcentaje de caída debe estar entre 0 y 100." });
+
+        // ── Limit enforcement — max 100 price alerts per user ──
+        var currentCount = await _repository.GetCountByUserIdAsync(userId, isActive: null);
+        const int HardCapPerUser = 100;
+        if (currentCount >= HardCapPerUser)
+        {
+            return BadRequest(new
+            {
+                error = $"Has alcanzado el límite máximo de {HardCapPerUser} alertas de precio.",
+                currentCount,
+                limit = HardCapPerUser
+            });
+        }
+
         _logger.LogInformation("Creating price alert for vehicle {VehicleId}, target price {TargetPrice}",
             request.VehicleId, request.TargetPrice);
 

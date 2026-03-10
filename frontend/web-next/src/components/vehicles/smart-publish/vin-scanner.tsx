@@ -184,6 +184,7 @@ export function VinScanner({ onDecoded, onCancel }: VinScannerProps) {
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              capture="environment"
               className="hidden"
               onChange={handleFileUpload}
             />

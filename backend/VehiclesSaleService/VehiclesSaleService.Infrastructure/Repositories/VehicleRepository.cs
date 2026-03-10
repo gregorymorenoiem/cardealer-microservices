@@ -223,7 +223,7 @@ public class VehicleRepository : IVehicleRepository
         if (!string.IsNullOrWhiteSpace(p.SearchTerm))
         {
             var term = p.SearchTerm.ToLower();
-            
+
             // Intento de búsqueda full-text con tsvector
             // Si la columna search_vector existe, usa ts_rank para ordenar por relevancia
             // Si no existe, fallback a búsqueda simple con LIKE
@@ -328,5 +328,25 @@ public class VehicleRepository : IVehicleRepository
         }
 
         return query;
+    }
+
+    public async Task<IEnumerable<Vehicle>> GetStaleActiveListingsAsync(int daysOld, int skip = 0, int take = 100)
+    {
+        var cutoffDate = DateTime.UtcNow.AddDays(-daysOld);
+
+        return await _context.Vehicles
+            .AsNoTracking()
+            .Include(v => v.Images.Where(i => i.IsPrimary))
+            .Where(v => !v.IsDeleted
+                        && v.Status == VehicleStatus.Active
+                        && !v.IsFeatured
+                        && !v.IsPremium
+                        && v.PublishedAt != null
+                        && v.PublishedAt <= cutoffDate
+                        && v.SoldAt == null)
+            .OrderBy(v => v.PublishedAt) // Oldest first
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
     }
 }

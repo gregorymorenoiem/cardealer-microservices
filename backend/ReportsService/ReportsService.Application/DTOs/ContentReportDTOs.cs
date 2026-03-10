@@ -17,7 +17,8 @@ public record ContentReportDto(
     DateTime? ResolvedAt,
     string? ResolvedById,
     string? Resolution,
-    int ReportCount);
+    int ReportCount,
+    string? ReportCategory = null);
 
 public record ContentReportStatsDto(
     int Total,
@@ -44,7 +45,19 @@ public record CreateContentReportRequest(
     string Description,
     string ReportedById,
     string ReportedByEmail,
-    string? Priority = null);
+    string? Priority = null,
+    string? ReportCategory = null);
+
+/// <summary>
+/// Anonymous report request — no auth required.
+/// Buyer can report a vehicle listing without registering.
+/// </summary>
+public record CreateAnonymousVehicleReportRequest(
+    string VehicleId,
+    string VehicleTitle,
+    string ReportCategory,
+    string? Description = null,
+    string? ContactEmail = null);
 
 public record UpdateContentReportStatusRequest(
     string Status,

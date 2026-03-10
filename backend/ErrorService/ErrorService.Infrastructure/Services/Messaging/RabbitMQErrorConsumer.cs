@@ -197,7 +197,7 @@ public class RabbitMQErrorConsumer : BackgroundService
             if (errorEvent == null)
             {
                 _logger.LogWarning("Received null or invalid error event from RabbitMQ");
-                _channel.BasicAck(deliveryTag, multiple: false);
+                _channel!.BasicAck(deliveryTag, multiple: false);
                 return;
             }
 
@@ -205,7 +205,7 @@ public class RabbitMQErrorConsumer : BackgroundService
             if (string.IsNullOrWhiteSpace(errorEvent.ServiceName) || string.IsNullOrWhiteSpace(errorEvent.ErrorMessage))
             {
                 _logger.LogWarning("Error event missing required fields (ServiceName or ErrorMessage). Discarding");
-                _channel.BasicAck(deliveryTag, multiple: false);
+                _channel!.BasicAck(deliveryTag, multiple: false);
                 return;
             }
 
@@ -240,19 +240,19 @@ public class RabbitMQErrorConsumer : BackgroundService
                 errorEvent.ServiceName, errorEvent.ErrorCode);
 
             // Acknowledge the message
-            _channel.BasicAck(deliveryTag, multiple: false);
+            _channel!.BasicAck(deliveryTag, multiple: false);
         }
         catch (JsonException jsonEx)
         {
             _logger.LogError(jsonEx, "Failed to deserialize RabbitMQ message");
             // Reject and don't requeue malformed messages
-            _channel.BasicNack(deliveryTag, multiple: false, requeue: false);
+            _channel!.BasicNack(deliveryTag, multiple: false, requeue: false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error processing RabbitMQ message");
             // Reject and requeue for transient errors
-            _channel.BasicNack(deliveryTag, multiple: false, requeue: true);
+            _channel!.BasicNack(deliveryTag, multiple: false, requeue: true);
         }
     }
 

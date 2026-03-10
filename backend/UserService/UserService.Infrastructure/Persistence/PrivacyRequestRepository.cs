@@ -71,7 +71,7 @@ public class PrivacyRequestRepository : IPrivacyRequestRepository
         return await _context.PrivacyRequests
             .Where(pr => 
                 pr.Type == PrivacyRequestType.Cancellation &&
-                pr.Status == PrivacyRequestStatus.Pending &&
+                pr.Status == PrivacyRequestStatus.Processing &&
                 pr.IsConfirmed &&
                 pr.GracePeriodEndsAt <= DateTime.UtcNow)
             .Include(pr => pr.User)
@@ -87,5 +87,47 @@ public class PrivacyRequestRepository : IPrivacyRequestRepository
                 pr.Type == PrivacyRequestType.Cancellation &&
                 pr.Status == PrivacyRequestStatus.Pending &&
                 (pr.ExpiresAt == null || pr.ExpiresAt > DateTime.UtcNow));
+    }
+
+    // ── Ley 172-13 Art. 5: Derecho de acceso y portabilidad ──────────────
+
+    public async Task<PrivacyRequest?> GetLatestExportRequestAsync(Guid userId)
+    {
+        return await _context.PrivacyRequests
+            .Where(pr => pr.UserId == userId &&
+                         (pr.Type == PrivacyRequestType.Portability || pr.Type == PrivacyRequestType.Access))
+            .OrderByDescending(pr => pr.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<PrivacyRequest?> GetByDownloadTokenAsync(string downloadToken)
+    {
+        return await _context.PrivacyRequests
+            .Include(pr => pr.User)
+            .FirstOrDefaultAsync(pr =>
+                pr.DownloadToken == downloadToken &&
+                pr.Status == PrivacyRequestStatus.Completed &&
+                pr.DownloadTokenExpiresAt > DateTime.UtcNow);
+    }
+
+    public async Task<IEnumerable<PrivacyRequest>> GetPendingExportRequestsAsync()
+    {
+        return await _context.PrivacyRequests
+            .Where(pr =>
+                (pr.Type == PrivacyRequestType.Portability || pr.Type == PrivacyRequestType.Access) &&
+                pr.Status == PrivacyRequestStatus.Pending)
+            .OrderBy(pr => pr.CreatedAt)
+            .Include(pr => pr.User)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<PrivacyRequest>> GetExpiredExportRequestsAsync()
+    {
+        return await _context.PrivacyRequests
+            .Where(pr =>
+                (pr.Type == PrivacyRequestType.Portability || pr.Type == PrivacyRequestType.Access) &&
+                pr.Status == PrivacyRequestStatus.Completed &&
+                pr.DownloadTokenExpiresAt <= DateTime.UtcNow)
+            .ToListAsync();
     }
 }

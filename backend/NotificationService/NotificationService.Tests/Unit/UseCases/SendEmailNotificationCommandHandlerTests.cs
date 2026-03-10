@@ -19,6 +19,7 @@ public class SendEmailNotificationCommandHandlerTests
     private readonly Mock<INotificationLogRepository> _logRepositoryMock;
     private readonly Mock<IEmailProvider> _emailProviderMock;
     private readonly Mock<IConfigurationServiceClient> _configClientMock;
+    private readonly Mock<IUserConsentClient> _consentClientMock;
     private readonly Mock<ILogger<SendEmailNotificationCommandHandler>> _loggerMock;
     private readonly SendEmailNotificationCommandHandler _handler;
 
@@ -28,6 +29,7 @@ public class SendEmailNotificationCommandHandlerTests
         _logRepositoryMock = new Mock<INotificationLogRepository>();
         _emailProviderMock = new Mock<IEmailProvider>();
         _configClientMock = new Mock<IConfigurationServiceClient>();
+        _consentClientMock = new Mock<IUserConsentClient>();
         _loggerMock = new Mock<ILogger<SendEmailNotificationCommandHandler>>();
 
         _emailProviderMock.Setup(x => x.ProviderName).Returns("TestProvider");
@@ -39,6 +41,7 @@ public class SendEmailNotificationCommandHandlerTests
             _logRepositoryMock.Object,
             _emailProviderMock.Object,
             _configClientMock.Object,
+            _consentClientMock.Object,
             _loggerMock.Object);
     }
 

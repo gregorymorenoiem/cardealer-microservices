@@ -43,8 +43,7 @@ import { useVehiclesByDealer } from '@/hooks/use-vehicles';
 import { ReviewsSection } from '@/components/reviews';
 import { AppointmentCalendar } from '@/components/appointments';
 import { ChatWidget } from '@/components/chat/ChatWidget';
-import { JsonLd, generateDealerJsonLd, generateBreadcrumbJsonLd } from '@/lib/seo';
-import type { DealerSEO } from '@/lib/seo';
+// JSON-LD structured data is rendered server-side in page.tsx — no need to duplicate here
 
 // =============================================================================
 // LOADING SKELETON
@@ -249,38 +248,8 @@ export default function DealerProfileClient({ params }: PageProps) {
   // Get data from hooks
   const vehicles = vehiclesData?.items || [];
 
-  // Build JSON-LD structured data for SEO
-  const dealerSEO: DealerSEO = {
-    id: dealer.id,
-    slug: dealer.slug,
-    name: dealer.name,
-    description: dealerData.description,
-    logo: dealer.logo,
-    coverImage: dealer.coverImage,
-    address: dealer.location.address,
-    city: dealer.location.city,
-    province: dealer.location.province,
-    phone: dealer.contact.phone,
-    email: dealer.contact.email,
-    rating: dealer.rating || undefined,
-    reviewCount: dealer.totalReviews || undefined,
-    vehicleCount: dealer.totalVehicles,
-    socialMedia: {
-      facebook: dealer.contact.facebookUrl,
-      instagram: dealer.contact.instagramUrl,
-    },
-  };
-
-  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-    { name: 'Inicio', url: '/' },
-    { name: 'Dealers', url: '/dealers' },
-    { name: dealer.name, url: `/dealers/${dealer.slug}` },
-  ]);
-
   return (
     <div className="bg-muted/50 min-h-screen">
-      <JsonLd data={generateDealerJsonLd(dealerSEO)} />
-      <JsonLd data={breadcrumbJsonLd} />
       {/* Cover Image */}
       <div className="bg-muted-foreground/30 relative h-48 md:h-64 lg:h-80">
         <Image

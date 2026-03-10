@@ -120,7 +120,7 @@ function DealerImportContent() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold">Importar Vehículos</h1>
-          <p className="text-muted-foreground">Carga masiva desde CSV</p>
+          <p className="text-muted-foreground">Carga masiva desde CSV o Excel</p>
         </div>
       </div>
 
@@ -159,7 +159,7 @@ function DealerImportContent() {
         <CardHeader>
           <CardTitle>Subir Archivo</CardTitle>
           <CardDescription>
-            Formato soportado: CSV. Máximo 1000 registros por archivo.
+            Formatos soportados: CSV y Excel (.xlsx). Máximo 1000 registros por archivo.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -216,13 +216,47 @@ function DealerImportContent() {
                       )}
                     </div>
                     {importMutation.data.errors && importMutation.data.errors.length > 0 && (
-                      <div className="mt-2 max-h-32 overflow-y-auto text-sm text-red-600">
-                        {importMutation.data.errors.slice(0, 5).map((err, i) => (
-                          <p key={i}>
-                            Fila {err.row}: {err.message}
-                          </p>
-                        ))}
-                      </div>
+                      <>
+                        <div className="mt-2 max-h-32 overflow-y-auto text-sm text-red-600">
+                          {importMutation.data.errors.slice(0, 5).map((err, i) => (
+                            <p key={i}>
+                              Fila {err.row}: {err.message}
+                            </p>
+                          ))}
+                          {importMutation.data.errors.length > 5 && (
+                            <p className="text-muted-foreground mt-1 italic">
+                              ...y {importMutation.data.errors.length - 5} errores más
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-3 gap-2"
+                          onClick={() => {
+                            const csv = [
+                              'fila,error',
+                              ...(importMutation.data?.errors ?? []).map(
+                                e => `${e.row},"${(e.message ?? '').replace(/"/g, '""')}"`
+                              ),
+                            ].join('\n');
+                            const blob = new Blob(['\uFEFF' + csv], {
+                              type: 'text/csv;charset=utf-8;',
+                            });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'reporte-errores-importacion.csv';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          <Download className="h-4 w-4" />
+                          Descargar reporte de errores
+                        </Button>
+                      </>
                     )}
                   </div>
                 )}
@@ -247,7 +281,7 @@ function DealerImportContent() {
                 <p className="text-muted-foreground mb-2">
                   Arrastra tu archivo aquí o haz clic para seleccionar
                 </p>
-                <p className="text-muted-foreground mb-4 text-sm">CSV (.csv)</p>
+                <p className="text-muted-foreground mb-4 text-sm">CSV (.csv) o Excel (.xlsx)</p>
                 <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
                   <Upload className="mr-2 h-4 w-4" />
                   Seleccionar Archivo
@@ -266,16 +300,7 @@ function DealerImportContent() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[
-              'marca',
-              'modelo',
-              'año',
-              'precio',
-              'kilometraje',
-              'transmision',
-              'combustible',
-              'color',
-            ].map(field => (
+            {['marca', 'modelo', 'año', 'precio', 'kilometraje'].map(field => (
               <div key={field} className="bg-muted/50 flex items-center gap-2 rounded-lg p-3">
                 <CheckCircle className="text-primary h-4 w-4" />
                 <span className="text-sm font-medium capitalize">{field}</span>
@@ -284,7 +309,8 @@ function DealerImportContent() {
           </div>
           <div className="mt-4">
             <p className="text-muted-foreground text-sm">
-              Campos opcionales: version, puertas, cilindros, traccion, descripcion, vin
+              Campos opcionales: descripcion, transmision, combustible, color, tipo_carroceria,
+              condicion, provincia, vin, puertas, traccion, motor
             </p>
           </div>
         </CardContent>

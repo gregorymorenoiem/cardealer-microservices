@@ -33,7 +33,7 @@ public class GetContactRequestsByBuyerQueryHandlerTests
         request2.Messages.Add(new ContactMessage(request2.Id, buyerId, "Hello", true));
         request2.Messages.Add(new ContactMessage(request2.Id, Guid.NewGuid(), "Reply", false));
 
-        _contactRequestRepo.Setup(r => r.GetByBuyerIdAsync(buyerId))
+        _contactRequestRepo.Setup(r => r.GetByBuyerIdAsync(buyerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ContactRequest> { request1, request2 });
 
         var query = new GetContactRequestsByBuyerQuery { BuyerId = buyerId };
@@ -53,7 +53,7 @@ public class GetContactRequestsByBuyerQueryHandlerTests
     public async Task Handle_EmptyList_ReturnsEmptyList()
     {
         var buyerId = Guid.NewGuid();
-        _contactRequestRepo.Setup(r => r.GetByBuyerIdAsync(buyerId))
+        _contactRequestRepo.Setup(r => r.GetByBuyerIdAsync(buyerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ContactRequest>());
 
         var query = new GetContactRequestsByBuyerQuery { BuyerId = buyerId };
@@ -80,7 +80,7 @@ public class GetContactRequestsByBuyerQueryHandlerTests
         request.Messages.Add(msg1);
         request.Messages.Add(msg2);
 
-        _contactRequestRepo.Setup(r => r.GetByBuyerIdAsync(buyerId))
+        _contactRequestRepo.Setup(r => r.GetByBuyerIdAsync(buyerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ContactRequest> { request });
 
         // Act
@@ -100,7 +100,7 @@ public class GetContactRequestsByBuyerQueryHandlerTests
         // Clear the Messages collection to trigger null-safe operator
         request.Messages = null!;
 
-        _contactRequestRepo.Setup(r => r.GetByBuyerIdAsync(buyerId))
+        _contactRequestRepo.Setup(r => r.GetByBuyerIdAsync(buyerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ContactRequest> { request });
 
         var result = await _sut.Handle(
@@ -145,7 +145,7 @@ public class GetContactRequestsBySellerQueryHandlerTests
         request.Messages.Add(read1);
         request.Messages.Add(sellerMsg);
 
-        _contactRequestRepo.Setup(r => r.GetBySellerIdAsync(sellerId))
+        _contactRequestRepo.Setup(r => r.GetBySellerIdAsync(sellerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ContactRequest> { request });
 
         // Act
@@ -163,7 +163,7 @@ public class GetContactRequestsBySellerQueryHandlerTests
     public async Task Handle_EmptyResults_ReturnsEmptyList()
     {
         var sellerId = Guid.NewGuid();
-        _contactRequestRepo.Setup(r => r.GetBySellerIdAsync(sellerId))
+        _contactRequestRepo.Setup(r => r.GetBySellerIdAsync(sellerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ContactRequest>());
 
         var result = await _sut.Handle(
@@ -205,8 +205,8 @@ public class GetContactRequestDetailQueryHandlerTests
             new(request.Id, sellerId, "Yes it is!", false)
         };
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(request.Id)).ReturnsAsync(request);
-        _contactMessageRepo.Setup(r => r.GetByContactRequestIdAsync(request.Id)).ReturnsAsync(messages);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(request);
+        _contactMessageRepo.Setup(r => r.GetByContactRequestIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(messages);
 
         var query = new GetContactRequestDetailQuery
         {
@@ -233,8 +233,8 @@ public class GetContactRequestDetailQueryHandlerTests
         var sellerId = Guid.NewGuid();
         var request = new ContactRequest(Guid.NewGuid(), buyerId, sellerId, "Test", "Juan", "j@t.com", "Hi");
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(request.Id)).ReturnsAsync(request);
-        _contactMessageRepo.Setup(r => r.GetByContactRequestIdAsync(request.Id))
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(request);
+        _contactMessageRepo.Setup(r => r.GetByContactRequestIdAsync(request.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ContactMessage>());
 
         var query = new GetContactRequestDetailQuery
@@ -253,7 +253,7 @@ public class GetContactRequestDetailQueryHandlerTests
     public async Task Handle_NotFound_ReturnsNull()
     {
         var requestId = Guid.NewGuid();
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId)).ReturnsAsync((ContactRequest?)null);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>())).ReturnsAsync((ContactRequest?)null);
 
         var query = new GetContactRequestDetailQuery
         {
@@ -273,7 +273,7 @@ public class GetContactRequestDetailQueryHandlerTests
         var sellerId = Guid.NewGuid();
         var request = new ContactRequest(Guid.NewGuid(), buyerId, sellerId, "Test", "Juan", "j@t.com", "Hi");
 
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(request.Id)).ReturnsAsync(request);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(request);
 
         var query = new GetContactRequestDetailQuery
         {
@@ -304,7 +304,7 @@ public class GetUnreadCountQueryHandlerTests
     public async Task Handle_ReturnsUnreadCount()
     {
         var userId = Guid.NewGuid();
-        _contactMessageRepo.Setup(r => r.GetUnreadCountForUserAsync(userId)).ReturnsAsync(5);
+        _contactMessageRepo.Setup(r => r.GetUnreadCountForUserAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(5);
 
         var result = await _sut.Handle(
             new GetUnreadCountQuery { UserId = userId },
@@ -317,7 +317,7 @@ public class GetUnreadCountQueryHandlerTests
     public async Task Handle_NoUnread_ReturnsZero()
     {
         var userId = Guid.NewGuid();
-        _contactMessageRepo.Setup(r => r.GetUnreadCountForUserAsync(userId)).ReturnsAsync(0);
+        _contactMessageRepo.Setup(r => r.GetUnreadCountForUserAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(0);
 
         var result = await _sut.Handle(
             new GetUnreadCountQuery { UserId = userId },
@@ -357,8 +357,8 @@ public class MarkMessageAsReadCommandHandlerTests
         // Override the auto-generated Id to match requestId
         typeof(ContactRequest).GetProperty("Id")!.SetValue(contactRequest, requestId);
 
-        _contactMessageRepo.Setup(r => r.GetByIdAsync(message.Id)).ReturnsAsync(message);
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId)).ReturnsAsync(contactRequest);
+        _contactMessageRepo.Setup(r => r.GetByIdAsync(message.Id, It.IsAny<CancellationToken>())).ReturnsAsync(message);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
 
         var command = new MarkMessageAsReadCommand
         {
@@ -371,14 +371,14 @@ public class MarkMessageAsReadCommandHandlerTests
 
         // Assert
         result.Should().Be(MediatR.Unit.Value);
-        _contactMessageRepo.Verify(r => r.MarkAsReadAsync(message.Id), Times.Once);
+        _contactMessageRepo.Verify(r => r.MarkAsReadAsync(message.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Handle_MessageNotFound_ThrowsKeyNotFoundException()
     {
         var messageId = Guid.NewGuid();
-        _contactMessageRepo.Setup(r => r.GetByIdAsync(messageId)).ReturnsAsync((ContactMessage?)null);
+        _contactMessageRepo.Setup(r => r.GetByIdAsync(messageId, It.IsAny<CancellationToken>())).ReturnsAsync((ContactMessage?)null);
 
         var command = new MarkMessageAsReadCommand
         {
@@ -396,8 +396,8 @@ public class MarkMessageAsReadCommandHandlerTests
         var requestId = Guid.NewGuid();
         var message = new ContactMessage(requestId, Guid.NewGuid(), "Hi", true);
 
-        _contactMessageRepo.Setup(r => r.GetByIdAsync(message.Id)).ReturnsAsync(message);
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId)).ReturnsAsync((ContactRequest?)null);
+        _contactMessageRepo.Setup(r => r.GetByIdAsync(message.Id, It.IsAny<CancellationToken>())).ReturnsAsync(message);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>())).ReturnsAsync((ContactRequest?)null);
 
         var command = new MarkMessageAsReadCommand
         {
@@ -419,8 +419,8 @@ public class MarkMessageAsReadCommandHandlerTests
         var contactRequest = new ContactRequest(Guid.NewGuid(), buyerId, sellerId, "Test", "B", "b@t.com", "Hi");
         typeof(ContactRequest).GetProperty("Id")!.SetValue(contactRequest, requestId);
 
-        _contactMessageRepo.Setup(r => r.GetByIdAsync(message.Id)).ReturnsAsync(message);
-        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId)).ReturnsAsync(contactRequest);
+        _contactMessageRepo.Setup(r => r.GetByIdAsync(message.Id, It.IsAny<CancellationToken>())).ReturnsAsync(message);
+        _contactRequestRepo.Setup(r => r.GetByIdAsync(requestId, It.IsAny<CancellationToken>())).ReturnsAsync(contactRequest);
 
         var command = new MarkMessageAsReadCommand
         {

@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef, useState, useEffect, type ReactNode } from 'react';
 import { HeroCompact, WhyChooseUs, CTASection, TestimonialsCarousel } from '@/components/homepage';
 import VehicleTypeSection from '@/components/homepage/vehicle-type-section';
 import FeaturedVehicles from '@/components/advertising/featured-vehicles';
@@ -19,6 +19,39 @@ import { useQuery } from '@tanstack/react-query';
 import type { BrandConfig } from '@/types/advertising';
 import { Bus, Car, Gauge, Leaf, Truck, Wind, Zap } from 'lucide-react';
 import { HOMEPAGE_STATS } from '@/lib/platform-stats';
+
+// =============================================
+// CWV FIX: LazySection — defers mounting of below-fold sections until they
+// enter the viewport (with 200px rootMargin for pre-loading). This reduces
+// initial JS work and main-thread contention, improving LCP and INP.
+// =============================================
+
+function LazySection({ children, minHeight = 300 }: { children: ReactNode; minHeight?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} style={{ minHeight: isVisible ? undefined : minHeight }}>
+      {isVisible ? children : null}
+    </div>
+  );
+}
 
 // =============================================
 // COMPONENT
@@ -82,7 +115,7 @@ export default function HomepageClient() {
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {HOMEPAGE_STATS.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl font-bold text-primary md:text-4xl">{stat.value}</div>
+                <div className="text-primary text-3xl font-bold md:text-4xl">{stat.value}</div>
                 <div className="text-muted-foreground mt-1 text-sm">{stat.label}</div>
               </div>
             ))}
@@ -91,7 +124,15 @@ export default function HomepageClient() {
       </section>
 
       {/* ── 🏆 VEHÍCULO DEL DÍA ─────────────────────────────────────────── */}
-      {vodVehicles && vodVehicles.length > 0 && <VehicleOfTheDay vehicles={vodVehicles} />}
+      {/* CWV FIX: Always reserve space for VehicleOfTheDay to prevent CLS.
+          The section is ~300px tall; when data loads and it renders, no shift occurs. */}
+      {vodVehicles && vodVehicles.length > 0 ? (
+        <VehicleOfTheDay vehicles={vodVehicles} />
+      ) : (
+        <section className="container mx-auto px-4 py-8" aria-hidden="true">
+          <div className="h-[280px] animate-pulse rounded-xl border-2 border-amber-200/50 bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-950/10 dark:to-orange-950/10" />
+        </section>
+      )}
 
       {/* ── SECCIONES PAGADAS CON FOTOS GRANDES (primeras) ───────────────── */}
 
@@ -144,108 +185,128 @@ export default function HomepageClient() {
       />
 
       {/* Hatchbacks */}
-      <VehicleTypeSection
-        filterValue="Hatchback"
-        title="Hatchbacks"
-        subtitle="Agilidad y practicidad en cada viaje"
-        icon={<Car className="inline-block h-6 w-6" />}
-        viewAllHref="/vehiculos?bodyType=hatchback"
-        accentColor="violet"
-      />
+      <LazySection minHeight={400}>
+        <VehicleTypeSection
+          filterValue="Hatchback"
+          title="Hatchbacks"
+          subtitle="Agilidad y practicidad en cada viaje"
+          icon={<Car className="inline-block h-6 w-6" />}
+          viewAllHref="/vehiculos?bodyType=hatchback"
+          accentColor="violet"
+        />
+      </LazySection>
 
       {/* Dealer CTA banner between type sections */}
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
-        <NativeBannerAd
-          title="¿Eres dealer? Llega a más compradores"
-          subtitle="Destaca tu inventario con publicidad inteligente y paga solo por resultados reales."
-          ctaText="Conocer más"
-          ctaUrl="/dealers"
-          backgroundGradient="from-emerald-600 to-teal-700"
-          impressionToken={bannerImpressionToken}
-        />
-      </div>
+      <LazySection minHeight={120}>
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
+          <NativeBannerAd
+            title="¿Eres dealer? Llega a más compradores"
+            subtitle="Destaca tu inventario con publicidad inteligente y paga solo por resultados reales."
+            ctaText="Conocer más"
+            ctaUrl="/dealers"
+            backgroundGradient="from-emerald-600 to-teal-700"
+            impressionToken={bannerImpressionToken}
+          />
+        </div>
+      </LazySection>
 
       {/* 8. Camionetas / Pickups */}
-      <VehicleTypeSection
-        filterValue="Pickup"
-        title="Camionetas"
-        subtitle="Potencia y versatilidad para trabajo y aventura"
-        icon={<Truck className="inline-block h-6 w-6" />}
-        viewAllHref="/vehiculos?bodyType=pickup"
-        accentColor="amber"
-      />
+      <LazySection minHeight={400}>
+        <VehicleTypeSection
+          filterValue="Pickup"
+          title="Camionetas"
+          subtitle="Potencia y versatilidad para trabajo y aventura"
+          icon={<Truck className="inline-block h-6 w-6" />}
+          viewAllHref="/vehiculos?bodyType=pickup"
+          accentColor="amber"
+        />
+      </LazySection>
 
       {/* 9. Coupés */}
-      <VehicleTypeSection
-        filterValue="Coupe"
-        title="Coupés"
-        subtitle="Diseño elegante y líneas aerodinámicas"
-        icon={<Gauge className="inline-block h-6 w-6" />}
-        viewAllHref="/vehiculos?bodyType=coupe"
-        accentColor="rose"
-      />
+      <LazySection minHeight={400}>
+        <VehicleTypeSection
+          filterValue="Coupe"
+          title="Coupés"
+          subtitle="Diseño elegante y líneas aerodinámicas"
+          icon={<Gauge className="inline-block h-6 w-6" />}
+          viewAllHref="/vehiculos?bodyType=coupe"
+          accentColor="rose"
+        />
+      </LazySection>
 
       {/* Deportivos */}
-      <VehicleTypeSection
-        filterValue="Sport"
-        title="Deportivos"
-        subtitle="Rendimiento y adrenalina en cada curva"
-        icon={<Gauge className="inline-block h-6 w-6" />}
-        viewAllHref="/vehiculos?bodyType=sport"
-        accentColor="orange"
-      />
+      <LazySection minHeight={400}>
+        <VehicleTypeSection
+          filterValue="Sport"
+          title="Deportivos"
+          subtitle="Rendimiento y adrenalina en cada curva"
+          icon={<Gauge className="inline-block h-6 w-6" />}
+          viewAllHref="/vehiculos?bodyType=sport"
+          accentColor="orange"
+        />
+      </LazySection>
 
       {/* Convertibles */}
-      <VehicleTypeSection
-        filterValue="Convertible"
-        title="Convertibles"
-        subtitle="Libertad a cielo abierto en cada trayecto"
-        icon={<Wind className="inline-block h-6 w-6" />}
-        viewAllHref="/vehiculos?bodyType=convertible"
-        accentColor="pink"
-      />
+      <LazySection minHeight={400}>
+        <VehicleTypeSection
+          filterValue="Convertible"
+          title="Convertibles"
+          subtitle="Libertad a cielo abierto en cada trayecto"
+          icon={<Wind className="inline-block h-6 w-6" />}
+          viewAllHref="/vehiculos?bodyType=convertible"
+          accentColor="pink"
+        />
+      </LazySection>
 
       {/* Vans */}
-      <VehicleTypeSection
-        filterValue="Van"
-        title="Vans"
-        subtitle="Capacidad y espacio para toda la familia"
-        icon={<Bus className="inline-block h-6 w-6" />}
-        viewAllHref="/vehiculos?bodyType=van"
-        accentColor="slate"
-      />
+      <LazySection minHeight={400}>
+        <VehicleTypeSection
+          filterValue="Van"
+          title="Vans"
+          subtitle="Capacidad y espacio para toda la familia"
+          icon={<Bus className="inline-block h-6 w-6" />}
+          viewAllHref="/vehiculos?bodyType=van"
+          accentColor="slate"
+        />
+      </LazySection>
 
       {/* Minivans */}
-      <VehicleTypeSection
-        filterValue="Minivan"
-        title="Minivans"
-        subtitle="El equilibrio perfecto entre comodidad y espacio"
-        icon={<Bus className="inline-block h-6 w-6" />}
-        viewAllHref="/vehiculos?bodyType=minivan"
-        accentColor="yellow"
-      />
+      <LazySection minHeight={400}>
+        <VehicleTypeSection
+          filterValue="Minivan"
+          title="Minivans"
+          subtitle="El equilibrio perfecto entre comodidad y espacio"
+          icon={<Bus className="inline-block h-6 w-6" />}
+          viewAllHref="/vehiculos?bodyType=minivan"
+          accentColor="yellow"
+        />
+      </LazySection>
 
       {/* 10. Híbridos — filter by fuelType */}
-      <VehicleTypeSection
-        filterType="fuelType"
-        filterValue="Hybrid"
-        title="Híbridos"
-        subtitle="Mayor eficiencia, menor impacto ambiental"
-        icon={<Leaf className="inline-block h-6 w-6" />}
-        viewAllHref="/vehiculos?fuelType=hibrido"
-        accentColor="teal"
-      />
+      <LazySection minHeight={400}>
+        <VehicleTypeSection
+          filterType="fuelType"
+          filterValue="Hybrid"
+          title="Híbridos"
+          subtitle="Mayor eficiencia, menor impacto ambiental"
+          icon={<Leaf className="inline-block h-6 w-6" />}
+          viewAllHref="/vehiculos?fuelType=hibrido"
+          accentColor="teal"
+        />
+      </LazySection>
 
       {/* 11. Eléctricos — filter by fuelType */}
-      <VehicleTypeSection
-        filterType="fuelType"
-        filterValue="Electric"
-        title="Eléctricos"
-        subtitle="El futuro de la movilidad ya está aquí"
-        icon={<Zap className="inline-block h-6 w-6" />}
-        viewAllHref="/vehiculos?fuelType=electrico"
-        accentColor="indigo"
-      />
+      <LazySection minHeight={400}>
+        <VehicleTypeSection
+          filterType="fuelType"
+          filterValue="Electric"
+          title="Eléctricos"
+          subtitle="El futuro de la movilidad ya está aquí"
+          icon={<Zap className="inline-block h-6 w-6" />}
+          viewAllHref="/vehiculos?fuelType=electrico"
+          accentColor="indigo"
+        />
+      </LazySection>
 
       {/* ── FINAL ──────────────────────────────────────────────────────────── */}
 
@@ -262,10 +323,14 @@ export default function HomepageClient() {
       </div>
 
       {/* ── ⭐ TESTIMONIOS — Social proof from real users ─────────────────── */}
-      <TestimonialsCarousel autoPlay autoPlayInterval={6000} />
+      <LazySection minHeight={300}>
+        <TestimonialsCarousel autoPlay autoPlayInterval={6000} />
+      </LazySection>
 
       {/* Why Choose OKLA */}
-      <WhyChooseUs variant="grid" />
+      <LazySection minHeight={300}>
+        <WhyChooseUs variant="grid" />
+      </LazySection>
 
       {/* CTA */}
       <CTASection

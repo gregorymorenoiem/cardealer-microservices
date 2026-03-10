@@ -38,6 +38,7 @@ using CarDealer.Shared.Logging.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
 using System.IO.Compression;
 using Microsoft.AspNetCore.ResponseCompression;
 
@@ -84,6 +85,7 @@ builder.Services.AddLogging();
 // ============================================================================
 builder.Services.AddStandardObservability("AuthService", options =>
 {
+    options.ServiceVersion = ServiceVersion;
     options.TracingEnabled = true;
     options.MetricsEnabled = true;
     options.OtlpEndpoint = builder.Configuration["Observability:Otlp:Endpoint"] ?? "http://jaeger:4317";
@@ -215,6 +217,10 @@ else
 // Database Context (multi-provider configuration)
 builder.Services.AddDatabaseProvider<ApplicationDbContext>(builder.Configuration);
 
+// ── Health Checks — dependency probes for /health and /health/ready ──────────
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ApplicationDbContext>("database", tags: new[] { "ready" });
+
 // ✅ NUEVO: Custom Metrics
 builder.Services.AddSingleton<AuthServiceMetrics>();
 
@@ -234,7 +240,7 @@ builder.Services.AddHttpClient<ISecurityConfigProvider, SecurityConfigProvider>(
 {
     client.BaseAddress = new Uri(configServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(5);
-});
+}).AddStandardResilience(builder.Configuration);
 Log.Information("SecurityConfigProvider registered → {Url}", configServiceUrl);
 
 // Settings (JwtSettings is configured in AddInfrastructure with secrets merged in)
@@ -260,6 +266,10 @@ if (rabbitMqEnabled)
     builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
     builder.Services.AddSingleton<IErrorEventProducer, RabbitMQErrorProducer>();
     builder.Services.AddSingleton<INotificationEventProducer, RabbitMQNotificationProducer>();
+
+    // ── LEY 172-13: User data deletion consumer (cascade hard-delete + Redis) ──
+    builder.Services.AddHostedService<AuthService.Infrastructure.Messaging.UserDataDeletionConsumer>();
+
     Log.Information("RabbitMQ ENABLED - Using real messaging implementations");
 }
 else
@@ -293,7 +303,8 @@ builder.Services.AddScoped<IAuthNotificationService>(provider =>
 builder.Services.AddScoped<IRevokedDeviceService, RevokedDeviceService>();
 
 // Geolocation service for IP-based location lookup
-builder.Services.AddHttpClient<IGeoLocationService, IpApiGeoLocationService>();
+builder.Services.AddHttpClient<IGeoLocationService, IpApiGeoLocationService>()
+    .AddStandardResilience(builder.Configuration);
 
 // Audit Service Client for centralized audit logging
 builder.Services.AddHttpClient<AuthService.Application.Interfaces.IAuditServiceClient, AuthService.Infrastructure.External.AuditServiceClient>(client =>
@@ -302,7 +313,7 @@ builder.Services.AddHttpClient<AuthService.Application.Interfaces.IAuditServiceC
     client.BaseAddress = new Uri(auditServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
 builder.Services.AddResponseCompression(options =>

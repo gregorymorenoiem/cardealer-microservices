@@ -54,7 +54,7 @@ export default function DealerAdStatsPage() {
   const handleExport = () => {
     if (!report) return;
     const rows: string[] = [
-      'Campaña,Vehículo,Estado,Placement,Impresiones,Clicks,CTR,Gastado,Presupuesto,CPC,CPM,Quality Score',
+      'Campaña,Vehículo,Estado,Ubicación,Apariciones,Toques,Efectividad,Gastado,Presupuesto,Costo por toque,Costo por 1K apariciones,Calidad del anuncio',
     ];
     for (const c of report.campaigns) {
       rows.push(
@@ -161,7 +161,7 @@ export default function DealerAdStatsPage() {
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          title="Impresiones"
+          title="Veces que apareció tu anuncio"
           value={formatNum(s.totalImpressions)}
           change={s.impressionsChange}
           icon={Eye}
@@ -169,7 +169,7 @@ export default function DealerAdStatsPage() {
           bgColor="bg-blue-50"
         />
         <KpiCard
-          title="Clicks"
+          title="Personas que tocaron tu anuncio"
           value={formatNum(s.totalClicks)}
           change={s.clicksChange}
           icon={MousePointerClick}
@@ -177,7 +177,7 @@ export default function DealerAdStatsPage() {
           bgColor="bg-emerald-50"
         />
         <KpiCard
-          title="CTR"
+          title="Efectividad del anuncio"
           value={formatPct(s.overallCtr)}
           change={s.ctrChange}
           icon={Target}
@@ -197,13 +197,13 @@ export default function DealerAdStatsPage() {
       {/* Secondary KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MiniKpi
-          label="CPC (Costo por Click)"
+          label="Costo por cada toque"
           value={formatDOP(s.costPerClick)}
           icon={MousePointerClick}
         />
-        <MiniKpi label="CPM (Costo por 1K Imp.)" value={formatDOP(s.costPerMil)} icon={Eye} />
-        <MiniKpi label="Leads Estimados" value={formatNum(s.estimatedLeads)} icon={Zap} />
-        <MiniKpi label="Costo por Lead" value={formatDOP(s.costPerLead)} icon={Target} />
+        <MiniKpi label="Costo por 1,000 apariciones" value={formatDOP(s.costPerMil)} icon={Eye} />
+        <MiniKpi label="Interesados esperados" value={formatNum(s.estimatedLeads)} icon={Zap} />
+        <MiniKpi label="Costo por cada interesado" value={formatDOP(s.costPerLead)} icon={Target} />
       </div>
 
       {/* Budget Utilization */}
@@ -239,7 +239,7 @@ export default function DealerAdStatsPage() {
               <Activity className="h-4 w-4" />
               Tendencia Diaria
             </CardTitle>
-            <CardDescription>Impresiones y clicks por día</CardDescription>
+            <CardDescription>Apariciones y toques por día</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex h-40 items-end gap-1">
@@ -276,10 +276,10 @@ export default function DealerAdStatsPage() {
             </div>
             <div className="text-muted-foreground mt-3 flex items-center justify-center gap-4 text-xs">
               <span className="flex items-center gap-1">
-                <div className="h-2 w-2 rounded bg-blue-300" /> Impresiones
+                <div className="h-2 w-2 rounded bg-blue-300" /> Apariciones
               </span>
               <span className="flex items-center gap-1">
-                <div className="h-2 w-2 rounded bg-emerald-400" /> Clicks
+                <div className="h-2 w-2 rounded bg-emerald-400" /> Toques
               </span>
             </div>
           </CardContent>
@@ -405,13 +405,20 @@ function CampaignCard({
             <h3 className="font-semibold">{c.vehicleTitle}</h3>
             <div className="mt-1 flex items-center gap-2">
               <Badge className={statusColors[c.status] || 'bg-gray-100'} variant="secondary">
-                {c.status}
+                {{
+                  Active: 'Activa',
+                  Paused: 'Pausada',
+                  Completed: 'Finalizada',
+                  Cancelled: 'Cancelada',
+                  Expired: 'Vencida',
+                  PendingPayment: 'Pago pendiente',
+                }[c.status] || c.status}
               </Badge>
               <Badge variant="outline" className="text-xs">
                 {c.placementType}
               </Badge>
               {c.qualityScore > 0 && (
-                <span className="text-muted-foreground text-xs">QS: {c.qualityScore}</span>
+                <span className="text-muted-foreground text-xs">Calidad: {c.qualityScore}/10</span>
               )}
             </div>
           </div>
@@ -424,21 +431,21 @@ function CampaignCard({
         {/* Campaign metrics grid */}
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
-            <p className="text-muted-foreground text-xs">Impresiones</p>
+            <p className="text-muted-foreground text-xs">Apariciones</p>
             <p className="text-lg font-bold tabular-nums">{formatNum(c.impressions)}</p>
             <p className="text-muted-foreground text-[10px]">~{c.avgDailyImpressions}/día</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">Clicks</p>
+            <p className="text-muted-foreground text-xs">Toques</p>
             <p className="text-lg font-bold tabular-nums">{formatNum(c.clicks)}</p>
             <p className="text-muted-foreground text-[10px]">~{c.avgDailyClicks}/día</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">CTR</p>
+            <p className="text-muted-foreground text-xs">Efectividad</p>
             <p className="text-lg font-bold tabular-nums">{c.ctr.toFixed(2)}%</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">CPC</p>
+            <p className="text-muted-foreground text-xs">Costo/toque</p>
             <p className="text-lg font-bold tabular-nums">{formatDOP(c.costPerClick)}</p>
           </div>
         </div>

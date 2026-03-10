@@ -30,7 +30,7 @@ export default function TerminosPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-foreground text-3xl font-bold">Términos y Condiciones</h1>
-            <p className="text-muted-foreground mt-2">Última actualización: Enero 2026</p>
+            <p className="text-muted-foreground mt-2">Última actualización: Marzo 2026 (v2026.1)</p>
           </div>
 
           {/* Content */}
@@ -182,7 +182,94 @@ export default function TerminosPage() {
                 </a>
               </p>
 
-              <h2>15. Contacto</h2>
+              <h2>15. Cláusula de Exoneración — Responsabilidad del Vendedor/Dealer</h2>
+              <p>
+                OKLA opera exclusivamente como intermediario tecnológico entre compradores y
+                vendedores de vehículos. Al publicar un anuncio a través de la Plataforma, el
+                vendedor o dealer reconoce y acepta expresamente que:
+              </p>
+              <ul>
+                <li>
+                  <strong>Veracidad de la información:</strong> El vendedor es el único responsable
+                  de la exactitud, integridad y veracidad de toda la información proporcionada en el
+                  anuncio, incluyendo pero no limitándose a: marca, modelo, año, kilometraje,
+                  condición, precio, historial de accidentes y estado mecánico.
+                </li>
+                <li>
+                  <strong>Propiedad legítima:</strong> El vendedor declara ser el propietario
+                  legítimo del vehículo o contar con autorización legal escrita del propietario para
+                  su venta.
+                </li>
+                <li>
+                  <strong>Ausencia de gravámenes ocultos:</strong> El vendedor garantiza que ha
+                  informado de todo gravamen, embargo, prenda o restricción legal que pese sobre el
+                  vehículo.
+                </li>
+                <li>
+                  <strong>Exoneración de OKLA:</strong> OKLA no inspecciona, verifica ni certifica
+                  los vehículos publicados. En consecuencia, OKLA queda expresamente exonerada de
+                  cualquier responsabilidad civil, penal o administrativa derivada de información
+                  inexacta, engañosa u omitida por el vendedor.
+                </li>
+                <li>
+                  <strong>Indemnización reforzada:</strong> El vendedor se compromete a indemnizar a
+                  OKLA, sus accionistas, directores, empleados y representantes legales, por
+                  cualquier daño, pérdida, sanción o gasto (incluyendo honorarios legales) que
+                  resulte de reclamaciones de terceros relacionadas con la información publicada o
+                  con la transacción del vehículo.
+                </li>
+                <li>
+                  <strong>Confirmación obligatoria:</strong> La publicación de cada anuncio requiere
+                  la aceptación explícita de esta cláusula mediante un checkbox obligatorio. La
+                  fecha, hora, dirección IP y versión de estos Términos aceptados quedan registrados
+                  en el sistema como evidencia legal.
+                </li>
+              </ul>
+              <p>
+                Esta cláusula de exoneración complementa, y no reemplaza, las disposiciones
+                establecidas en las Secciones 5 (Publicación de Anuncios), 8 (Limitación de
+                Responsabilidad) y 9 (Indemnización) de estos Términos.
+              </p>
+
+              <h2 id="proteccion-datos">16. Protección de Datos Personales (Ley 172-13)</h2>
+              <p>
+                En cumplimiento con la Ley No. 172-13 que tiene por objeto la protección integral de
+                los datos personales asentados en archivos, registros públicos, bancos de datos u
+                otros medios técnicos de tratamiento de datos destinados a dar informes, sean estos
+                públicos o privados, OKLA garantiza a sus usuarios:
+              </p>
+              <ul>
+                <li>
+                  <strong>Derecho de acceso:</strong> Los usuarios pueden solicitar información
+                  sobre qué datos personales suyos son tratados por OKLA.
+                </li>
+                <li>
+                  <strong>Derecho de rectificación:</strong> Los usuarios pueden solicitar la
+                  corrección de datos inexactos o incompletos.
+                </li>
+                <li>
+                  <strong>Derecho de supresión:</strong> Los usuarios pueden solicitar la
+                  eliminación de sus datos personales, sujeto a obligaciones legales de retención.
+                </li>
+                <li>
+                  <strong>Derecho de portabilidad:</strong> Los usuarios pueden solicitar una copia
+                  exportable de sus datos personales en formato estándar.
+                </li>
+                <li>
+                  <strong>Cifrado de datos sensibles:</strong> Los datos personales identificables
+                  (nombre, teléfono, cédula) son cifrados en reposo mediante AES-256-GCM.
+                </li>
+                <li>
+                  <strong>Anonimización en logs:</strong> Los registros del sistema no almacenan
+                  datos personales en texto plano.
+                </li>
+              </ul>
+              <p>
+                Para ejercer estos derechos, contacte a nuestro oficial de protección de datos:{' '}
+                <a href="mailto:privacidad@okla.com.do">privacidad@okla.com.do</a>
+              </p>
+
+              <h2>17. Contacto</h2>
               <p>Si tiene preguntas sobre estos Términos y Condiciones, contáctenos en:</p>
               <ul>
                 <li>

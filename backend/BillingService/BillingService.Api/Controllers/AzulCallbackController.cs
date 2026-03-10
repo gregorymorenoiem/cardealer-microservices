@@ -64,6 +64,16 @@ public class AzulCallbackController : ControllerBase
                 query.OrderNumber, query.IsoCode);
         }
 
+        // Idempotency: check if this transaction was already processed
+        var existingTransaction = await _transactionRepository.GetByOrderNumberAsync(query.OrderNumber ?? string.Empty);
+        if (existingTransaction != null && existingTransaction.Status == "Approved")
+        {
+            _logger.LogInformation("AZUL callback duplicado ignorado - OrderNumber: {OrderNumber} ya procesada como Approved",
+                query.OrderNumber);
+            var encodedExistingOrder = Uri.EscapeDataString(query.OrderNumber ?? string.Empty);
+            return Redirect($"{Request.Scheme}://{Request.Host}/payment/success?orderId={encodedExistingOrder}");
+        }
+
         // Guardar transacción en base de datos
         try
         {
@@ -96,13 +106,26 @@ public class AzulCallbackController : ControllerBase
 
         var response = MapToResponse(query);
 
-        // Guardar transacción declinada
+        // Idempotency: check if this decline was already processed
+        var existingDecline = await _transactionRepository.GetByOrderNumberAsync(query.OrderNumber ?? string.Empty);
+        if (existingDecline != null && existingDecline.Status == "Declined")
+        {
+            _logger.LogInformation("AZUL decline callback duplicado ignorado - OrderNumber: {OrderNumber}",
+                query.OrderNumber);
+            var encodedExistingDecline = Uri.EscapeDataString(query.OrderNumber ?? string.Empty);
+            var encodedExistingReason = Uri.EscapeDataString(response.GetDeclineReasonSpanish());
+            return Redirect($"{Request.Scheme}://{Request.Host}/payment/declined?orderId={encodedExistingDecline}&reason={encodedExistingReason}");
+        }
+
+        // Guardar transacción declinada con razón localizada
         try
         {
             var transaction = await CreateTransactionFromResponse(response, "Declined");
+            transaction.DeclineReasonLocalized = response.GetDeclineReasonSpanish();
             await _transactionRepository.CreateAsync(transaction);
             
-            _logger.LogInformation("Transacción AZUL declinada guardada - Id: {TransactionId}", transaction.Id);
+            _logger.LogInformation("Transacción AZUL declinada guardada - Id: {TransactionId}, IsoCode: {IsoCode}, Razón: {Reason}",
+                transaction.Id, response.IsoCode, transaction.DeclineReasonLocalized);
         }
         catch (Exception ex)
         {
@@ -112,8 +135,9 @@ public class AzulCallbackController : ControllerBase
         // TODO: Notificar al usuario
 
         // Security: URL-encode external values to prevent XSS/header injection (CWE-79, CWE-113)
+        // Use localized decline reason instead of raw Azul message for better UX
         var encodedOrderNum = Uri.EscapeDataString(query.OrderNumber ?? string.Empty);
-        var encodedReason = Uri.EscapeDataString(query.ResponseMessage ?? string.Empty);
+        var encodedReason = Uri.EscapeDataString(response.GetDeclineReasonSpanish());
         var frontendUrl = $"{Request.Scheme}://{Request.Host}/payment/declined?orderId={encodedOrderNum}&reason={encodedReason}";
         return Redirect(frontendUrl);
     }
@@ -124,6 +148,16 @@ public class AzulCallbackController : ControllerBase
     {
         _logger.LogInformation("AZUL Payment Cancelled - OrderNumber: {OrderNumber}", query.OrderNumber);
 
+        // Idempotency: check if this cancellation was already processed
+        var existingCancel = await _transactionRepository.GetByOrderNumberAsync(query.OrderNumber ?? string.Empty);
+        if (existingCancel != null && existingCancel.Status == "Cancelled")
+        {
+            _logger.LogInformation("AZUL cancel callback duplicado ignorado - OrderNumber: {OrderNumber}",
+                query.OrderNumber);
+            var encodedExistingCancel = Uri.EscapeDataString(query.OrderNumber ?? string.Empty);
+            return Redirect($"{Request.Scheme}://{Request.Host}/payment/cancelled?orderId={encodedExistingCancel}");
+        }
+
         // Guardar transacción cancelada
         try
         {
@@ -132,6 +166,7 @@ public class AzulCallbackController : ControllerBase
                 OrderNumber = query.OrderNumber ?? string.Empty,
                 AzulOrderId = query.AzulOrderId ?? string.Empty,
                 Status = "Cancelled",
+                Currency = "DOP",
                 TransactionDateTime = DateTime.UtcNow,
                 IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                 UserAgent = Request.Headers["User-Agent"].ToString()
@@ -224,6 +259,7 @@ public class AzulCallbackController : ControllerBase
             RRN = response.RRN,
             TransactionDateTime = transactionDateTime,
             Status = status,
+            Currency = "DOP", // Azul always processes in DOP (ISO 4217 code 214)
             DataVaultToken = response.DataVaultToken,
             DataVaultExpiration = response.DataVaultExpiration,
             DataVaultBrand = response.DataVaultBrand,

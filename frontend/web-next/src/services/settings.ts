@@ -36,9 +36,15 @@ export interface PushNotificationSettings {
   recommendations: boolean; // → push.recommendations (AI recs)
 }
 
+export interface WhatsAppNotificationSettings {
+  marketing: boolean;
+  priceAlerts: boolean;
+}
+
 export interface NotificationSettings {
   email: EmailNotificationSettings;
   push: PushNotificationSettings;
+  whatsapp: WhatsAppNotificationSettings;
 }
 
 // Backend DTOs from PrivacyController
@@ -60,6 +66,11 @@ interface BackendCommunicationPreferences {
     priceChanges: boolean;
     recommendations: boolean;
   };
+  whatsApp: {
+    transactional: boolean;
+    marketing: boolean;
+    priceAlerts: boolean;
+  };
   privacy: {
     allowProfiling: boolean;
     allowThirdPartySharing: boolean;
@@ -80,6 +91,8 @@ interface BackendUpdatePreferencesRequest {
   pushNewMessages?: boolean;
   pushPriceChanges?: boolean;
   pushRecommendations?: boolean;
+  whatsAppMarketing?: boolean;
+  whatsAppPriceAlerts?: boolean;
   allowProfiling?: boolean;
   allowThirdPartySharing?: boolean;
   allowAnalytics?: boolean;
@@ -109,6 +122,10 @@ const DEFAULT_NOTIFICATIONS: NotificationSettings = {
     messages: true,
     priceChanges: true,
     recommendations: false,
+  },
+  whatsapp: {
+    marketing: false,
+    priceAlerts: false,
   },
 };
 
@@ -236,6 +253,10 @@ function transformBackendToFrontend(
       priceChanges: backend.push.priceChanges,
       recommendations: backend.push.recommendations,
     },
+    whatsapp: {
+      marketing: backend.whatsApp?.marketing ?? false,
+      priceAlerts: backend.whatsApp?.priceAlerts ?? false,
+    },
   };
 }
 
@@ -254,6 +275,8 @@ function transformFrontendToBackend(
     pushNewMessages: frontend.push.messages,
     pushPriceChanges: frontend.push.priceChanges,
     pushRecommendations: frontend.push.recommendations,
+    whatsAppMarketing: frontend.whatsapp.marketing,
+    whatsAppPriceAlerts: frontend.whatsapp.priceAlerts,
   };
 }
 

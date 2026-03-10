@@ -51,6 +51,16 @@ public class ContactRequestConfiguration : IEntityTypeConfiguration<ContactReque
         builder.Property(cr => cr.CreatedAt)
             .IsRequired();
 
+        // ── UTM Attribution columns — SEM FIX ──────────────────────────────
+        builder.Property(cr => cr.UtmSource).HasMaxLength(200);
+        builder.Property(cr => cr.UtmMedium).HasMaxLength(100);
+        builder.Property(cr => cr.UtmCampaign).HasMaxLength(200);
+        builder.Property(cr => cr.UtmTerm).HasMaxLength(500);
+        builder.Property(cr => cr.UtmContent).HasMaxLength(500);
+        builder.Property(cr => cr.Gclid).HasMaxLength(200);
+        builder.Property(cr => cr.Fbclid).HasMaxLength(200);
+        builder.Property(cr => cr.LandingPage).HasMaxLength(500);
+
         // Indexes for query performance
         builder.HasIndex(cr => cr.BuyerId);
         builder.HasIndex(cr => cr.SellerId);

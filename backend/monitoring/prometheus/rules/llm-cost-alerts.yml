@@ -1,0 +1,114 @@
+# =============================================================================
+# OKLA LLM Cost Alert Rules
+#
+# Three-tier cost monitoring for LLM API spending:
+#   $300/month = Warning  → Admin alert (email + Slack)
+#   $500/month = Critical → CTO alert (email + SMS + Teams + Slack)
+#   $700/month = Emergency → Auto-activate aggressive cache mode
+#
+# Metrics expected (exposed by LLM Gateway /metrics endpoint):
+#   okla_llm_cost_usd_monthly       — gauge, current month total in USD
+#   okla_llm_cost_usd_daily         — gauge, today total in USD
+#   okla_llm_aggressive_mode_active — gauge, 1 if aggressive cache mode on
+#   okla_llm_requests_total         — counter, total requests by provider
+#
+# SLA: Alert reaches CTO < 5 minutes from threshold breach.
+# Config: group_wait=0s on CTO route → ~45-75s total (Prometheus 15s scrape
+#          + 0s group_wait + SendGrid email ~30s)
+# =============================================================================
+
+groups:
+  - name: llm_cost_alerts
+    interval: 15s # Match Prometheus scrape interval for fastest detection
+    rules:
+      # ── TIER 1: $300/month WARNING ────────────────────────────────────────
+      - alert: LlmCostWarning
+        expr: okla_llm_cost_usd_monthly > 300
+        for: 0m # Fire immediately — no wait time for cost alerts
+        labels:
+          severity: warning
+          service: llm-gateway
+          team: platform
+          alert_type: api_cost_warning
+        annotations:
+          summary: "⚠️ LLM monthly cost exceeded $300 warning threshold"
+          description: >-
+            Monthly LLM API cost is ${{ $value | printf "%.2f" }} (threshold: $300).
+            Projected monthly: extrapolate from daily rate.
+            Review agent-level breakdown at /api/admin/llm-gateway/cost.
+          runbook: "https://wiki.okla.do/runbooks/llm-cost-warning"
+          dashboard: "https://grafana.okla.do/d/llm-cost/llm-cost-overview"
+
+      # ── TIER 2: $500/month CRITICAL (CTO ALERT) ──────────────────────────
+      - alert: LlmCostCritical
+        expr: okla_llm_cost_usd_monthly > 500
+        for: 0m # Fire immediately — CTO must know within 5 minutes
+        labels:
+          severity: critical
+          service: llm-gateway
+          team: cto
+          alert_type: api_cost_critical
+        annotations:
+          summary: "🔴 CRITICAL: LLM monthly cost exceeded $500"
+          description: >-
+            Monthly LLM API cost is ${{ $value | printf "%.2f" }} (critical threshold: $500).
+            Aggressive cache mode will auto-activate at $700.
+            Immediate action: review /api/admin/llm-gateway/cost for top-spending agents.
+            CTO must acknowledge within 30 minutes.
+          runbook: "https://wiki.okla.do/runbooks/llm-cost-critical"
+          dashboard: "https://grafana.okla.do/d/llm-cost/llm-cost-overview"
+
+      # ── TIER 3: $700/month EMERGENCY (AUTO AGGRESSIVE CACHE MODE) ────────
+      - alert: LlmCostEmergency
+        expr: okla_llm_cost_usd_monthly > 700
+        for: 0m # Immediate — aggressive mode already activated in-app
+        labels:
+          severity: critical
+          service: llm-gateway
+          team: cto
+          alert_type: api_cost_emergency
+        annotations:
+          summary: "🚨 EMERGENCY: LLM cost $700+ — Aggressive cache mode ACTIVE"
+          description: >-
+            Monthly LLM API cost is ${{ $value | printf "%.2f" }} (emergency threshold: $700).
+            Aggressive cache mode has been AUTO-ACTIVATED:
+            40% traffic → Claude (reduced), 40% → Gemini Flash ($0.075/1M), 20% → Llama local ($0).
+            This reduces projected cost by ~60%. CTO must review and approve continued spending
+            or reduce agent quotas at /api/admin/llm-gateway/cost/aggressive-mode.
+          runbook: "https://wiki.okla.do/runbooks/llm-cost-emergency"
+
+      # ── PROJECTED COST ALERT ──────────────────────────────────────────────
+      # Alert if daily rate projects to exceed $500 by month end
+      - alert: LlmCostProjectedOverrun
+        expr: >-
+          okla_llm_cost_usd_daily * on() group_left()
+          (days_in_month(timestamp(vector(0))) - day_of_month(timestamp(vector(0))))
+          + okla_llm_cost_usd_monthly > 500
+        for: 30m # Require sustained high spending, not a spike
+        labels:
+          severity: warning
+          service: llm-gateway
+          team: platform
+          alert_type: api_cost_projected
+        annotations:
+          summary: "📈 Projected LLM cost will exceed $500 this month"
+          description: >-
+            At current daily rate (${{ printf "%.2f" (query "okla_llm_cost_usd_daily") }}),
+            projected monthly cost will exceed $500.
+            Current monthly total: ${{ $value | printf "%.2f" }}.
+            Consider reviewing expensive agents or enabling aggressive cache mode early.
+
+      # ── AGGRESSIVE MODE ACTIVE STATUS ─────────────────────────────────────
+      - alert: LlmAggressiveCacheModeActive
+        expr: okla_llm_aggressive_mode_active == 1
+        for: 0m
+        labels:
+          severity: info
+          service: llm-gateway
+          team: platform
+        annotations:
+          summary: "ℹ️ LLM Aggressive cache mode is ACTIVE"
+          description: >-
+            Traffic is being split: 40% Claude, 40% Gemini Flash, 20% Llama local.
+            Normal cascade will resume when monthly cost resets or CTO deactivates at
+            POST /api/admin/llm-gateway/cost/aggressive-mode { "active": false }

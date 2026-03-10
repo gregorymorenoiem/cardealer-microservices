@@ -7,6 +7,7 @@ using CarDealer.Shared.Resilience.Extensions;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.Secrets;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;

@@ -5,18 +5,30 @@ using MediaService.Domain.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Registry;
 
 namespace MediaService.Infrastructure.Services.Storage;
 
+/// <summary>
+/// S3/DigitalOcean Spaces storage with circuit breaker resilience.
+/// All S3 SDK calls are wrapped in the "media-circuit-breaker" pipeline.
+/// Degraded behavior: throws BrokenCircuitException → caller returns 503.
+/// </summary>
 public class S3StorageService : IMediaStorageService
 {
     private readonly IAmazonS3 _s3Client;
     private readonly S3StorageOptions _options;
     private readonly ILogger<S3StorageService> _logger;
+    private readonly ResiliencePipeline _resiliencePipeline;
 
-    public S3StorageService(IConfiguration configuration, ILogger<S3StorageService> logger)
+    public S3StorageService(
+        IConfiguration configuration,
+        ILogger<S3StorageService> logger,
+        ResiliencePipelineProvider<string> resiliencePipelineProvider)
     {
         _logger = logger;
+        _resiliencePipeline = resiliencePipelineProvider.GetPipeline("media-circuit-breaker");
         
         // Bind options directly from configuration
         _options = new S3StorageOptions();
@@ -124,7 +136,8 @@ public class S3StorageService : IMediaStorageService
                 Key = storageKey
             };
 
-            await _s3Client.GetObjectMetadataAsync(request);
+            await _resiliencePipeline.ExecuteAsync(async ct =>
+                await _s3Client.GetObjectMetadataAsync(request, ct));
             return true;
         }
         catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -165,7 +178,8 @@ public class S3StorageService : IMediaStorageService
 
         try
         {
-            await transferUtility.UploadAsync(request);
+            await _resiliencePipeline.ExecuteAsync(async _ =>
+                await transferUtility.UploadAsync(request));
         }
         catch (AmazonS3Exception ex) when (ex.ErrorCode == "RequestTimeTooSkewed")
         {
@@ -179,7 +193,8 @@ public class S3StorageService : IMediaStorageService
                 storageKey);
 
             fileStream.Position = 0; // Reset stream before retry
-            await transferUtility.UploadAsync(request);
+            await _resiliencePipeline.ExecuteAsync(async _ =>
+                await transferUtility.UploadAsync(request));
         }
     }
 
@@ -191,7 +206,8 @@ public class S3StorageService : IMediaStorageService
             Key = storageKey
         };
 
-        var response = await _s3Client.GetObjectAsync(request);
+        var response = await _resiliencePipeline.ExecuteAsync(async ct =>
+            await _s3Client.GetObjectAsync(request, ct));
         return response.ResponseStream;
     }
 
@@ -203,7 +219,8 @@ public class S3StorageService : IMediaStorageService
             Key = storageKey
         };
 
-        await _s3Client.DeleteObjectAsync(request);
+        await _resiliencePipeline.ExecuteAsync(async ct =>
+            await _s3Client.DeleteObjectAsync(request, ct));
     }
 
     public async Task CopyFileAsync(string sourceKey, string destinationKey)
@@ -216,7 +233,8 @@ public class S3StorageService : IMediaStorageService
             DestinationKey = destinationKey
         };
 
-        await _s3Client.CopyObjectAsync(request);
+        await _resiliencePipeline.ExecuteAsync(async ct =>
+            await _s3Client.CopyObjectAsync(request, ct));
     }
 
     public async Task<bool> IsHealthyAsync()

@@ -41,6 +41,16 @@ public class ApplicationDbContext : MultiTenantDbContext
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<LeadMessage> LeadMessages => Set<LeadMessage>();
 
+    // ========================================
+    // OKLA PLATFORM SCORE — VEHICLE PRICE HISTORY
+    // ========================================
+    public DbSet<VehiclePriceHistory> VehiclePriceHistories => Set<VehiclePriceHistory>();
+
+    // ========================================
+    // BULK IMPORT HISTORY
+    // ========================================
+    public DbSet<ImportHistory> ImportHistories => Set<ImportHistory>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -221,6 +231,13 @@ public class ApplicationDbContext : MultiTenantDbContext
             entity.Property(v => v.ConcurrencyStamp)
                 .IsConcurrencyToken()
                 .HasMaxLength(36);
+
+            // ── Disclaimer / Liability Exoneration (Ley 172-13) ──
+            entity.Property(v => v.DisclaimerAcceptedFromIp)
+                .HasMaxLength(50);
+
+            entity.Property(v => v.DisclaimerTosVersion)
+                .HasMaxLength(20);
 
             // Relaciones
             entity.HasOne(v => v.Category)
@@ -791,6 +808,42 @@ public class ApplicationDbContext : MultiTenantDbContext
 
             entity.HasIndex(m => m.LeadId);
             entity.HasIndex(m => m.CreatedAt);
+        });
+
+        // ========================================
+        // VEHICLE PRICE HISTORY — OKLA Platform Score
+        // Historial de cambios de precio para transparencia y switching cost
+        // ========================================
+        modelBuilder.Entity<VehiclePriceHistory>(entity =>
+        {
+            entity.ToTable("vehicle_price_history");
+            entity.HasKey(ph => ph.Id);
+            entity.Property(ph => ph.Id).ValueGeneratedNever();
+
+            entity.Property(ph => ph.VehicleId).IsRequired();
+            entity.Property(ph => ph.OldPrice).IsRequired().HasPrecision(18, 2);
+            entity.Property(ph => ph.NewPrice).IsRequired().HasPrecision(18, 2);
+            entity.Property(ph => ph.Currency).IsRequired().HasMaxLength(10).HasDefaultValue("DOP");
+            entity.Property(ph => ph.ChangedBy).IsRequired();
+            entity.Property(ph => ph.Reason).HasMaxLength(500);
+            entity.Property(ph => ph.ChangeType).HasConversion<string>().HasMaxLength(30);
+            entity.Property(ph => ph.ChangedAt).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(ph => ph.DealerId).IsRequired();
+
+            // Ignore computed properties
+            entity.Ignore(ph => ph.PriceDifference);
+            entity.Ignore(ph => ph.ChangePercentage);
+
+            // Relationships
+            entity.HasOne(ph => ph.Vehicle)
+                .WithMany(v => v.PriceHistory)
+                .HasForeignKey(ph => ph.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes for efficient querying
+            entity.HasIndex(ph => ph.VehicleId);
+            entity.HasIndex(ph => ph.ChangedAt);
+            entity.HasIndex(ph => new { ph.VehicleId, ph.ChangedAt });
         });
     }
 

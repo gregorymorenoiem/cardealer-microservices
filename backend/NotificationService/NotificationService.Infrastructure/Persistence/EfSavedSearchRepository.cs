@@ -69,4 +69,19 @@ public class EfSavedSearchRepository : ISavedSearchRepository
     public async Task<bool> ExistsAsync(Guid id, Guid userId)
         => await _context.SavedSearches
             .AnyAsync(ss => ss.Id == id && ss.UserId == userId);
+
+    public async Task<int> DeleteByUserIdAsync(Guid userId)
+    {
+        var searches = await _context.SavedSearches
+            .Where(ss => ss.UserId == userId)
+            .ToListAsync();
+
+        if (searches.Count > 0)
+        {
+            _context.SavedSearches.RemoveRange(searches);
+            await _context.SaveChangesAsync();
+        }
+
+        return searches.Count;
+    }
 }

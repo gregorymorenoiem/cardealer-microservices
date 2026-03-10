@@ -76,6 +76,8 @@ public class DealerChatAgentAuditTests
         MessageCount = 0,
         Language = "es",
         UserId = userId,
+        ConsentAccepted = true, // Disclosure already accepted for these tests
+        ConsentAcceptedAt = DateTime.UtcNow,
         CreatedAt = DateTime.UtcNow,
         LastActivityAt = DateTime.UtcNow
     };

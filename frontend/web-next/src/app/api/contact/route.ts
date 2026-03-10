@@ -17,6 +17,15 @@ interface ContactPayload {
   phone?: string;
   subject: string;
   message: string;
+  // SEM FIX: UTM attribution fields for lead tracking
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+  gclid?: string;
+  fbclid?: string;
+  landingPage?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -60,6 +69,15 @@ export async function POST(request: NextRequest) {
         // Public contact form — no specific vehicle/seller context
         vehicleId: '00000000-0000-0000-0000-000000000000',
         sellerId: '00000000-0000-0000-0000-000000000000',
+        // SEM FIX: Forward UTM attribution for lead tracking
+        utmSource: body.utmSource || null,
+        utmMedium: body.utmMedium || null,
+        utmCampaign: body.utmCampaign || null,
+        utmTerm: body.utmTerm || null,
+        utmContent: body.utmContent || null,
+        gclid: body.gclid || null,
+        fbclid: body.fbclid || null,
+        landingPage: body.landingPage || null,
       }),
       signal: AbortSignal.timeout(15000),
     });

@@ -154,7 +154,7 @@ function RendimientoContent() {
       trend: trends?.viewsTrend,
     },
     {
-      label: 'Leads Generados',
+      label: 'Personas interesadas',
       value: overview?.totalLeads ?? 0,
       icon: MessageSquare,
       color: 'text-purple-600',
@@ -170,7 +170,7 @@ function RendimientoContent() {
       trend: trends?.salesTrend,
     },
     {
-      label: 'Tasa de Conversión',
+      label: '¿Cuántos compran?',
       value: overview?.conversionRate ? `${overview.conversionRate.toFixed(1)}%` : 'N/A',
       icon: BarChart3,
       color: 'text-indigo-600',
@@ -245,21 +245,21 @@ function RendimientoContent() {
       {/* Tabs */}
       <Tabs defaultValue="engagement" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="engagement">Engagement</TabsTrigger>
+          <TabsTrigger value="engagement">Interacción</TabsTrigger>
           <TabsTrigger value="inventory">Inventario</TabsTrigger>
-          <TabsTrigger value="leads">Leads</TabsTrigger>
+          <TabsTrigger value="leads">Interesados</TabsTrigger>
         </TabsList>
 
         <TabsContent value="engagement">
           <Card>
             <CardHeader>
-              <CardTitle>Engagement de Listados</CardTitle>
+              <CardTitle>Interacción con tus publicaciones</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-muted-foreground flex min-h-[200px] items-center justify-center">
                 <div className="text-center">
                   <BarChart3 className="mx-auto h-12 w-12" />
-                  <p className="mt-3">Gráfico de engagement próximamente</p>
+                  <p className="mt-3">Gráfico de interacción próximamente</p>
                   <p className="text-sm">Vistas, favoritos y consultas por vehículo</p>
                 </div>
               </div>
@@ -287,13 +287,13 @@ function RendimientoContent() {
         <TabsContent value="leads">
           <Card>
             <CardHeader>
-              <CardTitle>Análisis de Leads</CardTitle>
+              <CardTitle>Personas Interesadas</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-muted-foreground flex min-h-[200px] items-center justify-center">
                 <div className="text-center">
                   <MessageSquare className="mx-auto h-12 w-12" />
-                  <p className="mt-3">Métricas de leads próximamente</p>
+                  <p className="mt-3">Métricas de interesados próximamente</p>
                   <p className="text-sm">Fuente, conversión y tiempo de respuesta</p>
                 </div>
               </div>

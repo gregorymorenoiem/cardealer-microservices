@@ -78,6 +78,7 @@ public class ReportsDbContext : MultiTenantDbContext
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.Priority);
             entity.HasIndex(e => new { e.TargetId, e.ReportedById });
+            entity.HasIndex(e => new { e.TargetId, e.ReporterIpAddress });
             entity.Property(e => e.TargetId).HasMaxLength(200).IsRequired();
             entity.Property(e => e.TargetTitle).HasMaxLength(500);
             entity.Property(e => e.Reason).HasMaxLength(500).IsRequired();
@@ -85,6 +86,10 @@ public class ReportsDbContext : MultiTenantDbContext
             entity.Property(e => e.ReportedByEmail).HasMaxLength(254);
             entity.Property(e => e.ResolvedById).HasMaxLength(200);
             entity.Property(e => e.Resolution).HasMaxLength(2000);
+            entity.Property(e => e.ReporterIpAddress).HasMaxLength(45); // IPv6 max
+            entity.Property(e => e.ReportCategory)
+                .HasConversion<string?>()
+                .HasMaxLength(50);
         });
     }
 }

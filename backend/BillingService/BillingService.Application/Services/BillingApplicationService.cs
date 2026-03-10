@@ -506,7 +506,7 @@ public class BillingApplicationService
     /// <summary>
     /// Validates that a URL is safe for redirection (belongs to an allowed domain).
     /// </summary>
-    internal static bool IsAllowedRedirectUrl(string url)
+    public static bool IsAllowedRedirectUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
             return false;
@@ -527,7 +527,7 @@ public class BillingApplicationService
     /// <summary>
     /// Validates redirect URL, throwing if invalid.
     /// </summary>
-    internal static void ValidateRedirectUrl(string url, string paramName)
+    public static void ValidateRedirectUrl(string url, string paramName)
     {
         if (!IsAllowedRedirectUrl(url))
             throw new ArgumentException(

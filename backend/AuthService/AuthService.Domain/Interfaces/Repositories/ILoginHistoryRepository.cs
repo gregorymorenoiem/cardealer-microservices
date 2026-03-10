@@ -15,4 +15,9 @@ public interface ILoginHistoryRepository
     Task<LoginHistory?> GetLastLoginAsync(string userId, CancellationToken cancellationToken = default);
     Task AddAsync(LoginHistory loginHistory, CancellationToken cancellationToken = default);
     Task<IEnumerable<LoginHistory>> GetByIpAddressAsync(string ipAddress, TimeSpan window, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Ley 172-13: Hard-deletes ALL login history for a user (cascade deletion).
+    /// </summary>
+    Task<int> DeleteAllByUserIdAsync(string userId, CancellationToken cancellationToken = default);
 }

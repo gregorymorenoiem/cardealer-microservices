@@ -60,4 +60,24 @@ public class ContactMessageRepository : IContactMessageRepository
                         (!cm.IsFromBuyer && cm.ContactRequest!.BuyerId == userId))
             .CountAsync(cancellationToken);
     }
+
+    public async Task<int> AnonymizeByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var messages = await _context.ContactMessages
+            .Include(cm => cm.ContactRequest)
+            .Where(cm => cm.ContactRequest!.BuyerId == userId && cm.IsFromBuyer)
+            .ToListAsync(cancellationToken);
+
+        foreach (var message in messages)
+        {
+            message.Message = "[MENSAJE SUPRIMIDO — Ley 172-13]";
+        }
+
+        if (messages.Count > 0)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        return messages.Count;
+    }
 }

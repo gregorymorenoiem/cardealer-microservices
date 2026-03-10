@@ -1,5 +1,7 @@
 using AdminService.Application.Interfaces;
+using AdminService.Application.Services;
 using AdminService.Infrastructure.External;
+using AdminService.Infrastructure.Services;
 using AdminService.Infrastructure.Persistence;
 using AdminService.Domain.Interfaces;
 using Consul;
@@ -285,6 +287,56 @@ builder.Services.AddHttpClient<IReviewServiceClient, ReviewServiceClient>(client
     var baseAddress = builder.Configuration["ServiceUrls:ReviewService"] ?? "http://reviewservice:8080";
     client.BaseAddress = new Uri(baseAddress);
     client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(configuration);
+
+// Financial Data Provider — CONTRA #5 FIX: Unified financial dashboard
+// Aggregates costs from Gateway (LLM), BillingService (marketing), and config (infra/dev)
+builder.Services.AddScoped<IFinancialDataProvider, FinancialDataProvider>();
+
+// Revenue Projection + Threshold Alert — CONTRA #7 FIX
+// Monitors projected monthly revenue against OPEX $2,215 threshold
+builder.Services.AddScoped<IRevenueProjectionService, RevenueProjectionService>();
+
+// Infrastructure Cost Monitor — CONTRA #8 FIX
+// Monitors projected DigitalOcean costs against $210 monthly budget
+builder.Services.AddScoped<IInfrastructureCostMonitorService, InfrastructureCostMonitorService>();
+
+// RabbitMQ Event Publisher (for revenue threshold alerts → NotificationService)
+var rabbitMqEnabled = configuration.GetValue<bool>("RabbitMQ:Enabled", false);
+if (rabbitMqEnabled)
+    builder.Services.AddSingleton<AdminService.Domain.Interfaces.IEventPublisher,
+        AdminService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+else
+    builder.Services.AddSingleton<AdminService.Domain.Interfaces.IEventPublisher,
+        AdminService.Infrastructure.Messaging.NoOpEventPublisher>();
+
+// Revenue Threshold Alert Background Job — runs every 6h
+builder.Services.AddHostedService<AdminService.Api.Workers.RevenueThresholdAlertJob>();
+
+// Infrastructure Cost Alert Background Job — CONTRA #8, runs every 4h
+builder.Services.AddHostedService<AdminService.Api.Workers.InfrastructureCostAlertJob>();
+
+// Named HTTP clients for financial data aggregation
+builder.Services.AddHttpClient("Gateway", client =>
+{
+    var baseAddress = builder.Configuration["ServiceUrls:Gateway"] ?? "http://gateway:8080";
+    client.BaseAddress = new Uri(baseAddress);
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(configuration);
+builder.Services.AddHttpClient("BillingService", client =>
+{
+    var baseAddress = builder.Configuration["ServiceUrls:BillingService"] ?? "http://billingservice:8080";
+    client.BaseAddress = new Uri(baseAddress);
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+}).AddStandardResilience(configuration);
+builder.Services.AddHttpClient("ContactService", client =>
+{
+    var baseAddress = builder.Configuration["ServiceUrls:ContactService"] ?? "http://contactservice:8080";
+    client.BaseAddress = new Uri(baseAddress);
+    client.Timeout = TimeSpan.FromSeconds(15);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 }).AddStandardResilience(configuration);
 

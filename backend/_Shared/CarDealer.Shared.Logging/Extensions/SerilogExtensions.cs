@@ -1,4 +1,5 @@
 using CarDealer.Shared.Logging.Models;
+using CarDealer.Shared.Logging.PiiProtection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -75,7 +76,9 @@ public static class SerilogExtensions
     }
 
     /// <summary>
-    /// Configures the Serilog logger with all sinks
+    /// Configures the Serilog logger with all sinks — routed through PII masking.
+    /// Defense-in-depth: even if developers accidentally log PII in structured properties,
+    /// the PiiMaskingSink intercepts and masks values before they reach any output.
     /// </summary>
     private static void ConfigureLogger(
         LoggerConfiguration loggerConfig,
@@ -84,6 +87,7 @@ public static class SerilogExtensions
     {
         var minimumLevel = ParseLogLevel(options.MinimumLevel);
 
+        // ── Enrichment & level filtering (outer logger) ──────────────────
         loggerConfig
             .MinimumLevel.Is(minimumLevel)
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -98,58 +102,39 @@ public static class SerilogExtensions
             .Enrich.WithThreadId()
             .Enrich.WithSpan(); // OpenTelemetry TraceId/SpanId
 
-        // Console sink
+        // ── Build inner logger with all output sinks ─────────────────────
+        var innerConfig = new LoggerConfiguration()
+            .MinimumLevel.Verbose(); // Accept everything — filtering done by outer logger
+
         if (options.EnableConsole)
         {
-            loggerConfig.WriteTo.Console(
+            innerConfig.WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{ServiceName}] {Message:lj} {Properties:j}{NewLine}{Exception}",
-                restrictedToMinimumLevel: minimumLevel);
+                restrictedToMinimumLevel: LogEventLevel.Verbose);
         }
 
-        // Seq sink
         if (options.Seq.Enabled)
         {
             var seqLevel = ParseLogLevel(options.Seq.MinimumLevel);
-            loggerConfig.WriteTo.Seq(
+            innerConfig.WriteTo.Seq(
                 serverUrl: options.Seq.ServerUrl,
                 apiKey: options.Seq.ApiKey,
                 restrictedToMinimumLevel: seqLevel);
         }
 
-        // RabbitMQ sink for critical logs (optional - requires proper RabbitMQ setup)
-        // Note: RabbitMQ sink is disabled for now. Error events are sent via ErrorHandling middleware.
-        // To enable, uncomment the following and ensure Serilog.Sinks.RabbitMQ is properly configured.
-        /*
-        if (options.RabbitMQ.Enabled)
-        {
-            var rabbitLevel = ParseLogLevel(options.RabbitMQ.MinimumLevel);
-            loggerConfig.WriteTo.RabbitMQ((config, sinkConfig) =>
-            {
-                config.Port = options.RabbitMQ.Port;
-                config.Username = options.RabbitMQ.Username;
-                config.Password = options.RabbitMQ.Password;
-                config.Exchange = options.RabbitMQ.Exchange;
-                config.ExchangeType = options.RabbitMQ.ExchangeType;
-                config.RouteKey = options.RabbitMQ.RouteKey;
-                foreach (var hostname in options.RabbitMQ.Hostnames)
-                {
-                    config.Hostnames.Add(hostname);
-                }
-                sinkConfig.RestrictedToMinimumLevel = rabbitLevel;
-            });
-        }
-        */
-
-        // File sink (optional, mainly for local debugging)
         if (options.File.Enabled)
         {
             var rollingInterval = Enum.Parse<Serilog.RollingInterval>(options.File.RollingInterval, true);
-            loggerConfig.WriteTo.File(
+            innerConfig.WriteTo.File(
                 path: options.File.Path,
                 rollingInterval: rollingInterval,
                 retainedFileCountLimit: options.File.RetainedFileCountLimit,
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] [{ServiceName}] {Message:lj}{NewLine}{Exception}");
         }
+
+        // ── Route all output through PII masking (Ley 172-13) ────────────
+        var innerLogger = innerConfig.CreateLogger();
+        loggerConfig.WriteTo.Sink(new PiiMaskingSink(innerLogger));
     }
 
     /// <summary>

@@ -14,6 +14,7 @@ using UserService.Application.UseCases.Privacy.GetUserDataSummary;
 using UserService.Application.UseCases.Privacy.GetUserFullData;
 using UserService.Application.UseCases.Privacy.RequestAccountDeletion;
 using UserService.Application.UseCases.Privacy.RequestDataExport;
+using UserService.Application.UseCases.Privacy.DownloadExportData;
 using UserService.Application.UseCases.Privacy.UpdateCommunicationPreferences;
 using UserService.Domain.Entities.Privacy;
 
@@ -149,22 +150,19 @@ public class PrivacyController : ControllerBase
     [ProducesResponseType(410)] // Gone - expired
     public async Task<IActionResult> DownloadExport(string token)
     {
-        // TODO: Implementar descarga real del archivo
-        // 1. Validar token
-        // 2. Verificar que no ha expirado
-        // 3. Servir archivo
+        var result = await _mediator.Send(new DownloadExportDataQuery(token));
 
-        await Task.CompletedTask;
+        if (result == null)
+            return NotFound(new { message = "Token de descarga no válido o no encontrado" });
 
-        // Por ahora retornamos ejemplo JSON
-        var content = System.Text.Json.JsonSerializer.Serialize(new
-        {
-            message = "Este es un archivo de ejemplo",
-            timestamp = DateTime.UtcNow
-        });
+        if (result.IsExpired)
+            return StatusCode(410, new { message = "El enlace de descarga ha expirado (24h). Solicite una nueva exportación." });
 
-        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-        return File(bytes, "application/json", "mis-datos-okla.json");
+        if (string.IsNullOrEmpty(result.FilePath) || !System.IO.File.Exists(result.FilePath))
+            return NotFound(new { message = "El archivo de exportación no se encontró en el servidor" });
+
+        var stream = System.IO.File.OpenRead(result.FilePath);
+        return File(stream, "application/zip", result.FileName);
     }
 
     #endregion
@@ -312,6 +310,8 @@ public class PrivacyController : ControllerBase
             EmailNewsletter: false,
             EmailPromotions: false,
             SmsPromotions: false,
+            WhatsAppMarketing: false,
+            WhatsAppPriceAlerts: false,
             PushRecommendations: false,
             AllowRetargeting: false
         ));

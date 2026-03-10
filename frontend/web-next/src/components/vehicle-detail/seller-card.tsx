@@ -80,7 +80,25 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
 
   const handleCall = () => {
     if (sellerData.phone) {
-      window.location.href = `tel:${sellerData.phone}`;
+      // SEM FIX: Track phone call as conversion BEFORE the tel: redirect.
+      // Uses a small delay to ensure the event fires.
+      try {
+        import('@/lib/retargeting-pixels').then(({ trackContactDealer }) => {
+          trackContactDealer({
+            vehicleId: vehicle.id,
+            title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+            price: vehicle.price,
+            dealerId: sellerData.id,
+            contactMethod: 'call',
+          });
+        });
+      } catch {
+        /* silently fail */
+      }
+      // Small delay to let the tracking event fire
+      setTimeout(() => {
+        window.location.href = `tel:${sellerData.phone}`;
+      }, 150);
     }
   };
 
@@ -88,13 +106,58 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
     const message = encodeURIComponent(
       `Hola, me interesa el ${vehicle.year} ${vehicle.make} ${vehicle.model} que vi en OKLA.`
     );
-    const phone = sellerData.phone?.replace(/\D/g, '');
-    window.open(`https://wa.me/1${phone}?text=${message}`, '_blank');
+    // SEM FIX: Normalize phone number — don't blindly prepend '1' if it already has country code.
+    // DR phone numbers: +1-809-XXX-XXXX, +1-829-XXX-XXXX, +1-849-XXX-XXXX
+    let phone = sellerData.phone?.replace(/\D/g, '') || '';
+    if (phone.length === 10 && /^(809|829|849)/.test(phone)) {
+      phone = `1${phone}`; // Add country code 1 for DR numbers without it
+    } else if (phone.length === 11 && phone.startsWith('1')) {
+      // Already has country code — use as is
+    }
+    // SEM FIX: Removed 7-digit fallback that assumed 809 area code.
+    // DR has 3 area codes (809/829/849) — guessing wrong sends messages to wrong numbers.
+    // If phone is <10 digits, WhatsApp will still attempt to match the number.
+    // Track WhatsApp as conversion
+    try {
+      import('@/lib/retargeting-pixels').then(({ trackContactDealer }) => {
+        trackContactDealer({
+          vehicleId: vehicle.id,
+          title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+          price: vehicle.price,
+          dealerId: sellerData.id,
+          contactMethod: 'whatsapp',
+        });
+      });
+    } catch {
+      /* silently fail */
+    }
+    // REMARKETING FIX: 150ms delay to let pixel events fire before window.open
+    // changes tab focus. Without this, FB/Google network requests may not complete.
+    setTimeout(() => {
+      window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+    }, 150);
   };
 
   const handleShowPhone = () => {
     setShowPhone(true);
-    // TODO: Track phone reveal event
+    // SEM FIX: Track phone reveal as high-intent event with UTM context
+    try {
+      import('@/lib/ad-params').then(({ getAdParams }) => {
+        const adParams = getAdParams();
+        window.gtag?.('event', 'phone_reveal', {
+          event_category: 'engagement',
+          vehicle_id: vehicle.id,
+          dealer_id: sellerData.id,
+          // UTM attribution for campaign-level analysis
+          utm_source: adParams?.utm_source,
+          utm_medium: adParams?.utm_medium,
+          utm_campaign: adParams?.utm_campaign,
+          gclid: adParams?.gclid,
+        });
+      });
+    } catch {
+      /* silently fail */
+    }
   };
 
   return (
@@ -181,7 +244,7 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
       <div className="mt-6 space-y-2.5">
         {/* PRIMARY CTA: Chat en vivo — requires auth, redirects to /mensajes */}
         <Button
-          className="h-11 w-full gap-2 bg-primary text-base font-semibold text-white shadow-md hover:bg-primary/80"
+          className="bg-primary hover:bg-primary/80 h-11 w-full gap-2 text-base font-semibold text-white shadow-md"
           onClick={() => {
             if (isAuthenticated) {
               // Redirect to messaging view with seller context
@@ -217,10 +280,10 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
                 <div className="mt-3 flex gap-2">
                   <Button
                     size="sm"
-                    className="h-8 gap-1.5 bg-primary text-xs text-white hover:bg-primary/80"
+                    className="bg-primary hover:bg-primary/80 h-8 gap-1.5 text-xs text-white"
                     onClick={() =>
                       router.push(
-                        `/login?callbackUrl=${encodeURIComponent(`/vehiculos/${vehicle.slug || vehicle.id}}`)}`
+                        `/login?callbackUrl=${encodeURIComponent(`/vehiculos/${vehicle.slug || vehicle.id}`)}`
                       )
                     }
                   >
@@ -233,7 +296,7 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
                     className="h-8 text-xs"
                     onClick={() =>
                       router.push(
-                        `/registro?callbackUrl=${encodeURIComponent(`/vehiculos/${vehicle.slug || vehicle.id}}`)}`
+                        `/registro?callbackUrl=${encodeURIComponent(`/vehiculos/${vehicle.slug || vehicle.id}`)}`
                       )
                     }
                   >
@@ -319,7 +382,7 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
       {/* Trust signals */}
       <div className="border-border mt-6 border-t pt-4">
         <div className="text-muted-foreground flex items-center gap-2 text-sm">
-          <Shield className="h-4 w-4 text-primary" />
+          <Shield className="text-primary h-4 w-4" />
           <span>Contacto verificado por OKLA</span>
         </div>
         <p className="text-muted-foreground mt-2 text-xs">
@@ -332,7 +395,7 @@ export function SellerCard({ vehicle, className, onChatClick: _onChatClick }: Se
         <div className="mt-4 flex flex-col items-center gap-1">
           <Link
             href={`/dealers/${sellerData.id}`}
-            className="flex items-center gap-1 text-sm text-primary hover:underline"
+            className="text-primary flex items-center gap-1 text-sm hover:underline"
           >
             <Store className="h-3.5 w-3.5" />
             Ver perfil y todo el inventario

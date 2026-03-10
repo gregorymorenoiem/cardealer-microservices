@@ -51,6 +51,7 @@ import {
   sanitizeUrl,
 } from '@/lib/security/sanitize';
 import { RD_PROVINCES } from '@/lib/validations/seller-onboarding';
+import { FieldTooltip } from '@/components/ui/field-tooltip';
 
 const steps = [
   { id: 1, title: 'Tipo de Cuenta', icon: Building2 },
@@ -102,6 +103,52 @@ export default function DealerRegistrationPage() {
   };
 
   const nextStep = () => {
+    // Step validation before advancing
+    if (currentStep === 1 && !formData.dealerType) {
+      setError('Por favor selecciona tu tipo de dealer.');
+      return;
+    }
+    if (currentStep === 2) {
+      if (!formData.businessName.trim()) {
+        setError('El nombre del negocio es requerido.');
+        return;
+      }
+      if (!formData.contactName.trim()) {
+        setError('El nombre de contacto es requerido.');
+        return;
+      }
+      if (!formData.email.trim() || !formData.email.includes('@')) {
+        setError('Un correo electrónico válido es requerido.');
+        return;
+      }
+      if (!formData.password || formData.password.length < 8) {
+        setError('La contraseña debe tener al menos 8 caracteres.');
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setError('Las contraseñas no coinciden.');
+        return;
+      }
+      if (!formData.phone.trim()) {
+        setError('El teléfono es requerido.');
+        return;
+      }
+    }
+    if (currentStep === 3) {
+      if (!formData.address.trim()) {
+        setError('La dirección es requerida.');
+        return;
+      }
+      if (!formData.city.trim()) {
+        setError('La ciudad es requerida.');
+        return;
+      }
+      if (!formData.province) {
+        setError('La provincia es requerida.');
+        return;
+      }
+    }
+    setError(null);
     if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
@@ -190,8 +237,8 @@ export default function DealerRegistrationPage() {
         // Step 3: Create the dealer profile (user is now authenticated)
         await createDealer(dealerPayload);
 
-        // Success — go to dealer dashboard
-        router.push('/mis-vehiculos');
+        // Success — redirect to publish first vehicle (onboarding flow)
+        router.push('/publicar?onboarding=true');
       } catch {
         // Auto-login failed (most likely email verification required).
         // Save the dealer data so it can be created after the user verifies and logs in.
@@ -392,8 +439,9 @@ export default function DealerRegistrationPage() {
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="md:col-span-2">
-                        <label className="mb-2 block text-sm font-medium">
+                        <label className="mb-2 flex items-center text-sm font-medium">
                           Nombre del Negocio *
+                          <FieldTooltip text="El nombre comercial de tu empresa o negocio, como aparece en tus redes sociales o letrero" />
                         </label>
                         <Input
                           placeholder="Ej: Auto Premium RD"
@@ -404,7 +452,10 @@ export default function DealerRegistrationPage() {
 
                       {accountType === 'company' && (
                         <div className="md:col-span-2">
-                          <label className="mb-2 block text-sm font-medium">RNC *</label>
+                          <label className="mb-2 flex items-center text-sm font-medium">
+                            RNC *
+                            <FieldTooltip text="Registro Nacional del Contribuyente — es el número fiscal de tu empresa asignado por la DGII (9 dígitos)" />
+                          </label>
                           <Input
                             placeholder="000-00000-0"
                             value={formData.rnc}
@@ -414,8 +465,9 @@ export default function DealerRegistrationPage() {
                       )}
 
                       <div>
-                        <label className="mb-2 block text-sm font-medium">
+                        <label className="mb-2 flex items-center text-sm font-medium">
                           Nombre del Contacto *
+                          <FieldTooltip text="Tu nombre completo, quien administrará la cuenta de OKLA" />
                         </label>
                         <Input
                           placeholder="Tu nombre completo"
@@ -425,8 +477,9 @@ export default function DealerRegistrationPage() {
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-sm font-medium">
+                        <label className="mb-2 flex items-center text-sm font-medium">
                           Correo Electrónico *
+                          <FieldTooltip text="Te enviaremos un correo de verificación. Usa el email donde recibirás notificaciones de OKLA" />
                         </label>
                         <Input
                           type="email"
@@ -437,7 +490,10 @@ export default function DealerRegistrationPage() {
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-sm font-medium">Contraseña *</label>
+                        <label className="mb-2 flex items-center text-sm font-medium">
+                          Contraseña *
+                          <FieldTooltip text="Mínimo 8 caracteres con al menos: 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial (!@#$%)" />
+                        </label>
                         <Input
                           type="password"
                           placeholder="Mínimo 8 caracteres"
@@ -447,8 +503,9 @@ export default function DealerRegistrationPage() {
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-sm font-medium">
+                        <label className="mb-2 flex items-center text-sm font-medium">
                           Confirmar Contraseña *
+                          <FieldTooltip text="Escribe la misma contraseña para confirmar" />
                         </label>
                         <Input
                           type="password"
@@ -459,7 +516,10 @@ export default function DealerRegistrationPage() {
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-sm font-medium">Teléfono *</label>
+                        <label className="mb-2 flex items-center text-sm font-medium">
+                          Teléfono *
+                          <FieldTooltip text="Número donde te pueden contactar los compradores interesados" />
+                        </label>
                         <Input
                           type="tel"
                           placeholder="809-555-0123"
@@ -469,8 +529,9 @@ export default function DealerRegistrationPage() {
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-sm font-medium">
+                        <label className="mb-2 flex items-center text-sm font-medium">
                           Sitio Web (opcional)
+                          <FieldTooltip text="Si tu negocio tiene página web o redes sociales, puedes colocar el enlace aquí" />
                         </label>
                         <Input
                           placeholder="https://tudealer.com"
@@ -487,7 +548,10 @@ export default function DealerRegistrationPage() {
                     <h3 className="text-lg font-semibold">Ubicación del Negocio</h3>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium">Dirección *</label>
+                      <label className="mb-2 flex items-center text-sm font-medium">
+                        Dirección *
+                        <FieldTooltip text="La dirección física de tu negocio donde los clientes pueden visitarte" />
+                      </label>
                       <Textarea
                         placeholder="Av. Principal #123, Local 4..."
                         value={formData.address}
@@ -497,7 +561,10 @@ export default function DealerRegistrationPage() {
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
-                        <label className="mb-2 block text-sm font-medium">Ciudad *</label>
+                        <label className="mb-2 flex items-center text-sm font-medium">
+                          Ciudad *
+                          <FieldTooltip text="La ciudad donde está ubicado tu dealer" />
+                        </label>
                         <Input
                           placeholder="Santo Domingo"
                           value={formData.city}
@@ -506,7 +573,10 @@ export default function DealerRegistrationPage() {
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-sm font-medium">Provincia *</label>
+                        <label className="mb-2 flex items-center text-sm font-medium">
+                          Provincia *
+                          <FieldTooltip text="La provincia de República Dominicana donde operas" />
+                        </label>
                         <Select
                           value={formData.province}
                           onValueChange={v => handleChange('province', v)}

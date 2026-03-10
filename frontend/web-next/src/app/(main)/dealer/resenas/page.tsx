@@ -39,6 +39,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import { cn, formatDate } from '@/lib/utils';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 import type { Review } from '@/services/reviews';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -426,7 +427,10 @@ export default function DealerResenasPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-foreground text-2xl font-bold">Reseñas</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground text-2xl font-bold">Reseñas</h1>
+            <VideoHelpButton sectionKey="resenas" variant="icon" />
+          </div>
           <p className="text-muted-foreground mt-1">
             Gestiona y responde las reseñas de tu concesionario
             {dealer?.businessName ? ` "${dealer.businessName}"` : ''}.

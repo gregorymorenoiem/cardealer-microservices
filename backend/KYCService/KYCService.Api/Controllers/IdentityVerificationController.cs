@@ -51,8 +51,9 @@ public class IdentityVerificationController : ControllerBase
         var canStart = await _mediator.Send(new CanStartVerificationQuery(userId));
         if (!canStart.CanStart)
         {
-            return BadRequest(new { 
-                error = "CannotStart", 
+            return BadRequest(new
+            {
+                error = "CannotStart",
                 message = canStart.Reason,
                 canRetryAfter = canStart.CanRetryAfter,
                 hasActiveSession = canStart.HasActiveSession,
@@ -71,10 +72,10 @@ public class IdentityVerificationController : ControllerBase
         };
 
         var result = await _mediator.Send(command);
-        
-        _logger.LogInformation("Identity verification session {SessionId} started for user {UserId}", 
+
+        _logger.LogInformation("Identity verification session {SessionId} started for user {UserId}",
             result.SessionId, userId);
-        
+
         return Ok(result);
     }
 
@@ -200,7 +201,7 @@ public class IdentityVerificationController : ControllerBase
             try
             {
                 livenessData = System.Text.Json.JsonSerializer.Deserialize<LivenessDataDto>(
-                    livenessDataJson, 
+                    livenessDataJson,
                     new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
             catch (Exception ex)
@@ -271,6 +272,10 @@ public class IdentityVerificationController : ControllerBase
             _logger.LogWarning(ex, "Session error during verification completion");
             return BadRequest(new { error = "SessionError", message = "No se pudo completar la verificación. Verifique el estado de la sesión." });
         }
+    }
+
+    /// <summary>
+    /// Obtener sesión de verificación por ID
     /// </summary>
     [HttpGet("{sessionId}")]
     [ProducesResponseType(typeof(VerificationSessionStatusDto), StatusCodes.Status200OK)]
@@ -332,7 +337,7 @@ public class IdentityVerificationController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Cannot retry verification for session {SessionId}", sessionId);
+            _logger.LogWarning(ex, "Cannot retry verification for session {SessionId}", request.SessionId);
             return BadRequest(new { error = "CannotRetry", message = "No se puede reintentar la verificación en este momento." });
         }
     }
@@ -445,7 +450,7 @@ public class IdentityVerificationController : ControllerBase
             try
             {
                 livenessDto = System.Text.Json.JsonSerializer.Deserialize<LivenessDataDto>(
-                    livenessData, 
+                    livenessData,
                     new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
             catch (Exception ex)
@@ -484,7 +489,7 @@ public class IdentityVerificationController : ControllerBase
 
     private Guid GetUserIdFromClaims()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                        ?? User.FindFirst("sub")?.Value
                        ?? User.FindFirst("userId")?.Value;
 

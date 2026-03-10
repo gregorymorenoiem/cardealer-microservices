@@ -40,6 +40,7 @@ import {
 } from '@/services/dealer-billing';
 import type { Invoice } from '@/services/dealer-billing';
 import { toast } from 'sonner';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 
 // ============================================================================
 // Loading Skeletons
@@ -213,7 +214,10 @@ export default function DealerBillingPage() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Facturación</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground text-2xl font-bold">Facturación</h1>
+            <VideoHelpButton sectionKey="facturacion" variant="icon" />
+          </div>
           <p className="text-muted-foreground">Historial de pagos y métodos de pago</p>
         </div>
         <Button variant="outline">
@@ -227,11 +231,11 @@ export default function DealerBillingPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <DollarSign className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <DollarSign className="text-primary h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Pagado (2024)</p>
+                <p className="text-muted-foreground text-sm">Total Pagado (2024)</p>
                 <p className="text-2xl font-bold">{formatCurrency(totalPaidThisYear)}</p>
               </div>
             </div>
@@ -244,7 +248,7 @@ export default function DealerBillingPage() {
                 <Calendar className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Próximo Pago</p>
+                <p className="text-muted-foreground text-sm">Próximo Pago</p>
                 <p className="text-2xl font-bold">{nextPaymentDate}</p>
               </div>
             </div>
@@ -257,7 +261,7 @@ export default function DealerBillingPage() {
                 <CreditCard className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Monto Mensual</p>
+                <p className="text-muted-foreground text-sm">Monto Mensual</p>
                 <p className="text-2xl font-bold">{formatCurrency(monthlyAmount)}</p>
               </div>
             </div>
@@ -281,15 +285,15 @@ export default function DealerBillingPage() {
                   invoices.map(invoice => (
                     <div
                       key={invoice.id}
-                      className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted/50"
+                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="rounded-lg bg-muted p-2">
-                          <FileText className="h-5 w-5 text-muted-foreground" />
+                        <div className="bg-muted rounded-lg p-2">
+                          <FileText className="text-muted-foreground h-5 w-5" />
                         </div>
                         <div>
                           <p className="font-medium">{invoice.description}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             {invoice.invoiceNumber} • {formatBillingDate(invoice.createdAt)}
                           </p>
                         </div>
@@ -315,7 +319,7 @@ export default function DealerBillingPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="py-8 text-center text-muted-foreground">
+                  <div className="text-muted-foreground py-8 text-center">
                     <FileText className="mx-auto mb-2 h-12 w-12 text-gray-300" />
                     <p>No hay facturas disponibles</p>
                   </div>
@@ -342,14 +346,14 @@ export default function DealerBillingPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="rounded bg-card p-2 shadow-sm">
+                      <div className="bg-card rounded p-2 shadow-sm">
                         <CreditCard className="h-5 w-5" />
                       </div>
                       <div>
                         <p className="font-medium">
                           {getPaymentMethodBrand(method.brand)} •••• {method.last4}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           Exp: {method.expiryMonth}/{method.expiryYear}
                         </p>
                       </div>
@@ -362,7 +366,7 @@ export default function DealerBillingPage() {
                   </div>
                 ))
               ) : (
-                <div className="py-4 text-center text-muted-foreground">
+                <div className="text-muted-foreground py-4 text-center">
                   <CreditCard className="mx-auto mb-2 h-8 w-8 text-gray-300" />
                   <p className="text-sm">No hay métodos de pago</p>
                 </div>
@@ -394,7 +398,7 @@ export default function DealerBillingPage() {
                 <span className="text-muted-foreground">Email Facturas</span>
                 <span className="font-medium">{dealer?.email || 'N/A'}</span>
               </div>
-              <Button variant="link" className="h-auto p-0 text-primary">
+              <Button variant="link" className="text-primary h-auto p-0">
                 Editar información
               </Button>
             </CardContent>

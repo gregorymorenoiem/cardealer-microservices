@@ -7,13 +7,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import {
   Camera,
   Upload,
@@ -69,6 +70,8 @@ export default function PublicarFotosPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgressMap, setUploadProgressMap] = useState<Record<string, number>>({});
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   // Initialize photos from existing vehicle data
   useState(() => {
@@ -345,6 +348,29 @@ export default function PublicarFotosPage() {
                         </span>
                       </Button>
                     </label>
+                    {/* Camera input + button for PWA mobile */}
+                    {isMobile && (
+                      <>
+                        <input
+                          ref={cameraInputRef}
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={e =>
+                            e.target.files && handlePhotoUpload(e.target.files, selectedCategory)
+                          }
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="mt-2 flex items-center gap-2 rounded-lg border-2 border-emerald-200 bg-emerald-50 px-4 py-2 text-emerald-700 transition-colors hover:bg-emerald-100 active:bg-emerald-200"
+                        >
+                          <Camera className="h-4 w-4" />
+                          <span className="text-sm font-medium">Tomar Foto</span>
+                        </button>
+                      </>
+                    )}
                   </>
                 )}
               </CardContent>

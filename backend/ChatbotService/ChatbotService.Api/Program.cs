@@ -5,6 +5,7 @@ using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.Audit.Extensions;
 using CarDealer.Shared.Configuration;
+using CarDealer.Shared.Resilience.Extensions;
 using CarDealer.Shared.Secrets;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using ChatbotService.Application;
 using ChatbotService.Infrastructure;
 using ChatbotService.Infrastructure.Persistence;
+using ChatbotService.Infrastructure.Messaging;
 using ChatbotService.Api.Services;
 
 const string ServiceName = "ChatbotService";
@@ -96,67 +98,70 @@ try
     // ============= RATE LIMITING (Per-IP) =============
     builder.Services.AddRateLimiter(options =>
     {
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    // Policy: Chat messages — max 20 requests per minute per IP
-    options.AddPolicy("ChatMessage", context =>
-        RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            factory: _ => new SlidingWindowRateLimiterOptions
-            {
-                PermitLimit = 20,
-                Window = TimeSpan.FromMinutes(1),
-                SegmentsPerWindow = 4,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 2
-            }));
+        // Policy: Chat messages — max 20 requests per minute per IP
+        options.AddPolicy("ChatMessage", context =>
+            RateLimitPartition.GetSlidingWindowLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new SlidingWindowRateLimiterOptions
+                {
+                    PermitLimit = 20,
+                    Window = TimeSpan.FromMinutes(1),
+                    SegmentsPerWindow = 4,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 2
+                }));
 
-    // Policy: Session start — max 5 per minute per IP (prevent session flooding)
-    options.AddPolicy("SessionStart", context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 5,
-                Window = TimeSpan.FromMinutes(1),
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            }));
+        // Policy: Session start — max 5 per minute per IP (prevent session flooding)
+        options.AddPolicy("SessionStart", context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
 
-    // Global fallback — 100 requests per minute per IP
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "global",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 100,
-                Window = TimeSpan.FromMinutes(1),
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            }));
-});
-
-// Add Hosted Services for maintenance tasks
-if (builder.Configuration.GetValue<bool>("Maintenance:EnableAutomatedTasks"))
-{
-    builder.Services.AddHostedService<MaintenanceWorkerService>();
-}
-
-// Redis Distributed Cache — required by LlmResponseCacheService (IDistributedCache)
-var redisConnectionString = builder.Configuration["Redis:ConnectionString"] ?? "redis:6379";
-try
-{
-    builder.Services.AddStackExchangeRedisCache(options =>
-    {
-        options.Configuration = redisConnectionString;
-        options.InstanceName = "ChatbotService:";
+        // Global fallback — 100 requests per minute per IP
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "global",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 100,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
     });
-}
-catch
-{
-    // Fallback to in-memory distributed cache if Redis is not available
-    builder.Services.AddDistributedMemoryCache();
-}
+
+    // Add Hosted Services for maintenance tasks
+    if (builder.Configuration.GetValue<bool>("Maintenance:EnableAutomatedTasks"))
+    {
+        builder.Services.AddHostedService<MaintenanceWorkerService>();
+    }
+
+    // Ley 172-13: User data deletion consumer (always active when RabbitMQ enabled)
+    builder.Services.AddHostedService<UserDataDeletionConsumer>();
+
+    // Redis Distributed Cache — required by LlmResponseCacheService (IDistributedCache)
+    var redisConnectionString = builder.Configuration["Redis:ConnectionString"] ?? "redis:6379";
+    try
+    {
+        builder.Services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnectionString;
+            options.InstanceName = "ChatbotService:";
+        });
+    }
+    catch
+    {
+        // Fallback to in-memory distributed cache if Redis is not available
+        builder.Services.AddDistributedMemoryCache();
+    }
 
     // Health checks
     builder.Services.AddHealthChecks()
@@ -221,7 +226,10 @@ catch
         ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
     });
 
-    // 6. CORS — before auth
+    // 6. Graceful Degradation — catches circuit breaker / timeout errors before they become 500s
+    app.UseGracefulDegradation();
+
+    // 7. CORS — before auth
     app.UseCors();
 
     // 7. Rate Limiting

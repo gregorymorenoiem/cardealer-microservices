@@ -188,6 +188,8 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
 
     // ─── Business Logic ──────────────────────────────────────────────────────────
 
+    // TODO: Migrate to fetch Email/FullName via UserService using UserId (Ley 172-13 compliance)
+    #pragma warning disable CS0618 // Obsolete Email/FullName — migration in progress
     private async Task HandleKYCStatusChangedAsync(
         KYCProfileStatusChangedEvent kycEvent,
         CancellationToken cancellationToken)
@@ -381,6 +383,8 @@ public class KYCStatusChangedNotificationConsumer : BackgroundService
 
         return (subject, body);
     }
+
+    #pragma warning restore CS0618
 
     // ─── Cleanup ─────────────────────────────────────────────────────────────────
 

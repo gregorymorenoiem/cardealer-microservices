@@ -109,6 +109,40 @@ public class ChatController : ControllerBase
     }
 
     /// <summary>
+    /// Accept bot disclosure and privacy policy.
+    /// Must be called after StartSession and before the first SendMessage.
+    /// </summary>
+    [HttpPost("accept-disclosure")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AcceptDisclosureResponse), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> AcceptDisclosure([FromBody] AcceptDisclosureRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new AcceptDisclosureCommand(request.SessionToken);
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.Success)
+            {
+                return NotFound(new { error = result.Message });
+            }
+
+            return Ok(new AcceptDisclosureResponse
+            {
+                Success = result.Success,
+                Message = result.Message,
+                ConsentAcceptedAt = result.ConsentAcceptedAt ?? DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error accepting disclosure");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
     /// End a chat session
     /// </summary>
     [HttpPost("end")]

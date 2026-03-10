@@ -12,9 +12,10 @@ import {
 } from '@/hooks/use-vehicles';
 import type { VehicleFormData } from './smart-publish-wizard';
 import { sanitizeText, sanitizeMileage, sanitizeYear } from '@/lib/security/sanitize';
-import { Check, Sparkles, MapPin, User } from 'lucide-react';
+import { Check, Sparkles, MapPin, User, HelpCircle } from 'lucide-react';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { RD_PROVINCES } from '@/lib/validations/seller-onboarding';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // ============================================================
 // Static Data
@@ -39,6 +40,13 @@ const MILEAGE_UNITS = [
 
 const DOORS_OPTIONS = [2, 3, 4, 5, 6].map(n => ({ value: n.toString(), label: `${n} puertas` }));
 
+const DRIVE_TYPES = [
+  { value: 'FWD', label: 'Delantera (FWD)' },
+  { value: 'RWD', label: 'Trasera (RWD)' },
+  { value: 'AWD', label: 'Total (AWD)' },
+  { value: '4WD', label: '4x4 (4WD)' },
+];
+
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: CURRENT_YEAR - 1900 + 2 }, (_, i) => CURRENT_YEAR + 1 - i);
 
@@ -56,6 +64,7 @@ function SelectField({
   isLoading = false,
   disabled = false,
   required = false,
+  helperText,
 }: {
   label: string;
   value: string;
@@ -66,6 +75,7 @@ function SelectField({
   isLoading?: boolean;
   disabled?: boolean;
   required?: boolean;
+  helperText?: string;
 }) {
   return (
     <div>
@@ -77,6 +87,18 @@ function SelectField({
             <Sparkles className="h-2.5 w-2.5" />
             VIN
           </span>
+        )}
+        {helperText && (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-3.5 w-3.5 cursor-help text-gray-400 hover:text-gray-600" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-xs">
+                {helperText}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </label>
       <SearchableSelect
@@ -101,6 +123,7 @@ function TextField({
   isAutoFilled = false,
   required = false,
   maxLength,
+  helperText,
 }: {
   label: string;
   value: string | number;
@@ -110,6 +133,7 @@ function TextField({
   isAutoFilled?: boolean;
   required?: boolean;
   maxLength?: number;
+  helperText?: string;
 }) {
   return (
     <div>
@@ -121,6 +145,18 @@ function TextField({
             <Sparkles className="h-2.5 w-2.5" />
             VIN
           </span>
+        )}
+        {helperText && (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-3.5 w-3.5 cursor-help text-gray-400 hover:text-gray-600" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-xs">
+                {helperText}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </label>
       <input
@@ -307,6 +343,7 @@ export function VehicleInfoForm({
             isAutoFilled={isAuto('make')}
             isLoading={makesLoading}
             required
+            helperText="La empresa que fabricó tu vehículo (ej: Toyota, Honda, Hyundai)"
           />
           <SelectField
             label="Modelo"
@@ -318,6 +355,7 @@ export function VehicleInfoForm({
             isLoading={modelsLoading}
             disabled={!data.make}
             required
+            helperText="El nombre específico del vehículo (ej: Camry, CR-V, Tucson)"
           />
           <SelectField
             label="Año"
@@ -327,6 +365,7 @@ export function VehicleInfoForm({
             placeholder="Seleccionar año..."
             isAutoFilled={isAuto('year')}
             required
+            helperText="El año de fabricación que aparece en los documentos"
           />
           <TextField
             label="Trim / Versión"
@@ -334,6 +373,7 @@ export function VehicleInfoForm({
             onChange={val => onChange({ trim: sanitizeText(val, { maxLength: 50 }) })}
             placeholder="Ej: LX, EX, Sport..."
             isAutoFilled={isAuto('trim')}
+            helperText="La versión o paquete del modelo (ej: LX, EX, Sport, Limited)"
           />
           <SelectField
             label="Tipo de Carrocería"
@@ -344,6 +384,7 @@ export function VehicleInfoForm({
             isAutoFilled={isAuto('bodyStyle')}
             isLoading={bodyLoading}
             required
+            helperText="La forma del vehículo: sedán, SUV, camioneta, etc."
           />
           <TextField
             label="Motor"
@@ -351,6 +392,7 @@ export function VehicleInfoForm({
             onChange={val => onChange({ engineSize: sanitizeText(val, { maxLength: 20 }) })}
             placeholder="Ej: 2.0L Turbo"
             isAutoFilled={isAuto('engineSize')}
+            helperText="El tamaño del motor (ej: 2.0L, 1.5T, 3.5 V6)"
           />
         </div>
       </section>
@@ -370,6 +412,7 @@ export function VehicleInfoForm({
             isAutoFilled={isAuto('fuelType')}
             isLoading={fuelLoading}
             required
+            helperText="El tipo de combustible que usa tu vehículo"
           />
           <SelectField
             label="Transmisión"
@@ -380,13 +423,16 @@ export function VehicleInfoForm({
             isAutoFilled={isAuto('transmission')}
             isLoading={transLoading}
             required
+            helperText="Cómo se cambian las velocidades: automática o manual"
           />
-          <TextField
+          <SelectField
             label="Tracción"
             value={data.driveType}
-            onChange={val => onChange({ driveType: sanitizeText(val, { maxLength: 20 }) })}
-            placeholder="Ej: FWD, AWD, RWD"
+            onChange={val => onChange({ driveType: val })}
+            options={DRIVE_TYPES}
+            placeholder="Seleccionar tracción..."
             isAutoFilled={isAuto('driveType')}
+            helperText="Cuáles ruedas reciben la fuerza del motor"
           />
           <div className="flex gap-3">
             <div className="flex-1">
@@ -397,6 +443,7 @@ export function VehicleInfoForm({
                 type="number"
                 placeholder="0"
                 required
+                helperText="Los kilómetros o millas que ha recorrido tu vehículo"
               />
             </div>
             <div className="w-32">
@@ -415,6 +462,7 @@ export function VehicleInfoForm({
             type="number"
             placeholder="Ej: 4"
             isAutoFilled={isAuto('cylinders')}
+            helperText="El número de cilindros del motor (aparece en los documentos)"
           />
           <TextField
             label="Caballos de fuerza"
@@ -423,6 +471,7 @@ export function VehicleInfoForm({
             type="number"
             placeholder="Ej: 192"
             isAutoFilled={isAuto('horsepower')}
+            helperText="La potencia del motor en HP (caballos de fuerza)"
           />
           <SelectField
             label="Puertas"
@@ -431,6 +480,7 @@ export function VehicleInfoForm({
             options={DOORS_OPTIONS}
             placeholder="Seleccionar puertas..."
             isAutoFilled={isAuto('doors')}
+            helperText="Número de puertas del vehículo (incluyendo compuerta trasera si aplica)"
           />
         </div>
       </section>
@@ -485,6 +535,7 @@ export function VehicleInfoForm({
             placeholder="Seleccionar color..."
             isAutoFilled={isAuto('exteriorColor')}
             isLoading={colorsLoading}
+            helperText="El color principal de la pintura exterior de tu vehículo"
           />
           <SelectField
             label="Color Interior"
@@ -493,6 +544,7 @@ export function VehicleInfoForm({
             options={colorOptions}
             placeholder="Seleccionar color..."
             isLoading={colorsLoading}
+            helperText="El color principal del interior (asientos, tablero)"
           />
         </div>
       </section>
@@ -552,12 +604,14 @@ export function VehicleInfoForm({
             options={RD_PROVINCES.map(p => ({ value: p, label: p }))}
             placeholder="Seleccionar provincia..."
             required
+            helperText="La provincia de RD donde se encuentra el vehículo"
           />
           <TextField
             label="Ciudad / Sector"
             value={data.city}
             onChange={val => onChange({ city: sanitizeText(val) })}
             placeholder="Ej: Naco, Piantini..."
+            helperText="El sector o zona donde el comprador puede ver el vehículo"
           />
         </div>
       </section>
@@ -594,6 +648,7 @@ export function VehicleInfoForm({
               onChange({ sellerPhone: val.replace(/[^\d\-+() ]/g, '').slice(0, 15) })
             }
             placeholder="809-000-0000"
+            helperText="El número de teléfono donde los interesados pueden llamarte"
           />
           <TextField
             label="WhatsApp"
@@ -602,6 +657,7 @@ export function VehicleInfoForm({
               onChange({ sellerWhatsApp: val.replace(/[^\d\-+() ]/g, '').slice(0, 15) })
             }
             placeholder="809-000-0000"
+            helperText="El número de WhatsApp para que los compradores te escriban"
           />
         </div>
         <p className="mt-2 text-xs text-gray-400">

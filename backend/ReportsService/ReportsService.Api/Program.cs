@@ -19,6 +19,7 @@ using ReportsService.Infrastructure.Repositories;
 using Serilog;
 using System.IO.Compression;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -128,6 +129,17 @@ try
 
     // Module Access (for paid feature gating)
     builder.Services.AddModuleAccessServices(builder.Configuration);
+
+    // ============= INTER-SERVICE HTTP CLIENTS =============
+    // VehiclesSaleService — used by auto-suspend logic to change vehicle status
+    var vehiclesSaleServiceUrl = builder.Configuration["Services:VehiclesSaleService"]
+        ?? "http://vehiclessaleservice:80";
+    builder.Services.AddHttpClient("VehiclesSaleService", client =>
+    {
+        client.BaseAddress = new Uri(vehiclesSaleServiceUrl);
+        client.Timeout = TimeSpan.FromSeconds(15);
+        client.DefaultRequestHeaders.Add("Accept", "application/json");
+    });
 
     // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
     builder.Services.AddResponseCompression(options =>

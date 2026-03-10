@@ -6,7 +6,16 @@ import { generateVehicleDescription } from '@/services/vehicles';
 import { PriceSuggestionCard } from './price-suggestion-card';
 import type { VehicleFormData } from './smart-publish-wizard';
 import { sanitizePrice, sanitizeText } from '@/lib/security/sanitize';
-import { DollarSign, Wand2, ToggleLeft, ToggleRight, ArrowLeftRight, FileText } from 'lucide-react';
+import {
+  DollarSign,
+  Wand2,
+  ToggleLeft,
+  ToggleRight,
+  ArrowLeftRight,
+  FileText,
+  HelpCircle,
+} from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // ============================================================
 // Component
@@ -95,8 +104,18 @@ export function PricingStep({ data, onChange }: PricingStepProps) {
         <div className="flex items-end gap-3">
           {/* Price Input */}
           <div className="flex-1">
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
               Precio de Venta <span className="text-red-500">*</span>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3.5 w-3.5 cursor-help text-gray-400 hover:text-gray-600" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs">
+                    El precio al que deseas vender tu vehículo. Puedes marcarlo como negociable.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </label>
             <div className="relative">
               <DollarSign className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -227,8 +246,19 @@ export function PricingStep({ data, onChange }: PricingStepProps) {
       {/* ── Description ── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold tracking-wider text-gray-500 uppercase">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold tracking-wider text-gray-500 uppercase">
             Descripción
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3.5 w-3.5 cursor-help text-gray-400 hover:text-gray-600" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs text-xs">
+                  Una buena descripción aumenta hasta 3x la probabilidad de venta. Incluye estado,
+                  historial y razón de venta.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </h3>
           <button
             type="button"

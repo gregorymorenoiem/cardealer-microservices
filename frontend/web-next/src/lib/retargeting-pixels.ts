@@ -42,6 +42,77 @@ declare global {
 
 let initialized = false;
 
+// =============================================================================
+// FB PIXEL EVENT QUEUE — Safari ITP & Deferred Init Race Condition Fix
+// =============================================================================
+// P0-01 FIX: FB Pixel is deferred via requestIdleCallback. Events fired before
+// fbq loads are silently dropped. This queue captures them and flushes once fbq
+// is available. Without this, ViewContent on first page load from Meta ads is lost.
+const fbEventQueue: Array<[string, ...unknown[]]> = [];
+let fbPixelReady = false;
+
+/**
+ * Queue-aware fbq caller. Fires immediately if fbq is loaded, otherwise queues.
+ */
+function safeFbq(eventType: string, ...args: unknown[]): void {
+  if (fbPixelReady && window.fbq) {
+    window.fbq(eventType, ...args);
+  } else {
+    fbEventQueue.push([eventType, ...args]);
+  }
+}
+
+/**
+ * Flush queued FB Pixel events after fbq has loaded.
+ */
+function flushFbEventQueue(): void {
+  fbPixelReady = true;
+  while (fbEventQueue.length > 0) {
+    const [eventType, ...args] = fbEventQueue.shift()!;
+    window.fbq?.(eventType, ...args);
+  }
+}
+
+// =============================================================================
+// UTM CONTEXT HELPER
+// =============================================================================
+
+/**
+ * Get persisted UTM params for attaching to analytics events.
+ * Falls back to ad-params.ts localStorage (survives SPA navigation).
+ * Returns empty object if no UTMs are available.
+ */
+function getUtmContext(): Record<string, string | undefined> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getAdParams } = require('@/lib/ad-params');
+    const params = getAdParams();
+    if (!params) return {};
+    return {
+      utm_source: params.utm_source,
+      utm_medium: params.utm_medium,
+      utm_campaign: params.utm_campaign,
+      utm_term: params.utm_term,
+      utm_content: params.utm_content,
+    };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Get persisted gclid for Google Ads attribution.
+ */
+function getPersistedGclid(): string | undefined {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getGclid } = require('@/lib/ad-params');
+    return getGclid();
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Initialize all retargeting pixels.
  * Call this once when the app loads (in TrackingProvider or layout).
@@ -50,6 +121,29 @@ let initialized = false;
 export function initRetargetingPixels(): void {
   if (typeof window === 'undefined' || initialized) return;
   initialized = true;
+
+  // SEM FIX: Warn in production if conversion pixel IDs are missing
+  // Without these, Google Ads Smart Bidding cannot optimize for conversions
+  if (process.env.NODE_ENV === 'production') {
+    if (!GOOGLE_ADS_ID) {
+      console.warn(
+        '[OKLA Pixels] ⚠️ NEXT_PUBLIC_GOOGLE_ADS_ID is not set. Google Ads conversion tracking is disabled. Smart Bidding cannot optimize.'
+      );
+    }
+    if (!FB_PIXEL_ID) {
+      console.warn(
+        '[OKLA Pixels] ⚠️ NEXT_PUBLIC_FB_PIXEL_ID is not set. Facebook/Meta retargeting is disabled.'
+      );
+    }
+    // P1-04 FIX: Warn when Google Ads ID is set but conversion label is missing.
+    // Without the label, generate_lead fires to GA4 but the Google Ads conversion
+    // event silently skips — Smart Bidding gets zero conversion data.
+    if (GOOGLE_ADS_ID && !process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL) {
+      console.warn(
+        '[OKLA Pixels] ⚠️ NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL is not set. Google Ads conversion events will NOT be sent. Smart Bidding has no conversion data.'
+      );
+    }
+  }
 
   // Defer pixel initialization to avoid blocking interactivity
   const deferInit = (fn: () => void) => {
@@ -60,7 +154,7 @@ export function initRetargetingPixels(): void {
     }
   };
 
-  // --- Facebook Pixel (deferred) ---
+  // --- Facebook Pixel (deferred, with event queue flush) ---
   if (FB_PIXEL_ID) {
     deferInit(() => {
       /* eslint-disable */
@@ -83,15 +177,24 @@ export function initRetargetingPixels(): void {
       /* eslint-enable */
 
       window.fbq?.('init', FB_PIXEL_ID);
-      window.fbq?.('track', 'PageView');
+      // P2-01 FIX: Do NOT fire PageView here — trackPageView() is called by
+      // TrackingProvider on route change and is the single source of FB PageViews.
+      // Firing it here causes ~2x FB PageView inflation on initial load.
+
+      // P0-01 FIX: Flush any events that were queued before fbq loaded
+      // (e.g., ViewContent fired on vehicle detail page before idle callback ran)
+      flushFbEventQueue();
     });
   }
 
   // --- Google Ads (reuse existing gtag from GoogleAnalytics component) ---
   // NOTE: GA4 gtag.js is already loaded by GoogleAnalytics component in layout.
   // We only need to configure Google Ads here — do NOT load gtag.js again.
+  // P0-02 FIX: Do NOT defer Google Ads config behind requestIdleCallback.
+  // Google Ads remarketing audience is built from config-triggered PageViews.
+  // Deferring means bouncers (<3s) are never added to remarketing audiences,
+  // and Smart Bidding loses signal data for fast-exit users.
   if (GOOGLE_ADS_ID) {
-    // Wait for gtag to be available (loaded by GoogleAnalytics component)
     const configureGoogleAds = () => {
       if (typeof window.gtag === 'function') {
         window.gtag('config', GOOGLE_ADS_ID);
@@ -105,12 +208,8 @@ export function initRetargetingPixels(): void {
         window.gtag('config', GOOGLE_ADS_ID);
       }
     };
-    // Defer to avoid blocking main thread
-    if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(configureGoogleAds);
-    } else {
-      setTimeout(configureGoogleAds, 2000);
-    }
+    // Run immediately — gtag is likely already available from GoogleAnalytics afterInteractive
+    configureGoogleAds();
   }
 
   // --- TikTok Pixel (deferred) ---
@@ -179,23 +278,17 @@ export function initRetargetingPixels(): void {
 // =============================================================================
 
 /**
- * Track a page view across all pixels
+ * Track a page view across all pixels.
+ * NOTE: GA4 page_view is NOT fired here — it's handled by AnalyticsPageView
+ * (google-analytics.tsx) via gtag('config', ...) which automatically sends
+ * a page_view with proper UTM attribution. Firing it here too would cause
+ * ~2x page_view inflation in GA4 reports.
  */
-export function trackPageView(url?: string): void {
+export function trackPageView(_url?: string): void {
   if (typeof window === 'undefined') return;
 
-  // Facebook
-  if (window.fbq) {
-    window.fbq('track', 'PageView');
-  }
-
-  // Google Analytics 4
-  if (window.gtag && GA_MEASUREMENT_ID) {
-    window.gtag('event', 'page_view', {
-      page_location: url || window.location.href,
-      page_title: document.title,
-    });
-  }
+  // Facebook (uses event queue — P0-01 fix)
+  safeFbq('track', 'PageView');
 
   // TikTok
   if (window.ttq) {
@@ -217,19 +310,18 @@ export function trackVehicleSearch(params: {
 }): void {
   if (typeof window === 'undefined') return;
 
-  // Facebook — Search event
-  if (window.fbq) {
-    window.fbq('track', 'Search', {
-      search_string: params.query || `${params.make || ''} ${params.model || ''}`.trim(),
-      content_category: 'Vehicles',
-      content_type: 'vehicle',
-      value: params.priceMax || 0,
-      currency: 'DOP',
-    });
-  }
+  // Facebook — Search event (uses event queue for deferred init)
+  safeFbq('track', 'Search', {
+    search_string: params.query || `${params.make || ''} ${params.model || ''}`.trim(),
+    content_category: 'Vehicles',
+    content_type: 'vehicle',
+    value: params.priceMax || 0,
+    currency: 'DOP',
+  });
 
   // Google — custom event
   if (window.gtag) {
+    const utm = getUtmContext();
     window.gtag('event', 'search', {
       search_term: params.query || `${params.make || ''} ${params.model || ''}`.trim(),
       vehicle_make: params.make,
@@ -237,6 +329,8 @@ export function trackVehicleSearch(params: {
       price_min: params.priceMin,
       price_max: params.priceMax,
       results_count: params.resultsCount,
+      // UTM FIX: Attach campaign params for event-level attribution
+      ...utm,
     });
   }
 
@@ -265,26 +359,25 @@ export function trackVehicleView(params: {
 }): void {
   if (typeof window === 'undefined') return;
 
-  // Facebook — ViewContent (Auto Inventory Ads compatible)
-  if (window.fbq) {
-    window.fbq('track', 'ViewContent', {
-      content_ids: [params.vehicleId],
-      content_name: params.title,
-      content_type: 'vehicle',
-      content_category: `${params.make} ${params.model}`,
-      value: params.price,
-      currency: 'DOP',
-      contents: [
-        {
-          id: params.vehicleId,
-          quantity: 1,
-        },
-      ],
-    });
-  }
+  // Facebook — ViewContent (Auto Inventory Ads compatible, uses event queue)
+  safeFbq('track', 'ViewContent', {
+    content_ids: [params.vehicleId],
+    content_name: params.title,
+    content_type: 'vehicle',
+    content_category: `${params.make} ${params.model}`,
+    value: params.price,
+    currency: 'DOP',
+    contents: [
+      {
+        id: params.vehicleId,
+        quantity: 1,
+      },
+    ],
+  });
 
   // Google — view_item (Enhanced Ecommerce)
   if (window.gtag) {
+    const utm = getUtmContext();
     window.gtag('event', 'view_item', {
       currency: 'DOP',
       value: params.price,
@@ -299,6 +392,8 @@ export function trackVehicleView(params: {
           quantity: 1,
         },
       ],
+      // UTM FIX: Attach campaign params for event-level attribution
+      ...utm,
     });
   }
 
@@ -326,17 +421,17 @@ export function trackAddToWishlist(params: {
 }): void {
   if (typeof window === 'undefined') return;
 
-  if (window.fbq) {
-    window.fbq('track', 'AddToWishlist', {
-      content_ids: [params.vehicleId],
-      content_name: params.title,
-      content_type: 'vehicle',
-      value: params.price,
-      currency: 'DOP',
-    });
-  }
+  // Facebook — AddToWishlist (uses event queue for deferred init)
+  safeFbq('track', 'AddToWishlist', {
+    content_ids: [params.vehicleId],
+    content_name: params.title,
+    content_type: 'vehicle',
+    value: params.price,
+    currency: 'DOP',
+  });
 
   if (window.gtag) {
+    const utm = getUtmContext();
     window.gtag('event', 'add_to_wishlist', {
       currency: 'DOP',
       value: params.price,
@@ -348,6 +443,8 @@ export function trackAddToWishlist(params: {
           price: params.price,
         },
       ],
+      // UTM FIX: Attach campaign params for event-level attribution
+      ...utm,
     });
   }
 
@@ -374,33 +471,41 @@ export function trackContactDealer(params: {
 }): void {
   if (typeof window === 'undefined') return;
 
-  // Facebook — Lead event (high-value conversion)
-  if (window.fbq) {
-    window.fbq('track', 'Lead', {
-      content_ids: [params.vehicleId],
-      content_name: params.title,
-      content_category: params.contactMethod,
-      value: params.price,
-      currency: 'DOP',
-    });
-  }
+  // Facebook — Lead event (high-value conversion, uses event queue)
+  safeFbq('track', 'Lead', {
+    content_ids: [params.vehicleId],
+    content_name: params.title,
+    content_category: params.contactMethod,
+    value: params.price,
+    currency: 'DOP',
+  });
 
   // Google — generate_lead (conversion event)
   if (window.gtag) {
+    const utm = getUtmContext();
+    const gclid = getPersistedGclid();
     window.gtag('event', 'generate_lead', {
       currency: 'DOP',
       value: params.price,
       contact_method: params.contactMethod,
       vehicle_id: params.vehicleId,
       dealer_id: params.dealerId,
+      // UTM FIX: Attach campaign + gclid for full lead attribution
+      ...utm,
+      ...(gclid ? { gclid } : {}),
     });
 
-    // If Google Ads conversion tracking is set up
-    if (GOOGLE_ADS_ID) {
+    // SEM FIX: Google Ads conversion tracking with proper conversion label.
+    // The send_to must be AW-XXXXXXXXX/AbCdEfGh (from Google Ads UI),
+    // NOT AW-XXXXXXXXX/lead which is invalid and records zero conversions.
+    const GOOGLE_ADS_CONVERSION_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL || '';
+    if (GOOGLE_ADS_ID && GOOGLE_ADS_CONVERSION_LABEL) {
       window.gtag('event', 'conversion', {
-        send_to: `${GOOGLE_ADS_ID}/lead`,
+        send_to: `${GOOGLE_ADS_ID}/${GOOGLE_ADS_CONVERSION_LABEL}`,
         value: params.price,
         currency: 'DOP',
+        transaction_id: params.vehicleId, // Dedup conversions
+        ...(gclid ? { gclid } : {}),
       });
     }
   }
@@ -426,22 +531,24 @@ export function trackFinancingIntent(params: {
 }): void {
   if (typeof window === 'undefined') return;
 
-  if (window.fbq) {
-    window.fbq('track', 'InitiateCheckout', {
-      content_ids: params.vehicleId ? [params.vehicleId] : [],
-      content_type: 'vehicle',
-      value: params.loanAmount,
-      currency: 'DOP',
-    });
-  }
+  // Facebook — InitiateCheckout (uses event queue for deferred init)
+  safeFbq('track', 'InitiateCheckout', {
+    content_ids: params.vehicleId ? [params.vehicleId] : [],
+    content_type: 'vehicle',
+    value: params.loanAmount,
+    currency: 'DOP',
+  });
 
   if (window.gtag) {
+    const utm = getUtmContext();
     window.gtag('event', 'begin_checkout', {
       currency: 'DOP',
       value: params.loanAmount,
       items: params.vehicleId
         ? [{ item_id: params.vehicleId, price: params.loanAmount, quantity: 1 }]
         : [],
+      // UTM FIX: Attach campaign params for financing intent attribution
+      ...utm,
     });
   }
 
@@ -450,6 +557,53 @@ export function trackFinancingIntent(params: {
       content_id: params.vehicleId,
       value: params.loanAmount,
       currency: 'DOP',
+    });
+  }
+}
+
+/**
+ * Track when a user starts a chatbot session.
+ * Creates "high-intent" remarketing audiences — chat initiation signals
+ * strong purchase intent but the user hasn't converted yet.
+ * P1-03 FIX: Added vehicleId + vehicleTitle for Dynamic Remarketing audiences
+ * ("users who chatted about THIS vehicle but didn't buy").
+ */
+export function trackChatStart(params: {
+  dealerId?: string;
+  channel?: string;
+  vehicleId?: string;
+  vehicleTitle?: string;
+}): void {
+  if (typeof window === 'undefined') return;
+
+  // Facebook — Contact event (high-intent signal)
+  safeFbq('track', 'Contact', {
+    content_category: 'ChatAgent',
+    content_type: 'chat_start',
+    // P1-03: Enable Dynamic Remarketing for chat users
+    ...(params.vehicleId ? { content_ids: [params.vehicleId] } : {}),
+    ...(params.vehicleTitle ? { content_name: params.vehicleTitle } : {}),
+  });
+
+  // Google — custom event for remarketing audience creation
+  if (window.gtag) {
+    const utm = getUtmContext();
+    window.gtag('event', 'chat_start', {
+      event_category: 'engagement',
+      dealer_id: params.dealerId,
+      channel: params.channel || 'web',
+      // P1-03: Pass vehicle context for Dynamic Remarketing
+      ...(params.vehicleId ? { item_id: params.vehicleId } : {}),
+      ...(params.vehicleTitle ? { item_name: params.vehicleTitle } : {}),
+      ...utm,
+    });
+  }
+
+  // TikTok — Contact event
+  if (window.ttq) {
+    window.ttq.track('Contact', {
+      content_type: 'chat_start',
+      ...(params.vehicleId ? { content_id: params.vehicleId } : {}),
     });
   }
 }

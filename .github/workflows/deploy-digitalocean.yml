@@ -294,6 +294,12 @@ jobs:
         run: |
           kubectl apply -f k8s/ingress.yaml
 
+      - name: 🗄️ Apply Backup CronJob
+        run: |
+          echo "🗄️ Applying backup & disaster recovery manifests..."
+          kubectl apply -f k8s/backup.yaml
+          echo "✅ Backup CronJob scheduled (daily at 3:00 AM RD / 7:00 AM UTC)"
+
       - name: ⏳ Wait for rollout
         run: |
           SERVICES="${{ needs.prepare.outputs.services }}"
@@ -387,6 +393,19 @@ jobs:
             echo "- Frontend: https://staging.okla.do" >> $GITHUB_STEP_SUMMARY
             echo "- API: https://api-staging.okla.do" >> $GITHUB_STEP_SUMMARY
           fi
+
+  # ============================================
+  # Post-Deploy Smoke Test
+  # ============================================
+  smoke-test:
+    name: 🔥 Post-Deploy Smoke Test
+    needs: [prepare, health-check]
+    if: success()
+    uses: ./.github/workflows/load-test.yml
+    with:
+      test_type: smoke
+      base_url: ${{ needs.prepare.outputs.environment == 'production' && 'https://api.okla.do' || 'https://api-staging.okla.do' }}
+    secrets: inherit
 
   # ============================================
   # Rollback (Manual)

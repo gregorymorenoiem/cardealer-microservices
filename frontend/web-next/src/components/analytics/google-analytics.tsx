@@ -40,11 +40,15 @@ export function GoogleAnalytics() {
 
   return (
     <>
+      {/* SEM FIX: Changed from lazyOnload to afterInteractive.
+          lazyOnload defers GA until page is fully idle (~3-5s), causing fast
+          conversions (WhatsApp/Call within 3s) to be completely missed.
+          afterInteractive loads immediately after hydration (~1s). */}
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-        strategy="lazyOnload"
+        strategy="afterInteractive"
       />
-      <Script id="google-analytics" strategy="lazyOnload">
+      <Script id="google-analytics" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -74,11 +78,35 @@ function AnalyticsPageView() {
 
     const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
 
-    // Track page view
-    window.gtag?.('config', GA_MEASUREMENT_ID, {
-      page_path: url,
-      page_title: document.title,
-    });
+    // UTM FIX: Attach persisted UTM params to every GA4 config call.
+    // GA4 auto-detects UTMs only from the FIRST page load URL.
+    // After SPA navigation, campaign attribution is lost unless we explicitly
+    // pass campaign_* parameters from localStorage-persisted ad-params.
+    const trackPageView = (campaignParams: Record<string, string> = {}) => {
+      window.gtag?.('config', GA_MEASUREMENT_ID, {
+        page_path: url,
+        page_title: document.title,
+        ...campaignParams,
+      });
+    };
+
+    import('@/lib/ad-params')
+      .then(({ getAdParams }) => {
+        const adParams = getAdParams();
+        const params: Record<string, string> = {};
+        if (adParams) {
+          if (adParams.utm_source) params.campaign_source = adParams.utm_source;
+          if (adParams.utm_medium) params.campaign_medium = adParams.utm_medium;
+          if (adParams.utm_campaign) params.campaign_name = adParams.utm_campaign;
+          if (adParams.utm_term) params.campaign_term = adParams.utm_term;
+          if (adParams.utm_content) params.campaign_content = adParams.utm_content;
+        }
+        trackPageView(params);
+      })
+      .catch(() => {
+        /* ad-params not available */
+        trackPageView();
+      });
   }, [pathname, searchParams]);
 
   return null;

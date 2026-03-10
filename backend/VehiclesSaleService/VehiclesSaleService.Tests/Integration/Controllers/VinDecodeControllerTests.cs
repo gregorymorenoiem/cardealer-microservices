@@ -28,6 +28,11 @@ public class VinDecodeControllerTests
         _cacheServiceMock = new Mock<ICacheService>();
         _httpClientFactoryMock = new Mock<IHttpClientFactory>();
 
+        // Set up IHttpClientFactory to return a real HttpClient for NHTSA API integration tests
+        _httpClientFactoryMock
+            .Setup(f => f.CreateClient(It.IsAny<string>()))
+            .Returns(new HttpClient());
+
         _controller = new CatalogController(
             _catalogRepositoryMock.Object,
             _vehicleRepositoryMock.Object,

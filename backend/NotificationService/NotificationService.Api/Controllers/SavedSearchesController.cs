@@ -71,6 +71,50 @@ public class SavedSearchesController : ControllerBase
         var userId = GetCurrentUserId();
         if (userId == Guid.Empty) return Unauthorized();
 
+        // ── Server-side validation ──
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "El nombre de la búsqueda es obligatorio." });
+
+        if (request.Name.Length > 100)
+            return BadRequest(new { error = "El nombre no puede exceder 100 caracteres." });
+
+        if (request.Criteria == null)
+            return BadRequest(new { error = "Los criterios de búsqueda son obligatorios." });
+
+        if (request.Criteria.MinPrice.HasValue && request.Criteria.MinPrice < 0)
+            return BadRequest(new { error = "El precio mínimo no puede ser negativo." });
+
+        if (request.Criteria.MaxPrice.HasValue && request.Criteria.MaxPrice < 0)
+            return BadRequest(new { error = "El precio máximo no puede ser negativo." });
+
+        if (request.Criteria.MinYear.HasValue && request.Criteria.MaxYear.HasValue
+            && request.Criteria.MinYear > request.Criteria.MaxYear)
+            return BadRequest(new { error = "El año mínimo no puede ser mayor que el año máximo." });
+
+        if (request.Criteria.MaxMileage.HasValue && request.Criteria.MaxMileage < 0)
+            return BadRequest(new { error = "El kilometraje máximo no puede ser negativo." });
+
+        var validFrequencies = new[] { "instant", "daily", "weekly", "never" };
+        var freq = request.NotificationFrequency?.ToLowerInvariant() ?? "daily";
+        if (!validFrequencies.Contains(freq))
+            return BadRequest(new { error = $"Frecuencia de notificación inválida. Valores permitidos: {string.Join(", ", validFrequencies)}" });
+
+        // ── Plan limit enforcement ──
+        // MaxSavedSearches: Libre=0, Visible=5, Pro/Elite=unlimited (-1)
+        // TODO: Resolve user's plan via BillingService HTTP call for accurate enforcement.
+        // For now, enforce a hard cap of 50 saved searches per user as safety limit.
+        var currentCount = await _repository.GetCountByUserIdAsync(userId);
+        const int HardCapPerUser = 50;
+        if (currentCount >= HardCapPerUser)
+        {
+            return BadRequest(new
+            {
+                error = $"Has alcanzado el límite máximo de {HardCapPerUser} búsquedas guardadas.",
+                currentCount,
+                limit = HardCapPerUser
+            });
+        }
+
         _logger.LogInformation("Creating saved search: {Name}", request.Name);
 
         var search = SavedSearch.Create(

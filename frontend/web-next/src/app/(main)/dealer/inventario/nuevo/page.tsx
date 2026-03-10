@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -193,6 +194,8 @@ export default function NewVehiclePage() {
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([]);
   const [uploading, setUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const cameraInputRef = React.useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   // Get models for selected make
   const { data: models } = useModelsByMake(formData.make);
@@ -841,6 +844,29 @@ export default function NewVehiclePage() {
                 className="hidden"
                 onChange={handleImageUpload}
               />
+              {/* Camera input for PWA mobile */}
+              {isMobile && (
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              )}
+
+              {/* Camera button for PWA mobile */}
+              {isMobile && (
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-emerald-200 bg-emerald-50 p-4 text-emerald-700 transition-colors hover:bg-emerald-100 active:bg-emerald-200"
+                >
+                  <Camera className="h-5 w-5" />
+                  <span className="font-medium">Tomar Foto con Cámara</span>
+                </button>
+              )}
 
               <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-4">
                 <AlertCircle className="mt-0.5 h-5 w-5 text-amber-600" />

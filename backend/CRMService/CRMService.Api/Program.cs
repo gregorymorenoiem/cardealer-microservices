@@ -18,6 +18,7 @@ using CarDealer.Shared.ErrorHandling.Extensions;
 using Serilog;
 using System.IO.Compression;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
 using Microsoft.AspNetCore.ResponseCompression;

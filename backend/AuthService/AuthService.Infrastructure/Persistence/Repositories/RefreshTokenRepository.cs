@@ -64,4 +64,12 @@ public class RefreshTokenRepository : IRefreshTokenRepository
             .Where(rt => rt.ExpiresAt <= now || rt.RevokedAt != null)
             .ExecuteDeleteAsync(cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<int> DeleteAllByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.RefreshTokens
+            .Where(rt => rt.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

@@ -175,3 +175,129 @@ public class ChangeBillingCycleRequestValidator : AbstractValidator<ChangeBillin
             .NoXss();
     }
 }
+
+// ============================================
+// KPI AUDIT FIX: Acquisition & Marketing Spend Validators
+// ============================================
+public class RecordAcquisitionRequestValidator : AbstractValidator<RecordAcquisitionRequest>
+{
+    public RecordAcquisitionRequestValidator()
+    {
+        RuleFor(x => x.DealerId)
+            .NotEmpty().WithMessage("DealerId is required.");
+
+        RuleFor(x => x.Channel)
+            .IsInEnum().WithMessage("Invalid acquisition channel.");
+
+        RuleFor(x => x.CampaignId)
+            .MaximumLength(200)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.CampaignId));
+
+        RuleFor(x => x.CampaignName)
+            .MaximumLength(300)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.CampaignName));
+
+        RuleFor(x => x.UtmSource)
+            .MaximumLength(200)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.UtmSource));
+
+        RuleFor(x => x.UtmMedium)
+            .MaximumLength(200)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.UtmMedium));
+
+        RuleFor(x => x.UtmCampaign)
+            .MaximumLength(200)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.UtmCampaign));
+
+        RuleFor(x => x.UtmContent)
+            .MaximumLength(500)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.UtmContent));
+
+        RuleFor(x => x.UtmTerm)
+            .MaximumLength(200)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.UtmTerm));
+
+        RuleFor(x => x.AcquisitionCostUsd)
+            .GreaterThanOrEqualTo(0).WithMessage("Acquisition cost cannot be negative.");
+
+        RuleFor(x => x.ReferralCode)
+            .MaximumLength(50)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.ReferralCode));
+
+        RuleFor(x => x.LandingPage)
+            .MaximumLength(500)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.LandingPage));
+
+        RuleFor(x => x.Country)
+            .MaximumLength(5)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.Country));
+    }
+}
+
+public class RecordMarketingSpendRequestValidator : AbstractValidator<RecordMarketingSpendRequest>
+{
+    public RecordMarketingSpendRequestValidator()
+    {
+        RuleFor(x => x.Year)
+            .InclusiveBetween(2024, 2030).WithMessage("Year must be between 2024 and 2030.");
+
+        RuleFor(x => x.Month)
+            .InclusiveBetween(1, 12).WithMessage("Month must be between 1 and 12.");
+
+        RuleFor(x => x.Channel)
+            .IsInEnum().WithMessage("Invalid acquisition channel.");
+
+        RuleFor(x => x.SpendUsd)
+            .GreaterThanOrEqualTo(0).WithMessage("Spend cannot be negative.");
+
+        RuleFor(x => x.CampaignId)
+            .MaximumLength(200)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.CampaignId));
+
+        RuleFor(x => x.CampaignName)
+            .MaximumLength(300)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.CampaignName));
+
+        RuleFor(x => x.Notes)
+            .MaximumLength(1000)
+            .NoSqlInjection()
+            .NoXss()
+            .When(x => !string.IsNullOrEmpty(x.Notes));
+
+        RuleFor(x => x.Impressions)
+            .GreaterThanOrEqualTo(0);
+
+        RuleFor(x => x.Clicks)
+            .GreaterThanOrEqualTo(0);
+
+        RuleFor(x => x.Signups)
+            .GreaterThanOrEqualTo(0);
+
+        RuleFor(x => x.PaidConversions)
+            .GreaterThanOrEqualTo(0);
+    }
+}

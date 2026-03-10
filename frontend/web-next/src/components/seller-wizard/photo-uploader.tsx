@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { IMAGE_CONSTRAINTS, validateVehicleImage } from '@/lib/validations/seller-onboarding';
 import { uploadVehicleImage, type UploadProgress } from '@/services/media';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 // =============================================================================
 // TYPES
@@ -48,6 +49,8 @@ interface PhotoUploaderProps {
 
 export function PhotoUploader({ images, onImagesChange, disabled }: PhotoUploaderProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const cameraInputRef = React.useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = React.useState(false);
 
   const canAddMore = images.length < IMAGE_CONSTRAINTS.maxImages;
@@ -245,6 +248,30 @@ export function PhotoUploader({ images, onImagesChange, disabled }: PhotoUploade
         onChange={e => handleFileSelect(e.target.files)}
         className="hidden"
       />
+      {/* Camera input for PWA mobile */}
+      {isMobile && (
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept={IMAGE_CONSTRAINTS.allowedTypes.join(',')}
+          capture="environment"
+          onChange={e => handleFileSelect(e.target.files)}
+          className="hidden"
+        />
+      )}
+
+      {/* Camera button for PWA mobile */}
+      {isMobile && canAddMore && (
+        <button
+          type="button"
+          onClick={() => cameraInputRef.current?.click()}
+          disabled={disabled}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-emerald-200 bg-emerald-50 p-3 text-emerald-700 transition-colors hover:bg-emerald-100 active:bg-emerald-200 disabled:opacity-50"
+        >
+          <Camera className="h-5 w-5" />
+          <span className="text-sm font-medium">Tomar Foto con Cámara</span>
+        </button>
+      )}
 
       {/* Image count indicator */}
       <div className="flex items-center justify-between">
@@ -280,7 +307,7 @@ export function PhotoUploader({ images, onImagesChange, disabled }: PhotoUploade
               key={image.id}
               className={cn(
                 'group relative aspect-[4/3] overflow-hidden rounded-lg border',
-                image.isPrimary && 'ring-2 ring-primary ring-offset-2',
+                image.isPrimary && 'ring-primary ring-2 ring-offset-2',
                 image.status === 'error' && 'border-red-300'
               )}
             >
@@ -324,7 +351,7 @@ export function PhotoUploader({ images, onImagesChange, disabled }: PhotoUploade
                 <div className="absolute inset-0 flex items-start justify-between bg-gradient-to-b from-black/40 to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
                   {/* Primary badge / button */}
                   {image.isPrimary ? (
-                    <span className="flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-white">
+                    <span className="bg-primary flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-white">
                       <Star className="h-3 w-3" />
                       Principal
                     </span>
@@ -352,7 +379,7 @@ export function PhotoUploader({ images, onImagesChange, disabled }: PhotoUploade
 
               {/* Primary indicator */}
               {image.isPrimary && image.status === 'done' && (
-                <div className="absolute right-0 bottom-0 left-0 bg-primary/90 px-2 py-0.5 text-center text-[10px] font-medium text-white group-hover:opacity-0">
+                <div className="bg-primary/90 absolute right-0 bottom-0 left-0 px-2 py-0.5 text-center text-[10px] font-medium text-white group-hover:opacity-0">
                   Foto principal
                 </div>
               )}

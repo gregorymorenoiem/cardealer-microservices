@@ -25,6 +25,12 @@ public class AzulTransaction
     // Relación con usuario (opcional)
     public Guid? UserId { get; set; }
     
+    // Currency tracking (DOP/USD) — critical for Dominican card reconciliation
+    public string Currency { get; set; } = "DOP";
+    
+    // Decline reason localized in Spanish for Dominican banks
+    public string? DeclineReasonLocalized { get; set; }
+    
     // Metadata adicional
     public string? CustomerEmail { get; set; }
     public string? CustomerName { get; set; }

@@ -184,7 +184,7 @@ export default function DealerVehicleStatsPage() {
         <Card className="border-slate-700 bg-slate-800">
           <CardContent className="p-4">
             <div className="mb-2 flex items-center justify-between">
-              <Phone className="h-5 w-5 text-primary/80" />
+              <Phone className="text-primary/80 h-5 w-5" />
             </div>
             <p className="text-3xl font-bold text-white">{contacts}</p>
             <p className="text-sm text-slate-400">Contactos</p>
@@ -207,7 +207,7 @@ export default function DealerVehicleStatsPage() {
               <MessageSquare className="h-5 w-5 text-purple-400" />
             </div>
             <p className="text-3xl font-bold text-white">{engagementScore.toFixed(0)}</p>
-            <p className="text-sm text-slate-400">Engagement Score</p>
+            <p className="text-sm text-slate-400">Nivel de interés</p>
           </CardContent>
         </Card>
       </div>
@@ -229,7 +229,7 @@ export default function DealerVehicleStatsPage() {
                   {dailyViews.map((day, i) => (
                     <div key={i} className="flex flex-1 flex-col items-center">
                       <div
-                        className="w-full rounded-t bg-primary"
+                        className="bg-primary w-full rounded-t"
                         style={{ height: `${(day.value / maxDailyViews) * 150}px` }}
                       />
                       <span className="mt-2 truncate text-xs text-slate-400">{day.label}</span>
@@ -249,8 +249,8 @@ export default function DealerVehicleStatsPage() {
           <Card className="border-slate-700 bg-slate-800">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-primary/20 p-3">
-                  <TrendingUp className="h-6 w-6 text-primary/80" />
+                <div className="bg-primary/20 rounded-lg p-3">
+                  <TrendingUp className="text-primary/80 h-6 w-6" />
                 </div>
                 <div>
                   <h3 className="mb-2 text-lg font-semibold text-white">
@@ -313,7 +313,7 @@ export default function DealerVehicleStatsPage() {
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-700">
                         <div
-                          className="h-full bg-primary/100"
+                          className="bg-primary/100 h-full"
                           style={{ width: `${deviceMobile}%` }}
                         />
                       </div>
@@ -371,7 +371,7 @@ export default function DealerVehicleStatsPage() {
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-20 overflow-hidden rounded-full bg-slate-700">
                         <div
-                          className="h-full bg-primary/100"
+                          className="bg-primary/100 h-full"
                           style={{ width: `${city.percentage}%` }}
                         />
                       </div>
@@ -410,7 +410,7 @@ export default function DealerVehicleStatsPage() {
                   variant="outline"
                   className="w-full border-slate-700 text-slate-300 hover:bg-slate-700"
                 >
-                  Ver todos los leads
+                  Ver todos los interesados
                 </Button>
               </Link>
             </CardContent>

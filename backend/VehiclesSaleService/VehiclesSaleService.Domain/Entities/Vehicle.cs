@@ -184,6 +184,29 @@ public class Vehicle : ITenantEntity
     public int RejectionCount { get; set; } = 0;
 
     // ========================================
+    // DISCLAIMER / LIABILITY EXONERATION
+    // Ley 172-13 + TOS Compliance
+    // ========================================
+    /// <summary>
+    /// Timestamp when the dealer/seller confirmed information accuracy
+    /// via the mandatory unchecked checkbox during publish.
+    /// Null if not yet accepted.
+    /// </summary>
+    public DateTime? DisclaimerAcceptedAt { get; set; }
+
+    /// <summary>
+    /// IP address from which the disclaimer was accepted.
+    /// Stored for legal audit trail per Ley 172-13.
+    /// </summary>
+    public string? DisclaimerAcceptedFromIp { get; set; }
+
+    /// <summary>
+    /// Version of the Terms of Service that was accepted at publish time.
+    /// Enables tracking which TOS version each listing was published under.
+    /// </summary>
+    public string? DisclaimerTosVersion { get; set; }
+
+    // ========================================
     // DETECCIÓN DE FRAUDE
     // ========================================
     /// <summary>
@@ -191,6 +214,29 @@ public class Vehicle : ITenantEntity
     /// 0 = low risk, 50+ = requires manual review, 75+ = high risk.
     /// </summary>
     public int FraudScore { get; set; } = 0;
+
+    // ========================================
+    // VERIFICACIÓN DE ODÓMETRO (VinAudit/CARFAX)
+    // ========================================
+    /// <summary>
+    /// True if VinAudit/CARFAX detected that declared mileage is lower than
+    /// the last historically-recorded odometer reading → possible rollback.
+    /// </summary>
+    public bool OdometerRollbackDetected { get; set; } = false;
+    /// <summary>Last mileage reported by VinAudit/CARFAX history provider</summary>
+    public decimal? HistoricalMileage { get; set; }
+    /// <summary>When the odometer cross-reference was performed</summary>
+    public DateTime? OdometerVerifiedAt { get; set; }
+
+    // ========================================
+    // REPORTES DE COMPRADORES
+    // ========================================
+    /// <summary>Total de reportes únicos recibidos de compradores</summary>
+    public int ReportCount { get; set; } = 0;
+    /// <summary>Fecha de suspensión automática por reportes</summary>
+    public DateTime? SuspendedAt { get; set; }
+    /// <summary>Razón de la suspensión (auto-suspend, admin, etc.)</summary>
+    public string? SuspendedReason { get; set; }
 
     // ── Propiedades de Campaña Publicitaria (AdvertisingService sync) ─────────
     /// <summary>Vehículo tiene una campaña PremiumSpot activa.</summary>
@@ -255,6 +301,13 @@ public class Vehicle : ITenantEntity
     /// Secciones del homepage donde aparece este vehículo
     /// </summary>
     public ICollection<VehicleHomepageSection> HomepageSectionAssignments { get; set; } = new List<VehicleHomepageSection>();
+
+    /// <summary>
+    /// Historial de cambios de precio del vehículo.
+    /// Cada cambio de precio se registra para transparencia al comprador
+    /// y como parte del OKLA Platform Score (switching cost).
+    /// </summary>
+    public ICollection<VehiclePriceHistory> PriceHistory { get; set; } = new List<VehiclePriceHistory>();
 }
 
 /// <summary>
@@ -268,7 +321,12 @@ public enum VehicleStatus
     Reserved = 3,
     Sold = 4,
     Archived = 5,
-    Rejected = 6
+    Rejected = 6,
+    /// <summary>
+    /// Auto-suspended by the moderation system after ≥3 buyer reports.
+    /// Listing is hidden from search until dealer reviews and admin approves.
+    /// </summary>
+    Suspended = 7
 }
 
 /// <summary>

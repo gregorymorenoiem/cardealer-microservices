@@ -24,6 +24,7 @@ using MediaService.Api.Middleware;
 using CarDealer.Shared.Observability.Extensions;
 using CarDealer.Shared.ErrorHandling.Extensions;
 using CarDealer.Shared.Audit.Extensions;
+using CarDealer.Shared.Resilience.Extensions;
 using CarDealer.Shared.Messaging;
 using CarDealer.Shared.Configuration;
 using CarDealer.Shared.Secrets;
@@ -251,7 +252,7 @@ builder.Services.AddHttpClient<MediaService.Application.Interfaces.IAuditService
     client.BaseAddress = new Uri(auditServiceUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+}).AddStandardResilience(builder.Configuration);
 
 // ============= RESPONSE COMPRESSION (Brotli + Gzip) =============
 builder.Services.AddResponseCompression(options =>

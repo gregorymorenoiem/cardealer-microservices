@@ -13,4 +13,9 @@ public interface ISavedSearchRepository
     Task UpdateAsync(SavedSearch savedSearch);
     Task DeleteAsync(Guid id);
     Task<bool> ExistsAsync(Guid id, Guid userId);
+
+    /// <summary>
+    /// Deletes all saved searches for a user (Ley 172-13 cascade deletion).
+    /// </summary>
+    Task<int> DeleteByUserIdAsync(Guid userId);
 }

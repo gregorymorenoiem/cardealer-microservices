@@ -6,7 +6,17 @@ import type { UploadedImage } from './smart-publish-wizard';
 import { sanitizeFilename } from '@/lib/security/sanitize';
 import { uploadImage } from '@/services/media';
 import { compressImage, shouldCompress } from '../photos/image-compressor';
-import { Upload, X, Star, GripVertical, ImagePlus, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  Upload,
+  X,
+  Star,
+  GripVertical,
+  ImagePlus,
+  AlertCircle,
+  Loader2,
+  Camera,
+} from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { toast } from 'sonner';
 
 // ============================================================
@@ -34,8 +44,10 @@ export function PhotoUploadStep({ images, onChange, mode }: PhotoUploadStepProps
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadingCount, setUploadingCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
+  const isMobile = useIsMobile();
 
   const minPhotos = mode === 'dealer' ? MIN_PHOTOS_DEALER : MIN_PHOTOS_INDIVIDUAL;
   const maxPhotos = mode === 'dealer' ? MAX_PHOTOS_DEALER : MAX_PHOTOS_INDIVIDUAL;
@@ -238,6 +250,17 @@ export function PhotoUploadStep({ images, onChange, mode }: PhotoUploadStepProps
           className="hidden"
           onChange={handleFileChange}
         />
+        {/* Camera input for PWA mobile — opens rear camera directly */}
+        {isMobile && (
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            capture="environment"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        )}
         {uploadingCount > 0 ? (
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
@@ -265,6 +288,18 @@ export function PhotoUploadStep({ images, onChange, mode }: PhotoUploadStepProps
           </div>
         )}
       </div>
+
+      {/* Camera button for PWA mobile */}
+      {isMobile && (
+        <button
+          type="button"
+          onClick={() => cameraInputRef.current?.click()}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-emerald-700 transition-colors hover:bg-emerald-100 active:bg-emerald-200"
+        >
+          <Camera className="h-5 w-5" />
+          <span className="font-medium">Tomar Foto con Cámara</span>
+        </button>
+      )}
 
       {/* Minimum photos warning */}
       {photosNeeded > 0 && images.length > 0 && (

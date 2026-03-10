@@ -9,7 +9,9 @@ namespace UserService.Domain.Interfaces
     {
         Task<Dealer?> GetByIdAsync(Guid id);
         Task<Dealer?> GetByOwnerIdAsync(Guid ownerId);
+        Task<Dealer?> GetBySlugAsync(string slug);
         Task<IEnumerable<Dealer>> GetAllAsync(int page = 1, int pageSize = 10);
+        Task<IEnumerable<Dealer>> GetForSitemapAsync();
         Task<IEnumerable<Dealer>> SearchAsync(string? searchTerm, string? city, string? state, DealerType? dealerType, bool? isVerified, int page = 1, int pageSize = 10);
         Task<Dealer> AddAsync(Dealer dealer);
         Task UpdateAsync(Dealer dealer);

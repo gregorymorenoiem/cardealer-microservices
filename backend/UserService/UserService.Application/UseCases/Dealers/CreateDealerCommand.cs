@@ -74,6 +74,7 @@ public class CreateDealerCommandHandler : IRequestHandler<CreateDealerCommand, D
             OwnerUserId = request.OwnerUserId,
             BusinessName = request.BusinessName,
             TradeName = request.TradeName,
+            Slug = GenerateSlug(request.BusinessName, request.City),
             Description = request.Description,
             DealerType = request.DealerType,
 
@@ -166,6 +167,7 @@ public class CreateDealerCommandHandler : IRequestHandler<CreateDealerCommand, D
             OwnerUserId = dealer.OwnerUserId,
             BusinessName = dealer.BusinessName,
             TradeName = dealer.TradeName,
+            Slug = dealer.Slug,
             Description = dealer.Description,
             DealerType = dealer.DealerType,
             Email = dealer.Email,
@@ -208,5 +210,28 @@ public class CreateDealerCommandHandler : IRequestHandler<CreateDealerCommand, D
             CreatedAt = dealer.CreatedAt,
             UpdatedAt = dealer.UpdatedAt
         };
+    }
+
+    /// <summary>
+    /// Generate a URL-friendly slug from business name and city.
+    /// Example: "Auto Plaza" + "Santo Domingo" → "auto-plaza-santo-domingo"
+    /// </summary>
+    private static string GenerateSlug(string businessName, string? city)
+    {
+        var raw = string.IsNullOrWhiteSpace(city)
+            ? businessName
+            : $"{businessName} {city}";
+
+        // Normalize: lowercase, replace accented chars, strip non-alnum, collapse dashes
+        var slug = raw.ToLowerInvariant()
+            .Replace('á', 'a').Replace('é', 'e').Replace('í', 'i')
+            .Replace('ó', 'o').Replace('ú', 'u').Replace('ñ', 'n')
+            .Replace('ü', 'u');
+
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9\s-]", "");
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[\s-]+", "-");
+        slug = slug.Trim('-');
+
+        return slug;
     }
 }

@@ -33,6 +33,7 @@ import {
   ArrowRight,
   CreditCard,
   Shield,
+  ShieldCheck,
   Sparkles,
   ChevronLeft,
   PartyPopper,
@@ -87,6 +88,7 @@ const DEALER_PLANS: Record<string, PlanInfo> = {
       '15 OKLA Coins/mes',
       'Soporte prioritario',
       '1 video por vehículo',
+      '✅ Garantía: si no recibes 10 consultas en 30 días, el mes 2 es gratis',
     ],
   },
   pro: {
@@ -461,6 +463,34 @@ function UpgradeCheckoutInner() {
       )}
 
       {/* Billing Period Selection */}
+
+      {/* Guarantee Banner — shown only for Plan VISIBLE */}
+      {targetPlan.key === 'visible' && (
+        <Card className="border-2 border-emerald-200 bg-emerald-50">
+          <CardContent className="flex items-start gap-4 pt-6">
+            <div className="rounded-full bg-emerald-100 p-3">
+              <ShieldCheck className="h-6 w-6 text-emerald-600" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-emerald-800">🛡️ Garantía de Resultados OKLA</h3>
+              <p className="text-sm text-emerald-700">
+                Si no recibes <strong>al menos 10 consultas</strong> de compradores en tus primeros{' '}
+                <strong>30 días</strong> con el plan Visible,{' '}
+                <strong>tu segundo mes es completamente gratis</strong>. Sin letra pequeña, sin
+                complicaciones.
+              </p>
+              <Link
+                href="/terminos#garantia-visible"
+                className="text-primary inline-flex items-center gap-1 text-sm font-medium underline"
+              >
+                Ver términos de la garantía
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Período de facturación</CardTitle>

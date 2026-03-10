@@ -14,6 +14,7 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using System.IO.Compression;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Text;
 using VehicleIntelligenceService.Application.Features.Pricing.Queries;

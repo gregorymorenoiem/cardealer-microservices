@@ -39,9 +39,9 @@
     <!-- NUEVOS PAQUETES PARA HEALTH CHECKS -->
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.11" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.11" />
-    <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.1" />
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.2" />
-    <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="8.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,6 +58,7 @@
     <ProjectReference Include="../../_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj" />
     <ProjectReference Include="../../_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj" />
+    <ProjectReference Include="../../_Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj" />
   </ItemGroup>
 
 </Project>

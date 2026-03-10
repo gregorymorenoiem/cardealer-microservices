@@ -48,6 +48,10 @@ public sealed class ChatbotMetrics : IChatbotSafetyMetrics
     private readonly Counter<long> _piiDetected;
     private readonly Histogram<double> _responseQualityScore;
 
+    // ── WhatsApp SLA Metrics ──────────────────────────────────────────
+    private readonly Histogram<double> _whatsAppWebhookLatency;
+    private readonly Counter<long> _whatsAppPlanGateRejections;
+
     public ChatbotMetrics(IMeterFactory meterFactory)
     {
         var meter = meterFactory.Create(MeterName, "1.0.0");
@@ -179,6 +183,17 @@ public sealed class ChatbotMetrics : IChatbotSafetyMetrics
             "chatbot.response.quality.score",
             unit: "{score}",
             description: "Response quality score (0.0-1.0) from grounding + moderation checks");
+
+        // ── WhatsApp SLA Metrics ─────────────────────────────────────
+        _whatsAppWebhookLatency = meter.CreateHistogram<double>(
+            "chatbot.whatsapp.webhook.latency",
+            unit: "ms",
+            description: "End-to-end WhatsApp webhook processing latency (receive → reply sent). SLA: <3000ms");
+
+        _whatsAppPlanGateRejections = meter.CreateCounter<long>(
+            "chatbot.whatsapp.plan_gate.rejections",
+            unit: "{rejection}",
+            description: "WhatsApp messages rejected because dealer plan does not include WhatsApp integration");
     }
 
     // ── Public Recording Methods ─────────────────────────────────────────────
@@ -296,4 +311,21 @@ public sealed class ChatbotMetrics : IChatbotSafetyMetrics
     public void RecordResponseQualityScore(double score, string chatMode)
         => _responseQualityScore.Record(score,
             new KeyValuePair<string, object?>("chat_mode", chatMode));
+
+    // ── WhatsApp SLA Recording Methods ───────────────────────────────
+
+    /// <summary>
+    /// Records end-to-end WhatsApp webhook latency (from message received to reply sent).
+    /// SLA target: &lt;3000ms. Alerts when P95 exceeds threshold.
+    /// </summary>
+    public void RecordWhatsAppWebhookLatency(double latencyMs)
+        => _whatsAppWebhookLatency.Record(latencyMs);
+
+    /// <summary>
+    /// Records when a WhatsApp message is rejected because the dealer's plan
+    /// does not include WhatsApp integration (Libre/Visible plan).
+    /// </summary>
+    public void RecordWhatsAppPlanGateRejection(string? dealerId = null)
+        => _whatsAppPlanGateRejections.Add(1,
+            new KeyValuePair<string, object?>("dealer_id", dealerId ?? "unknown"));
 }

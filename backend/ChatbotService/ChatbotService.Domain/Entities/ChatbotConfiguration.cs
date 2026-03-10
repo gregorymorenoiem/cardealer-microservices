@@ -58,6 +58,26 @@ public class ChatbotConfiguration
         "En este momento no estamos disponibles. Deja tu mensaje y te contactaremos pronto.";
     public string? QuickRepliesJson { get; set; } // JSON de quick replies iniciales
     
+    // ══════════════════════════════════════════════════════════════
+    // BOT DISCLOSURE — Cumplimiento legal de identificación de bot
+    // ══════════════════════════════════════════════════════════════
+    
+    /// <summary>
+    /// Nombre visible del dealer para el disclosure obligatorio.
+    /// Se usa en: "Soy un asistente virtual de OKLA, al servicio de {DealerDisplayName}."
+    /// </summary>
+    public string DealerDisplayName { get; set; } = "OKLA";
+    
+    /// <summary>
+    /// URL de la política de privacidad. Se incluye en el mensaje de disclosure.
+    /// </summary>
+    public string PrivacyPolicyUrl { get; set; } = "https://okla.do/privacidad";
+    
+    /// <summary>
+    /// Si true, el comprador debe aceptar el disclosure antes de enviar mensajes.
+    /// </summary>
+    public bool RequireDisclosureConsent { get; set; } = true;
+    
     // Horarios de atención del bot
     public bool RestrictToBusinessHours { get; set; }
     public string? BusinessHoursJson { get; set; } // JSON con horarios

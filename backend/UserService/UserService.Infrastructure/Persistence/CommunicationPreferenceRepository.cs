@@ -48,6 +48,9 @@ public class CommunicationPreferenceRepository : ICommunicationPreferenceReposit
             existing.PushNewMessages = preference.PushNewMessages;
             existing.PushPriceChanges = preference.PushPriceChanges;
             existing.PushRecommendations = preference.PushRecommendations;
+            existing.WhatsAppTransactional = preference.WhatsAppTransactional;
+            existing.WhatsAppMarketing = preference.WhatsAppMarketing;
+            existing.WhatsAppPriceAlerts = preference.WhatsAppPriceAlerts;
             existing.AllowProfiling = preference.AllowProfiling;
             existing.AllowThirdPartySharing = preference.AllowThirdPartySharing;
             existing.AllowAnalytics = preference.AllowAnalytics;

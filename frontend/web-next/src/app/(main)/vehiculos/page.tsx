@@ -23,7 +23,22 @@ export const revalidate = 120;
 export const metadata: Metadata = {
   title: 'Vehículos en Venta | OKLA',
   description:
-    'Encuentra los mejores vehículos en venta en República Dominicana. Miles de opciones nuevas y usadas verificadas en OKLA.',
+    'Encuentra los mejores vehículos en venta en República Dominicana. Miles de opciones nuevas y usadas verificadas en OKLA. ¡Busca, compara y contacta vendedores hoy!',
+  keywords: [
+    'vehículos en venta',
+    'carros usados',
+    'autos nuevos',
+    'República Dominicana',
+    'comprar carro',
+    'OKLA',
+    'marketplace automotriz',
+    'Toyota',
+    'Honda',
+    'Hyundai',
+  ],
+  alternates: {
+    canonical: 'https://okla.com.do/vehiculos',
+  },
   openGraph: {
     title: 'Vehículos en Venta | OKLA',
     description:
@@ -43,7 +58,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Vehículos en Venta | OKLA',
-    description: 'Miles de vehículos nuevos y usados verificados en República Dominicana.',
+    description:
+      'Miles de vehículos nuevos y usados verificados en República Dominicana. ¡Encuentra tu próximo carro en OKLA!',
     images: ['/opengraph-image'],
   },
 };
@@ -81,9 +97,11 @@ function VehiculosLoadingFallback() {
 export default async function VehiculosPage() {
   // SSR fetch first page for JSON-LD structured data (graceful degradation)
   let vehicles: VehicleCardData[] = [];
+  let totalPages = 1;
   try {
     const result = await searchVehicles({ page: 1, pageSize: 10 });
     vehicles = result.items;
+    totalPages = result.totalPages ?? Math.ceil((result.total ?? 0) / 10);
   } catch {
     // API unavailable at build time — JSON-LD omitted, page still renders
   }
@@ -106,6 +124,12 @@ export default async function VehiculosPage() {
         )
       : null;
 
+  // INDEXATION FIX C4: Generate pagination links so Googlebot can discover
+  // vehicles beyond page 1. The UI uses infinite scroll (client JS), but
+  // crawlers that don't execute JS need explicit <a> links to paginated URLs.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://okla.com.do';
+  const maxPaginationLinks = Math.min(totalPages, 100); // Cap at 100 pages for sanity
+
   return (
     <>
       <JsonLd data={breadcrumbJsonLd} />
@@ -113,6 +137,32 @@ export default async function VehiculosPage() {
       <Suspense fallback={<VehiculosLoadingFallback />}>
         <VehiculosClient />
       </Suspense>
+
+      {/* INDEXATION FIX C4: Server-rendered pagination links for crawlers.
+          These are hidden from visual users via noscript + sr-only but
+          provide Googlebot with a crawl path to all paginated vehicle pages. */}
+      <noscript>
+        <nav aria-label="Paginación de vehículos">
+          {Array.from({ length: maxPaginationLinks }, (_, i) => i + 1).map(page => (
+            <a
+              key={page}
+              href={`${siteUrl}/vehiculos?page=${page}`}
+              style={{ display: 'inline-block', padding: '4px 8px', margin: '2px' }}
+            >
+              Página {page}
+            </a>
+          ))}
+        </nav>
+      </noscript>
+
+      {/* Also provide crawl-visible links (sr-only but in the DOM for Googlebot JS rendering) */}
+      <nav aria-label="Páginas de vehículos" className="sr-only">
+        {Array.from({ length: maxPaginationLinks }, (_, i) => i + 1).map(page => (
+          <a key={page} href={`/vehiculos?page=${page}`}>
+            Vehículos página {page}
+          </a>
+        ))}
+      </nav>
     </>
   );
 }

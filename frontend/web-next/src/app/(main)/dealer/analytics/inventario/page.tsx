@@ -214,7 +214,7 @@ function InventoryAnalyticsContent() {
               <TrendingUp className="text-primary h-5 w-5" />
               Mejor Rendimiento
             </CardTitle>
-            <CardDescription>Vehículos con más vistas y leads</CardDescription>
+            <CardDescription>Vehículos que más llaman la atención</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -232,7 +232,7 @@ function InventoryAnalyticsContent() {
                       <span className="flex items-center gap-1">
                         <Eye className="h-3 w-3" /> {vehicle.views}
                       </span>
-                      <span>{vehicle.leads} leads</span>
+                      <span>{vehicle.leads} interesados</span>
                       <span>{vehicle.daysActive} días</span>
                     </div>
                   </div>
@@ -266,7 +266,7 @@ function InventoryAnalyticsContent() {
                       <span className="flex items-center gap-1">
                         <Eye className="h-3 w-3" /> {vehicle.views}
                       </span>
-                      <span>{vehicle.leads} leads</span>
+                      <span>{vehicle.leads} interesados</span>
                       <span className="text-red-600">{vehicle.daysActive} días</span>
                     </div>
                   </div>
@@ -284,7 +284,7 @@ function InventoryAnalyticsContent() {
                   <p className="font-medium text-yellow-800">Recomendación</p>
                   <p className="text-sm text-yellow-700">
                     Considera reducir el precio o mejorar las fotos de estos vehículos para aumentar
-                    su visibilidad y generar más leads.
+                    su visibilidad y atraer más interesados.
                   </p>
                 </div>
               </div>

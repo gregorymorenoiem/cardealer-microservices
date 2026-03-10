@@ -194,14 +194,14 @@ export default function LiveDashboardPage() {
         >
           <LiveKPICard
             icon={<Eye className="h-5 w-5" />}
-            label="Impresiones Hoy"
+            label="Apariciones hoy"
             value={data.summary.todayImpressions.toLocaleString('es-DO')}
             color="blue"
             trend={12.5}
           />
           <LiveKPICard
             icon={<MousePointerClick className="h-5 w-5" />}
-            label="Clics Hoy"
+            label="Toques hoy"
             value={data.summary.todayClicks.toLocaleString('es-DO')}
             color="green"
             trend={8.3}
@@ -211,14 +211,14 @@ export default function LiveDashboardPage() {
             label="Gasto Hoy"
             value={`RD$${data.summary.todaySpend.toLocaleString('es-DO')}`}
             color="amber"
-            subtext={`CTR: ${data.summary.todayCTR.toFixed(1)}%`}
+            subtext={`Efectividad: ${data.summary.todayCTR.toFixed(1)}%`}
           />
           <LiveKPICard
             icon={<Users className="h-5 w-5" />}
-            label="Leads Hoy"
+            label="Interesados hoy"
             value={data.summary.todayLeads.toString()}
             color="purple"
-            subtext={`CPL: RD$${Math.round(data.summary.todayCostPerLead).toLocaleString('es-DO')}`}
+            subtext={`Costo/interesado: RD$${Math.round(data.summary.todayCostPerLead).toLocaleString('es-DO')}`}
           />
         </div>
 
@@ -307,11 +307,12 @@ export default function LiveDashboardPage() {
                 ¡Tu publicidad está generando resultados! 🚀
               </h3>
               <p className="mt-1 text-blue-100">
-                Hoy has recibido <strong>{data.summary.todayLeads} leads</strong> con un CTR de{' '}
+                Hoy <strong>{data.summary.todayLeads} personas se interesaron</strong> en tus
+                vehículos, y la efectividad de tus anuncios es de{' '}
                 <strong>{data.summary.todayCTR.toFixed(1)}%</strong>.
                 {data.summary.todayCTR > 2
-                  ? ' Tu rendimiento está por encima del promedio de la plataforma.'
-                  : ' Considera aumentar tu presupuesto para maximizar resultados.'}
+                  ? ' Tu publicidad está funcionando mejor que el promedio. ¡Sigue así!'
+                  : ' Considera aumentar tu presupuesto para llegar a más personas.'}
               </p>
             </div>
             <a
@@ -327,13 +328,13 @@ export default function LiveDashboardPage() {
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
           <h3 className="mb-2 flex items-center gap-2 font-semibold text-amber-900">
             <Trophy className="h-5 w-5 text-amber-600" />
-            Mejora tu Quality Score para pagar menos por clic
+            Mejora la calidad de tus anuncios para pagar menos
           </h3>
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="rounded-lg border border-amber-100 bg-white p-3">
               <div className="text-sm font-medium text-amber-900">📸 Más fotos</div>
               <p className="mt-1 text-xs text-amber-700">
-                Listados con 10+ fotos tienen +20% más CTR
+                Publicaciones con 10+ fotos reciben un 20% más de toques
               </p>
             </div>
             <div className="rounded-lg border border-amber-100 bg-white p-3">
@@ -423,9 +424,9 @@ function HourlyChart({ data }: { data: HourlyDataPoint[] }) {
             {/* Tooltip */}
             <div className="absolute bottom-full z-10 mb-2 hidden rounded-lg bg-gray-900 p-2 text-xs whitespace-nowrap text-white group-hover:block">
               <div className="font-semibold">{point.label}</div>
-              <div>👁️ {point.impressions} impresiones</div>
-              <div>👆 {point.clicks} clics</div>
-              <div>📊 {point.ctr.toFixed(1)}% CTR</div>
+              <div>👁️ {point.impressions} apariciones</div>
+              <div>👆 {point.clicks} toques</div>
+              <div>📊 {point.ctr.toFixed(1)}% efectividad</div>
               <div>💰 RD${point.spend.toLocaleString('es-DO')}</div>
             </div>
             {/* Bars */}
@@ -505,21 +506,21 @@ function CampaignLiveCard({ campaign }: { campaign: CampaignLive }) {
           <div className="text-sm font-bold text-blue-600">
             {campaign.metricsToday.impressions.toLocaleString('es-DO')}
           </div>
-          <div className="text-[10px] text-gray-500">Impresiones</div>
+          <div className="text-[10px] text-gray-500">Apariciones</div>
         </div>
         <div className="text-center">
           <div className="text-sm font-bold text-green-600">{campaign.metricsToday.clicks}</div>
-          <div className="text-[10px] text-gray-500">Clics</div>
+          <div className="text-[10px] text-gray-500">Toques</div>
         </div>
         <div className="text-center">
           <div className="text-sm font-bold text-amber-600">
             {campaign.metricsToday.ctr.toFixed(1)}%
           </div>
-          <div className="text-[10px] text-gray-500">CTR</div>
+          <div className="text-[10px] text-gray-500">Efectividad</div>
         </div>
         <div className="text-center">
           <div className="text-sm font-bold text-purple-600">{campaign.metricsToday.leads}</div>
-          <div className="text-[10px] text-gray-500">Leads</div>
+          <div className="text-[10px] text-gray-500">Interesados</div>
         </div>
       </div>
 
@@ -570,13 +571,13 @@ function CampaignLiveCard({ campaign }: { campaign: CampaignLive }) {
         <div className="flex items-center gap-1">
           <Trophy className="h-3.5 w-3.5 text-amber-500" />
           <span className="text-xs text-gray-600">
-            QS: <strong>{campaign.qualityScore.toFixed(1)}</strong>
+            Calidad: <strong>{campaign.qualityScore.toFixed(1)}/10</strong>
           </span>
         </div>
         <div className="flex items-center gap-1">
           <MessageSquare className="h-3.5 w-3.5 text-gray-400" />
           <span className="text-[10px] text-gray-400">
-            Último lead: {formatTimeAgo(campaign.lastLeadAt)}
+            Último interesado: {formatTimeAgo(campaign.lastLeadAt)}
           </span>
         </div>
       </div>

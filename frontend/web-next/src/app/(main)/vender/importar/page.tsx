@@ -56,6 +56,8 @@ interface ExtractedVehicle {
   engineSize: string | null;
   doors: number | null;
   driveType: string | null;
+  vin: string | null;
+  imageUrls: string[];
   confidence: number;
 }
 
@@ -124,7 +126,7 @@ export default function ImportarPage() {
   const handlePublish = useCallback(() => {
     if (!extractedData) return;
     sessionStorage.setItem('importedVehicle', JSON.stringify(extractedData));
-    router.push('/vender/publicar?from=import');
+    router.push('/publicar?from=import');
   }, [extractedData, router]);
 
   const handleBulkImport = useCallback(async () => {
@@ -601,6 +603,7 @@ export default function ImportarPage() {
                   <DataField label="Condición" value={extractedData.condition} />
                   <DataField label="Motor" value={extractedData.engineSize} />
                   <DataField label="Tracción" value={extractedData.driveType} />
+                  <DataField label="VIN" value={extractedData.vin} />
                 </div>
               </div>
 

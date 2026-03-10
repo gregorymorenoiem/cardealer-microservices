@@ -50,8 +50,10 @@ import {
   AlertCircle,
   Loader2,
   RefreshCw,
+  Camera,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import {
   useVehicle,
   useUpdateVehicle,
@@ -163,6 +165,8 @@ export default function DealerEditVehiclePage() {
 
   // Image upload
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const cameraInputRef = React.useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   const [uploadingImages, setUploadingImages] = React.useState(false);
 
   // Sync form with vehicle data
@@ -584,6 +588,17 @@ export default function DealerEditVehiclePage() {
                     className="hidden"
                     onChange={handleImageUpload}
                   />
+                  {/* Camera input for PWA mobile */}
+                  {isMobile && (
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                  )}
 
                   <div className="rounded-lg border-2 border-dashed border-slate-600 p-8 text-center">
                     <Upload className="mx-auto mb-3 h-10 w-10 text-slate-500" />
@@ -607,6 +622,18 @@ export default function DealerEditVehiclePage() {
                       )}
                     </Button>
                   </div>
+
+                  {/* Camera button for PWA mobile */}
+                  {isMobile && (
+                    <button
+                      type="button"
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-emerald-200 bg-emerald-50 p-4 text-emerald-700 transition-colors hover:bg-emerald-100 active:bg-emerald-200"
+                    >
+                      <Camera className="h-5 w-5" />
+                      <span className="font-medium">Tomar Foto con Cámara</span>
+                    </button>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

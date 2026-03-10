@@ -1,6 +1,10 @@
+using System.Globalization;
 using ContactService.Application.DTOs;
 using ContactService.Domain.Entities;
+using ContactService.Domain.Events;
 using ContactService.Domain.Interfaces;
+using CarDealer.Contracts.Enums;
+using CarDealer.Contracts.Events.Vehicle;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -20,6 +24,16 @@ public record CreateContactRequestCommand : IRequest<ContactRequestSummaryDto>
     public string BuyerEmail { get; init; } = string.Empty;
     public string? BuyerPhone { get; init; }
     public string Message { get; init; } = string.Empty;
+
+    // UTM Attribution — SEM FIX
+    public string? UtmSource { get; init; }
+    public string? UtmMedium { get; init; }
+    public string? UtmCampaign { get; init; }
+    public string? UtmTerm { get; init; }
+    public string? UtmContent { get; init; }
+    public string? Gclid { get; init; }
+    public string? Fbclid { get; init; }
+    public string? LandingPage { get; init; }
 }
 
 public class CreateContactRequestCommandHandler
@@ -27,15 +41,27 @@ public class CreateContactRequestCommandHandler
 {
     private readonly IContactRequestRepository _contactRequestRepository;
     private readonly IContactMessageRepository _contactMessageRepository;
+    private readonly IEventPublisher _eventPublisher;
+    private readonly IConversationUsageTracker _usageTracker;
+    private readonly IDealerPlanResolver _planResolver;
+    private readonly IConversationOverageRepository _overageRepo;
     private readonly ILogger<CreateContactRequestCommandHandler> _logger;
 
     public CreateContactRequestCommandHandler(
         IContactRequestRepository contactRequestRepository,
         IContactMessageRepository contactMessageRepository,
+        IEventPublisher eventPublisher,
+        IConversationUsageTracker usageTracker,
+        IDealerPlanResolver planResolver,
+        IConversationOverageRepository overageRepo,
         ILogger<CreateContactRequestCommandHandler> logger)
     {
         _contactRequestRepository = contactRequestRepository;
         _contactMessageRepository = contactMessageRepository;
+        _eventPublisher = eventPublisher;
+        _usageTracker = usageTracker;
+        _planResolver = planResolver;
+        _overageRepo = overageRepo;
         _logger = logger;
     }
 
@@ -54,6 +80,16 @@ public class CreateContactRequestCommandHandler
         );
         contactRequest.BuyerPhone = request.BuyerPhone;
 
+        // SEM FIX: Map UTM attribution fields
+        contactRequest.UtmSource = request.UtmSource;
+        contactRequest.UtmMedium = request.UtmMedium;
+        contactRequest.UtmCampaign = request.UtmCampaign;
+        contactRequest.UtmTerm = request.UtmTerm;
+        contactRequest.UtmContent = request.UtmContent;
+        contactRequest.Gclid = request.Gclid;
+        contactRequest.Fbclid = request.Fbclid;
+        contactRequest.LandingPage = request.LandingPage;
+
         var created = await _contactRequestRepository.CreateAsync(contactRequest, cancellationToken);
 
         // Create initial message
@@ -63,6 +99,119 @@ public class CreateContactRequestCommandHandler
         _logger.LogInformation(
             "Contact request {ContactRequestId} created by buyer {BuyerId} for seller {SellerId}",
             created.Id, request.BuyerId, request.SellerId);
+
+        // Detect if this is the dealer's very first inquiry (for celebration notification)
+        var sellerLeadCount = await _contactRequestRepository.CountBySellerIdAsync(created.SellerId, cancellationToken);
+        var isFirstInquiry = sellerLeadCount == 1; // 1 = the one we just created
+
+        // Publish LeadCreatedEvent → NotificationService (email + WhatsApp to dealer)
+        try
+        {
+            await _eventPublisher.PublishAsync(new LeadCreatedEvent
+            {
+                LeadId = created.Id,
+                VehicleId = created.VehicleId ?? Guid.Empty,
+                SellerId = created.SellerId,
+                BuyerId = created.BuyerId,
+                BuyerName = created.BuyerName,
+                BuyerEmail = created.BuyerEmail,
+                BuyerPhone = created.BuyerPhone,
+                Message = request.Message,
+                VehicleTitle = created.Subject,
+                CreatedAt = created.CreatedAt,
+                IsFirstInquiry = isFirstInquiry
+            }, cancellationToken);
+
+            _logger.LogInformation(
+                "LeadCreatedEvent published for ContactRequestId={ContactRequestId}",
+                created.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to publish LeadCreatedEvent for ContactRequestId={ContactRequestId}. Lead was saved but notification may be delayed.",
+                created.Id);
+            // Don't throw — the lead was saved successfully, notification failure is non-critical
+        }
+
+        // ── CONTRA #5 FIX: Conversation limit enforcement for ÉLITE plan ──────
+        // Track usage, check thresholds, and publish events for notifications.
+        try
+        {
+            var dealerPlan = await _planResolver.GetDealerPlanAsync(created.SellerId, cancellationToken);
+            var usageResult = await _usageTracker.IncrementAndCheckAsync(
+                created.SellerId, dealerPlan, cancellationToken);
+
+            // Publish warning threshold event (80% = 1,600 for Elite)
+            if (usageResult.JustCrossedWarningThreshold)
+            {
+                await _eventPublisher.PublishAsync(new ConversationWarningThresholdEvent(
+                    dealerId: created.SellerId,
+                    dealerPlan: dealerPlan,
+                    currentCount: usageResult.CurrentCount,
+                    maxAllowed: usageResult.MaxAllowed,
+                    projectedMonthlyTotal: usageResult.ProjectedMonthlyTotal
+                ), cancellationToken);
+
+                _logger.LogWarning(
+                    "[CONTRA#5] Dealer {DealerId} reached 80% conversation limit: {Count}/{Max} (plan={Plan}). " +
+                    "Projected monthly total: {Projected}. Warning notification sent.",
+                    created.SellerId, usageResult.CurrentCount, usageResult.MaxAllowed,
+                    dealerPlan, usageResult.ProjectedMonthlyTotal);
+            }
+
+            // Publish hard limit reached event (100% = 2,000 for Elite)
+            if (usageResult.JustReachedLimit)
+            {
+                await _eventPublisher.PublishAsync(new ConversationLimitReachedEvent(
+                    dealerId: created.SellerId,
+                    dealerPlan: dealerPlan,
+                    limitReached: usageResult.MaxAllowed
+                ), cancellationToken);
+
+                _logger.LogWarning(
+                    "[CONTRA#5] Dealer {DealerId} REACHED conversation hard limit: {Max} (plan={Plan}). " +
+                    "ChatAgent will enter basic mode until next billing cycle.",
+                    created.SellerId, usageResult.MaxAllowed, dealerPlan);
+            }
+
+            // ── OVERAGE DETAIL LOGGING ──────────────────────────────────────
+            // If the conversation exceeds the plan limit, persist the overage
+            // detail for billing and downloadable report.
+            if (usageResult.OverageCount > 0 && usageResult.MaxAllowed > 0)
+            {
+                var overageDetail = new ConversationOverageDetail
+                {
+                    DealerId = created.SellerId,
+                    ContactRequestId = created.Id,
+                    BuyerId = created.BuyerId,
+                    VehicleId = created.VehicleId,
+                    Subject = created.Subject,
+                    DealerPlan = dealerPlan,
+                    BillingPeriod = DateTime.UtcNow.ToString("yyyy-MM", CultureInfo.InvariantCulture),
+                    ConversationNumber = usageResult.CurrentCount,
+                    PlanLimit = usageResult.MaxAllowed,
+                    UnitCost = CarDealer.Contracts.Enums.PlanFeatureLimits.OverageCostPerConversation,
+                    OccurredAtUtc = DateTime.UtcNow
+                };
+
+                await _overageRepo.CreateAsync(overageDetail, cancellationToken);
+
+                _logger.LogWarning(
+                    "[CONTRA#5-OVERAGE] Dealer {DealerId} overage conversation #{ConvNo} logged. " +
+                    "ContactRequest={ContactRequestId} Cost=${UnitCost}",
+                    created.SellerId, usageResult.CurrentCount,
+                    created.Id, overageDetail.UnitCost);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "[CONTRA#5] Failed to track conversation usage for dealer {DealerId}. " +
+                "Contact request was saved but limit enforcement may be delayed.",
+                created.SellerId);
+            // Don't throw — contact request was saved, usage tracking failure is non-critical
+        }
 
         return new ContactRequestSummaryDto
         {

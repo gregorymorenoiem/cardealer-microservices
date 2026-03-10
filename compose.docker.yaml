@@ -14,7 +14,7 @@ services:
   # ===========================================
   # INFRASTRUCTURE
   # ===========================================
-  
+
   # PostgreSQL - Shared instance for all services
   postgres:
     image: postgres:16-alpine
@@ -122,7 +122,7 @@ services:
   # ===========================================
   # CORE SERVICES
   # ===========================================
-  
+
   authservice:
     build:
       context: ./backend
@@ -334,7 +334,7 @@ services:
   # ===========================================
   # BUSINESS SERVICES
   # ===========================================
-  
+
   billingservice:
     build:
       context: ./backend
@@ -405,6 +405,25 @@ services:
     networks:
       - cardealer-net
 
+  listingagent:
+    build:
+      context: ./backend
+      dockerfile: ListingAgent/Dockerfile
+    container_name: listingagent
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    secrets:
+      - redis_password
+    ports:
+      - "15095:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - cardealer-net
+
   auditservice:
     build:
       context: ./backend
@@ -436,7 +455,7 @@ services:
   # ===========================================
   # FRONTEND WEB
   # ===========================================
-  
+
   frontend-web:
     build:
       context: ./frontend/web

@@ -34,10 +34,13 @@ import {
   Menu,
   Star,
   Megaphone,
+  Crown,
+  PlusCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthGuard } from '@/components/auth/auth-guard';
+import { usePlanAccess } from '@/hooks/use-plan-access';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 // =============================================================================
@@ -88,6 +91,7 @@ export default function DealerLayout({ children }: { children: React.ReactNode }
 
 function DealerLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
+  const { currentPlan } = usePlanAccess();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -106,6 +110,7 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
   const mobileNavItems = [
     { href: '/dealer', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/dealer/inventario', label: 'Inventario', icon: Car },
+    { href: '/publicar', label: 'Publicar', icon: PlusCircle, highlight: true },
     { href: '/dealer/leads', label: 'Leads', icon: Users },
     { href: '/dealer/analytics', label: 'Analytics', icon: BarChart3 },
   ];
@@ -178,6 +183,16 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
             className="flex-1 space-y-1 overflow-y-auto p-4"
             aria-label="Navegación del portal dealer"
           >
+            {/* Upgrade CTA for LIBRE dealers */}
+            {currentPlan === 'libre' && (
+              <Link
+                href="/cuenta/upgrade?plan=visible&type=dealer"
+                className="mb-3 flex items-center gap-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:brightness-110"
+              >
+                <Crown className="h-4 w-4 text-yellow-300" />
+                Mejorar Plan
+              </Link>
+            )}
             {mainLinks.map(link => {
               const Icon = link.icon;
               return (
@@ -273,6 +288,17 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
               className="flex-1 space-y-1 overflow-y-auto p-4"
               aria-label="Menú de navegación móvil"
             >
+              {/* Upgrade CTA for LIBRE dealers (mobile) */}
+              {currentPlan === 'libre' && (
+                <Link
+                  href="/cuenta/upgrade?plan=visible&type=dealer"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="mb-3 flex items-center gap-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-3 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:brightness-110"
+                >
+                  <Crown className="h-4 w-4 text-yellow-300" />
+                  Mejorar Plan
+                </Link>
+              )}
               {mainLinks.map(link => {
                 const Icon = link.icon;
                 return (
@@ -370,17 +396,27 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
           {mobileNavItems.map(item => {
             const Icon = item.icon;
             const active = isActivePath(item.href);
+            const isHighlight = 'highlight' in item && item.highlight;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
                   'flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 text-xs transition-colors',
-                  active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                  isHighlight
+                    ? 'text-primary font-semibold'
+                    : active
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
                 )}
                 aria-current={active ? 'page' : undefined}
               >
-                <Icon className="h-5 w-5" />
+                <Icon
+                  className={cn(
+                    'h-5 w-5',
+                    isHighlight && 'bg-primary text-primary-foreground h-8 w-8 rounded-full p-1.5'
+                  )}
+                />
                 <span>{item.label}</span>
               </Link>
             );

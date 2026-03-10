@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using BillingService.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace BillingService.Infrastructure.Persistence;
 
@@ -19,6 +19,14 @@ public class BillingDbContext : DbContext
 
     // RETENTION FIX: Track every subscription plan change for churn analytics
     public DbSet<SubscriptionChangeHistory> SubscriptionChangeHistory => Set<SubscriptionChangeHistory>();
+
+    // KPI AUDIT FIX: CAC tracking — acquisition source and marketing spend per channel
+    public DbSet<AcquisitionTracking> AcquisitionTrackings => Set<AcquisitionTracking>();
+    public DbSet<MarketingSpend> MarketingSpends => Set<MarketingSpend>();
+
+    // CONTRA #6 FIX: Payment reconciliation — daily Stripe↔OKLA DB audit
+    public DbSet<ReconciliationReport> ReconciliationReports => Set<ReconciliationReport>();
+    public DbSet<ReconciliationDiscrepancy> ReconciliationDiscrepancies => Set<ReconciliationDiscrepancy>();
 
     public BillingDbContext(DbContextOptions<BillingDbContext> options) : base(options)
     {
@@ -224,6 +232,92 @@ public class BillingDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.SubscriptionId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ========================================
+        // KPI AUDIT FIX: Acquisition Tracking for CAC
+        // ========================================
+        modelBuilder.Entity<AcquisitionTracking>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DealerId).IsUnique();
+            entity.HasIndex(e => e.Channel);
+            entity.HasIndex(e => e.RegisteredAt);
+            entity.HasIndex(e => e.ConvertedToPaid);
+            entity.HasIndex(e => new { e.Channel, e.RegisteredAt });
+
+            entity.Property(e => e.AcquisitionCostUsd).HasPrecision(18, 2);
+            entity.Property(e => e.CampaignId).HasMaxLength(200);
+            entity.Property(e => e.CampaignName).HasMaxLength(300);
+            entity.Property(e => e.UtmSource).HasMaxLength(200);
+            entity.Property(e => e.UtmMedium).HasMaxLength(200);
+            entity.Property(e => e.UtmCampaign).HasMaxLength(200);
+            entity.Property(e => e.UtmContent).HasMaxLength(500);
+            entity.Property(e => e.UtmTerm).HasMaxLength(200);
+            entity.Property(e => e.ReferralCode).HasMaxLength(50);
+            entity.Property(e => e.LandingPage).HasMaxLength(500);
+            entity.Property(e => e.Country).HasMaxLength(5);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+        });
+
+        // ========================================
+        // KPI AUDIT FIX: Marketing Spend for aggregated CAC
+        // ========================================
+        modelBuilder.Entity<MarketingSpend>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.Year, e.Month, e.Channel });
+            entity.HasIndex(e => e.Channel);
+            entity.HasIndex(e => e.CampaignId);
+
+            entity.Property(e => e.SpendUsd).HasPrecision(18, 2);
+            entity.Property(e => e.CampaignId).HasMaxLength(200);
+            entity.Property(e => e.CampaignName).HasMaxLength(300);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+        });
+
+        // ========================================
+        // CONTRA #6 FIX: Payment Reconciliation Reports
+        // ========================================
+        modelBuilder.Entity<ReconciliationReport>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Period);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.StartedAt);
+
+            entity.Property(e => e.Period).HasMaxLength(7).IsRequired(); // YYYY-MM
+            entity.Property(e => e.TotalDiscrepancyAmount).HasPrecision(18, 2);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(2000);
+            entity.Property(e => e.TriggeredBy).HasMaxLength(200);
+
+            entity.HasMany(e => e.Discrepancies)
+                .WithOne(d => d.Report)
+                .HasForeignKey(d => d.ReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ReconciliationDiscrepancy>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ReportId);
+            entity.HasIndex(e => e.DealerId);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.Severity);
+            entity.HasIndex(e => new { e.IsAutoResolved, e.ResolvedAt });
+
+            entity.Property(e => e.StripePaymentIntentId).HasMaxLength(200);
+            entity.Property(e => e.StripeSubscriptionId).HasMaxLength(200);
+            entity.Property(e => e.StripeInvoiceId).HasMaxLength(200);
+            entity.Property(e => e.StripeCustomerId).HasMaxLength(200);
+            entity.Property(e => e.StripeAmount).HasPrecision(18, 2);
+            entity.Property(e => e.OklaAmount).HasPrecision(18, 2);
+            entity.Property(e => e.AmountDifference).HasPrecision(18, 2);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.SuggestedAction).HasMaxLength(1000);
+            entity.Property(e => e.ResolutionNotes).HasMaxLength(2000);
+            entity.Property(e => e.ResolvedBy).HasMaxLength(200);
         });
     }
 

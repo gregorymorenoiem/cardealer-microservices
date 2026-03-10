@@ -49,4 +49,26 @@ public interface IPrivacyRequestRepository
     /// Verifica el código de confirmación
     /// </summary>
     Task<PrivacyRequest?> GetByConfirmationCodeAsync(Guid userId, string code);
+
+    // ── Ley 172-13 Art. 5: Derecho de acceso y portabilidad ──────────────
+
+    /// <summary>
+    /// Obtiene la solicitud de exportación más reciente de un usuario
+    /// </summary>
+    Task<PrivacyRequest?> GetLatestExportRequestAsync(Guid userId);
+
+    /// <summary>
+    /// Obtiene una solicitud de exportación por su token de descarga seguro
+    /// </summary>
+    Task<PrivacyRequest?> GetByDownloadTokenAsync(string downloadToken);
+
+    /// <summary>
+    /// Obtiene solicitudes de exportación pendientes de procesamiento
+    /// </summary>
+    Task<IEnumerable<PrivacyRequest>> GetPendingExportRequestsAsync();
+
+    /// <summary>
+    /// Obtiene solicitudes de exportación expiradas para limpieza de archivos
+    /// </summary>
+    Task<IEnumerable<PrivacyRequest>> GetExpiredExportRequestsAsync();
 }

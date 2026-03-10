@@ -19,6 +19,12 @@ public interface IChatSessionRepository
     Task UpdateAsync(ChatSession session, CancellationToken ct = default);
     Task<int> GetTodaySessionCountAsync(Guid configurationId, CancellationToken ct = default);
     Task<int> GetMonthSessionCountAsync(Guid configurationId, int year, int month, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes all chat sessions for a user (Ley 172-13 cascade deletion).
+    /// Returns the list of deleted session IDs for downstream cleanup.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> DeleteAllByUserIdAsync(Guid userId, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -34,11 +40,16 @@ public interface IChatMessageRepository
     Task<IEnumerable<ChatMessage>> GetFallbackMessagesAsync(Guid configurationId, DateTime since, CancellationToken ct = default);
     Task<IEnumerable<ChatMessage>> GetRecentBySessionTokenAsync(string sessionToken, int maxMessages, CancellationToken ct = default);
     Task<int> GetLlmCallsCountAsync(Guid configurationId, DateTime from, DateTime to, CancellationToken ct = default);
-    
+
     /// <summary>
     /// Counts LLM interactions by a specific user within a time range (for daily/monthly limits).
     /// </summary>
     Task<int> GetLlmCallsCountByUserAsync(Guid userId, DateTime from, DateTime to, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes all chat messages for the given sessions (Ley 172-13 cascade deletion).
+    /// </summary>
+    Task<int> DeleteBySessionIdsAsync(IReadOnlyList<Guid> sessionIds, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -54,6 +65,11 @@ public interface IChatLeadRepository
     Task UpdateAsync(ChatLead lead, CancellationToken ct = default);
     Task<int> GetTodayLeadCountAsync(Guid configurationId, CancellationToken ct = default);
     Task<int> GetMonthLeadCountAsync(Guid configurationId, int year, int month, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes all chat leads for the given sessions (Ley 172-13 cascade deletion).
+    /// </summary>
+    Task<int> DeleteBySessionIdsAsync(IReadOnlyList<Guid> sessionIds, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -63,6 +79,11 @@ public interface IChatbotConfigurationRepository
 {
     Task<ChatbotConfiguration?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<ChatbotConfiguration?> GetByDealerIdAsync(Guid dealerId, CancellationToken ct = default);
+    /// <summary>
+    /// Find dealer configuration by WhatsApp Business Phone Number ID.
+    /// Used by WhatsApp webhook to resolve which dealer the buyer is messaging.
+    /// </summary>
+    Task<ChatbotConfiguration?> GetByWhatsAppPhoneIdAsync(string phoneNumberId, CancellationToken ct = default);
     Task<ChatbotConfiguration?> GetGlobalConfigurationAsync(CancellationToken ct = default);
     Task<ChatbotConfiguration?> GetDefaultAsync(CancellationToken ct = default);
     Task<IEnumerable<ChatbotConfiguration>> GetAllActiveAsync(CancellationToken ct = default);
@@ -82,6 +103,11 @@ public interface IInteractionUsageRepository
     Task<InteractionUsage> IncrementUsageAsync(Guid configurationId, Guid? userId, string? sessionToken, decimal cost, CancellationToken ct = default);
     Task<MonthlyUsageSummary?> GetMonthlySummaryAsync(Guid configurationId, int year, int month, CancellationToken ct = default);
     Task<MonthlyUsageSummary> CreateOrUpdateMonthlySummaryAsync(MonthlyUsageSummary summary, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes all interaction usage for a user (Ley 172-13 cascade deletion).
+    /// </summary>
+    Task<int> DeleteByUserIdAsync(Guid userId, CancellationToken ct = default);
 }
 
 /// <summary>

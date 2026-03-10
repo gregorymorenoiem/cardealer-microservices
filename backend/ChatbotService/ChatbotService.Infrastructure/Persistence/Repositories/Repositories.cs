@@ -54,6 +54,23 @@ public class ChatSessionRepository : IChatSessionRepository
 
     public async Task<int> GetMonthSessionCountAsync(Guid configurationId, int year, int month, CancellationToken ct = default)
         => await _context.ChatSessions.CountAsync(s => s.ChatbotConfigurationId == configurationId && s.CreatedAt.Year == year && s.CreatedAt.Month == month, ct);
+
+    public async Task<IReadOnlyList<Guid>> DeleteAllByUserIdAsync(Guid userId, CancellationToken ct = default)
+    {
+        var sessions = await _context.ChatSessions
+            .Where(s => s.UserId == userId)
+            .ToListAsync(ct);
+
+        var sessionIds = sessions.Select(s => s.Id).ToList();
+
+        if (sessions.Count > 0)
+        {
+            _context.ChatSessions.RemoveRange(sessions);
+            await _context.SaveChangesAsync(ct);
+        }
+
+        return sessionIds;
+    }
 }
 
 public class ChatMessageRepository : IChatMessageRepository
@@ -91,9 +108,9 @@ public class ChatMessageRepository : IChatMessageRepository
     public async Task<int> GetLlmCallsCountAsync(Guid configurationId, DateTime from, DateTime to, CancellationToken ct = default)
         => await _context.ChatMessages
             .Include(m => m.Session)
-            .CountAsync(m => m.Session!.ChatbotConfigurationId == configurationId 
-                && m.CreatedAt >= from 
-                && m.CreatedAt < to 
+            .CountAsync(m => m.Session!.ChatbotConfigurationId == configurationId
+                && m.CreatedAt >= from
+                && m.CreatedAt < to
                 && m.ConsumedInteraction, ct);
 
     public async Task<IEnumerable<ChatMessage>> GetRecentBySessionTokenAsync(string sessionToken, int maxMessages, CancellationToken ct = default)
@@ -115,6 +132,23 @@ public class ChatMessageRepository : IChatMessageRepository
                 && m.CreatedAt >= from
                 && m.CreatedAt < to
                 && m.ConsumedInteraction, ct);
+
+    public async Task<int> DeleteBySessionIdsAsync(IReadOnlyList<Guid> sessionIds, CancellationToken ct = default)
+    {
+        if (sessionIds.Count == 0) return 0;
+
+        var messages = await _context.ChatMessages
+            .Where(m => sessionIds.Contains(m.SessionId))
+            .ToListAsync(ct);
+
+        if (messages.Count > 0)
+        {
+            _context.ChatMessages.RemoveRange(messages);
+            await _context.SaveChangesAsync(ct);
+        }
+
+        return messages.Count;
+    }
 }
 
 public class ChatLeadRepository : IChatLeadRepository
@@ -153,6 +187,23 @@ public class ChatLeadRepository : IChatLeadRepository
 
     public async Task<int> GetMonthLeadCountAsync(Guid configurationId, int year, int month, CancellationToken ct = default)
         => await _context.ChatLeads.Include(l => l.Session).CountAsync(l => l.Session!.ChatbotConfigurationId == configurationId && l.CreatedAt.Year == year && l.CreatedAt.Month == month, ct);
+
+    public async Task<int> DeleteBySessionIdsAsync(IReadOnlyList<Guid> sessionIds, CancellationToken ct = default)
+    {
+        if (sessionIds.Count == 0) return 0;
+
+        var leads = await _context.ChatLeads
+            .Where(l => sessionIds.Contains(l.SessionId))
+            .ToListAsync(ct);
+
+        if (leads.Count > 0)
+        {
+            _context.ChatLeads.RemoveRange(leads);
+            await _context.SaveChangesAsync(ct);
+        }
+
+        return leads.Count;
+    }
 }
 
 public class ChatbotConfigurationRepository : IChatbotConfigurationRepository
@@ -166,6 +217,10 @@ public class ChatbotConfigurationRepository : IChatbotConfigurationRepository
 
     public async Task<ChatbotConfiguration?> GetByDealerIdAsync(Guid dealerId, CancellationToken ct = default)
         => await _context.ChatbotConfigurations.FirstOrDefaultAsync(c => c.DealerId == dealerId && c.IsEnabled, ct);
+
+    public async Task<ChatbotConfiguration?> GetByWhatsAppPhoneIdAsync(string phoneNumberId, CancellationToken ct = default)
+        => await _context.ChatbotConfigurations.FirstOrDefaultAsync(
+            c => c.WhatsAppBusinessPhoneId == phoneNumberId && c.EnableWhatsApp && c.IsEnabled, ct);
 
     public async Task<ChatbotConfiguration?> GetGlobalConfigurationAsync(CancellationToken ct = default)
         => await _context.ChatbotConfigurations.FirstOrDefaultAsync(c => c.DealerId == null && c.IsEnabled, ct);
@@ -242,6 +297,21 @@ public class InteractionUsageRepository : IInteractionUsageRepository
         }
         await _context.SaveChangesAsync(ct);
         return summary;
+    }
+
+    public async Task<int> DeleteByUserIdAsync(Guid userId, CancellationToken ct = default)
+    {
+        var usages = await _context.InteractionUsages
+            .Where(u => u.UserId == userId)
+            .ToListAsync(ct);
+
+        if (usages.Count > 0)
+        {
+            _context.InteractionUsages.RemoveRange(usages);
+            await _context.SaveChangesAsync(ct);
+        }
+
+        return usages.Count;
     }
 }
 

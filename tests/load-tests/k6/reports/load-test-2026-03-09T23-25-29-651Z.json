@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-03-09T23:25:29.652Z",
+  "environment": "staging",
+  "baseUrl": "http://localhost:8080",
+  "mode": "quick",
+  "metrics": {
+    "http_reqs": {
+      "count": 3057,
+      "rate": 24.54020076629647
+    },
+    "http_req_duration": {
+      "min": 0.304,
+      "med": 3.632,
+      "max": 2021.46,
+      "p(90)": 5.3474,
+      "p(95)": 6.986999999999999,
+      "p(99)": 17.584719999999997,
+      "count": 3057,
+      "avg": 6.578908406934911
+    },
+    "http_req_failed": {
+      "rate": 0.7877003598298986,
+      "passes": 2408,
+      "fails": 649
+    },
+    "errors_5xx": {
+      "rate": 0.04908376963350786,
+      "passes": 150,
+      "fails": 2906
+    },
+    "errors_4xx": {
+      "rate": 0.7388743455497382,
+      "passes": 2258,
+      "fails": 798
+    },
+    "autoscale_latency_alerts": {
+      "count": 4,
+      "rate": 0.032110174375265255
+    },
+    "checks": {
+      "rate": 0.6537216828478964,
+      "passes": 2424,
+      "fails": 1284
+    }
+  },
+  "thresholds": {
+    "http_req_duration{endpoint:vehicles_detail}": {
+      "p(95)<2000": true
+    },
+    "checks": {
+      "rate>0.95": false
+    },
+    "http_req_duration{endpoint:auth_login}": {
+      "p(95)<2000": true
+    },
+    "http_req_duration{endpoint:media}": {
+      "p(95)<3000": true
+    },
+    "http_req_duration{endpoint:vehicles_list}": {
+      "p(95)<2000": true
+    },
+    "http_req_duration{endpoint:catalog}": {
+      "p(95)<2500": true
+    },
+    "http_req_duration{endpoint:health}": {
+      "p(95)<500": true
+    },
+    "http_req_duration": {
+      "p(99)<5000": true,
+      "avg<1500": true,
+      "p(95)<3000": true
+    },
+    "http_reqs": {
+      "rate>50": false
+    },
+    "http_req_failed": {
+      "rate<0.01": false
+    }
+  }
+}

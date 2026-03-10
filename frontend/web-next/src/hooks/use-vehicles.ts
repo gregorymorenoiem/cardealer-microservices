@@ -8,6 +8,7 @@ import {
   vehicleService,
   getVehiclesByDealer,
   getVehiclesByIds,
+  getVehicleDtosForComparison,
   createVehicle,
   publishVehicle,
   updateVehicle,
@@ -26,10 +27,7 @@ import {
   type CreateVehicleRequest,
   type UpdateVehicleRequest,
 } from '@/services/vehicles';
-import {
-  getPriceSuggestion,
-  type PriceSuggestionRequest,
-} from '@/services/vehicle-intelligence';
+import { getPriceSuggestion, type PriceSuggestionRequest } from '@/services/vehicle-intelligence';
 import type { VehicleSearchParams } from '@/types';
 
 // =============================================================================
@@ -96,7 +94,7 @@ export const useVehicleSearch = useVehicleList;
 /**
  * Get similar vehicles
  */
-export function useSimilarVehicles(vehicleId: string, limit: number = 4) {
+export function useSimilarVehicles(vehicleId: string, limit: number = 6) {
   return useQuery({
     queryKey: vehicleKeys.similar(vehicleId),
     queryFn: () => vehicleService.getSimilar(vehicleId, limit),
@@ -143,6 +141,18 @@ export function useVehiclesByIds(ids: string[]) {
   });
 }
 
+/**
+ * Get FULL vehicle DTOs for comparison (includes engineSize, horsepower, doors, etc.)
+ */
+export function useVehicleDtosForComparison(ids: string[]) {
+  return useQuery({
+    queryKey: [...vehicleKeys.byIds(ids), 'comparison-full'],
+    queryFn: () => getVehicleDtosForComparison(ids),
+    enabled: ids.length > 0,
+    staleTime: 10 * 60 * 1000, // 10 minutes — comparison data changes infrequently
+  });
+}
+
 // =============================================================================
 // MUTATION HOOKS
 // =============================================================================
@@ -179,7 +189,13 @@ export function usePublishVehicle() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => publishVehicle(id),
+    mutationFn: ({
+      id,
+      body,
+    }: {
+      id: string;
+      body?: { disclaimerAccepted: boolean; tosVersion?: string };
+    }) => publishVehicle(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.lists() });
       queryClient.invalidateQueries({ queryKey: vehicleKeys.featured() });

@@ -79,6 +79,20 @@ public record ReturnToBotCommand(
     string SessionToken
 ) : IRequest<HandoffResult>;
 
+/// <summary>
+/// Comando para aceptar el disclosure de bot y política de privacidad.
+/// Debe ejecutarse después de StartSession y antes del primer SendMessage.
+/// </summary>
+public record AcceptDisclosureCommand(
+    string SessionToken
+) : IRequest<AcceptDisclosureResult>;
+
+public record AcceptDisclosureResult(
+    bool Success,
+    string Message,
+    DateTime? ConsentAcceptedAt
+);
+
 public record HandoffResult(
     bool Success,
     string Message,

@@ -31,6 +31,7 @@ import { useDemandByCategory, useCreatePriceAnalysis } from '@/hooks/use-vehicle
 import { formatPrice, getRecommendationType } from '@/services/vehicle-intelligence';
 import { toast } from 'sonner';
 import { PlanGate } from '@/components/plan/plan-gate';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 
 // ============================================================================
 // Skeleton Components
@@ -278,7 +279,10 @@ function DealerPricingContent() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div>
-          <h1 className="text-2xl font-bold">Pricing Intelligence</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">Pricing Intelligence</h1>
+            <VideoHelpButton sectionKey="pricing" variant="icon" />
+          </div>
           <p className="text-muted-foreground">Recomendaciones de precio basadas en IA</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90" onClick={() => refetchVehicles()}>

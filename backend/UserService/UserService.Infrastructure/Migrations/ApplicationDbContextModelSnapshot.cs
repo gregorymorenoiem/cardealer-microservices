@@ -224,6 +224,9 @@ namespace UserService.Infrastructure.Migrations
                     b.Property<int>("ResponseTimeMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Slug")
+                        .HasColumnType("text");
+
                     b.Property<string>("SocialMediaLinks")
                         .HasColumnType("jsonb");
 
@@ -1150,11 +1153,64 @@ namespace UserService.Infrastructure.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("WhatsAppMarketing")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("WhatsAppPriceAlerts")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("WhatsAppTransactional")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("CommunicationPreferences");
+                });
+
+            modelBuilder.Entity("UserService.Domain.Entities.Privacy.ConsentRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConsentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("Granted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "ConsentType");
+
+                    b.ToTable("ConsentRecords", (string)null);
                 });
 
             modelBuilder.Entity("UserService.Domain.Entities.Privacy.PrivacyRequest", b =>
@@ -2060,6 +2116,17 @@ namespace UserService.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("UserService.Domain.Entities.Privacy.CommunicationPreference", b =>
+                {
+                    b.HasOne("UserService.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("UserService.Domain.Entities.Privacy.ConsentRecord", b =>
                 {
                     b.HasOne("UserService.Domain.Entities.User", "User")
                         .WithMany()

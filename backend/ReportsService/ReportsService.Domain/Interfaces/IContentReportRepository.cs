@@ -32,6 +32,21 @@ public interface IContentReportRepository
     Task<ContentReport?> FindByTargetAndReporterAsync(
         string targetId, Guid reportedById,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Count total unique reports (Pending or Investigating) for a given target.
+    /// Used for auto-suspend threshold checks.
+    /// </summary>
+    Task<int> CountActiveByTargetIdAsync(
+        string targetId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Find existing report from the same IP on the same target (anonymous dedup).
+    /// </summary>
+    Task<ContentReport?> FindByTargetAndIpAsync(
+        string targetId, string ipAddress,
+        CancellationToken cancellationToken = default);
 }
 
 public record ContentReportStats(

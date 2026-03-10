@@ -1,392 +1,227 @@
-# 🤖 GitHub Copilot Instructions - OKLA Project (v2)
+# GitHub Copilot — Instrucciones Globales del Agente
 
-This file provides concise context for GitHub Copilot (Claude) when assisting with the OKLA codebase. Use it to understand the project’s architecture, coding standards, and critical rules.
-
-**Last updated:** 2026-02-22
-
----
-
-## 1. Project Overview
-
-**OKLA** is a vehicle marketplace in Dominican Republic, built with microservices (.NET 8) and a Next.js 16 frontend, deployed on Digital Ocean Kubernetes (DOKS).
-
-- **Business model**: Freemium v3 — Free buyers, dealers on 4 tiers: Libre ($0), Visible ($29/mo), Pro ($89/mo), Elite ($199/mo).
-- **Architecture**: Clean Architecture per service, CQRS with MediatR, Domain Events, RabbitMQ, PostgreSQL, Redis.
-- **Frontend**: Next.js 16 (App Router), TypeScript, Tailwind, shadcn/ui, Zustand, TanStack Query, pnpm (⚠️ **NO npm/yarn**).
-- **Backend**: .NET 8, Ocelot Gateway, shared libraries (`CarDealer.Shared`, `CarDealer.Contracts`).
-- **K8s**: DOKS, all services use port **8080** internally, BFF pattern (`/api/*` rewritten to gateway).
+> **Ambiente controlado · Auditoría manual al final del día**
+> Este archivo es leído por el agente en cada sesión. Sigue estas reglas sin excepción.
 
 ---
 
-## 2. Essential Coding Rules
+🚦 GATE OBLIGATORIO PRE-COMMIT Y PRE-PUSH
+NUNCA ejecutes git commit ni git push sin antes haber pasado los 4 pasos de este gate.
+Si cualquier paso falla, detente, corrige el problema y vuelve a correr el gate completo desde el paso 1.
+No hay excepciones. Este proceso garantiza que el CI/CD no se rompa.
 
-### 2.1 Naming Conventions
+Paso 1 — dotnet restore · Detecta paquetes rotos o referencias faltantes
+bashdotnet restore
+Criterio de éxito: salida sin errores error ni NU\*\*\*\* codes.
+Si falla:
 
-- **C#**: Classes/interfaces: `PascalCase`, methods: `PascalCase`, params/locals: `camelCase`. Private fields: `_camelCase`. Interfaces: `I` prefix.
-- **TypeScript**: Components: `PascalCase`, functions/variables: `camelCase`, interfaces: `PascalCase` (no `I` prefix).
-- **Files**: Match the main export name (e.g., `VehicleCard.tsx`).
-- **Folders**: `kebab-case` (e.g., `auth-service`).
+Revisa que todos los proyectos referenciados en la .sln existan en disco.
+Verifica que el NuGet.Config apunte a los feeds correctos.
+Comprueba conectividad si los paquetes son privados (Azure Artifacts, GitHub Packages).
+Elimina la carpeta obj/ del proyecto afectado y repite: dotnet restore <proyecto>.csproj
+Registra en auditoría y no avances hasta resolver.
 
-### 2.2 Project Structure
+bashecho "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1] dotnet restore — OK" >> .github/copilot-audit.log
 
-```
-backend/
-├── ServiceName/
-│   ├── ServiceName.Api/          # Controllers, Program.cs
-│   ├── ServiceName.Application/   # Commands/Queries, DTOs, Validators
-│   ├── ServiceName.Domain/        # Entities, Enums, Events, Interfaces
-│   └── ServiceName.Infrastructure/# Persistence, Repos, External Services
-frontend/
-├── web-next/
-│   ├── src/app/                   # App Router (groups: (auth), (main), api)
-│   ├── src/components/             # Reusable components (grouped by feature)
-│   ├── src/services/               # API clients
-│   └── src/lib/                    # Utilities, security, config
-k8s/                                 # Manifests (deployments, services, ingress)
-docs/                                # Detailed documentation
-```
+Paso 2 — dotnet build /p:TreatWarningsAsErrors=true · Detecta errores y warnings como CS8601
+bashdotnet build /p:TreatWarningsAsErrors=true
+Criterio de éxito: Build succeeded con 0 errores y 0 warnings.
+Si falla — errores frecuentes y cómo resolverlos:
+CódigoSignificadoAcciónCS8601Posible asignación de referencia nulaAgrega null check o usa operador ?. / !CS8602Dereference de referencia posiblemente nulaValida con if (x != null) o usa ??CS8618Propiedad no-nullable sin inicializarInicializa en constructor o usa = null!CS0108Miembro oculta miembro heredado sin newAgrega keyword new o renombra el miembroCS0162Código inalcanzableElimina o comenta el bloque inalcanzableCS1998Método async sin awaitAgrega await o elimina asyncCS8625Literal null no puede convertirse a tipoCambia el tipo a nullable T? o elimina el null
 
-### 2.3 Critical Prohibitions
+Nunca uses /p:TreatWarningsAsErrors=false ni #pragma warning disable para forzar el paso.
+Corrige el warning en el código fuente. Si el warning es de una dependencia externa que no puedes modificar, usa <NoWarn>CSXXXX</NoWarn> en el .csproj correspondiente, justificando con un comentario XML.
 
-- ❌ **Never** use `npm` or `yarn` in frontend – use `pnpm`.
-- ❌ **Never** expose Gateway to internet – only internal.
-- ❌ **Never** use `CreateBootstrapLogger()` if you call `UseStandardSerilog()`.
-- ❌ **Never** change RabbitMQ queue arguments without deleting the old queue first.
-- ❌ **Never** let `/health` endpoint run external checks (exclude `"external"` tag).
-- ❌ **Never** store secrets in code – use K8s secrets or environment variables.
+bashecho "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2] dotnet build TreatWarningsAsErrors — OK" >> .github/copilot-audit.log
 
----
+Paso 3 — npx next lint · Detecta errores de ESLint en el frontend Next.js
+bashnpx next lint
+Criterio de éxito: salida ✔ No ESLint warnings or errors o sin líneas error.
+Si falla — errores frecuentes y cómo resolverlos:
+Regla ESLintCausa comúnAcciónno-unused-varsVariable declarada pero no usadaElimínala o prefixa con \_ si es intencionalreact-hooks/exhaustive-depsDependencia faltante en useEffectAgrega la dependencia al array o usa useCallback@next/next/no-img-elementUso de <img> nativo en lugar de <Image>Reemplaza con import Image from 'next/image'@typescript-eslint/no-explicit-anyTipo any explícitoDefine un tipo o interfaz específicono-consoleconsole.log en producciónUsa logger configurado o elimina el consolereact/no-unescaped-entitiesComillas o apóstrofes sin escapar en JSXUsa &apos; &quot; o mueve el texto a variableimport/no-anonymous-default-exportExport default de literal anónimoAsigna nombre a la función/objeto antes de exportar
 
-## 3. Backend Development Standards
+Nunca deshabilites reglas con eslint-disable para forzar el paso.
+Si es un false positive justificado, usa // eslint-disable-next-line <regla> -- motivo con motivo explícito.
 
-### 3.1 Clean Architecture Layers
+bashecho "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3] npx next lint — OK" >> .github/copilot-audit.log
 
-Each service must follow the 4-layer structure above. **Shared libraries** in `_Shared/` provide common functionality.
+Paso 4 — dotnet test · Detecta tests rotos antes de que los detecte el CI/CD
+bashdotnet test --no-build --logger "console;verbosity=detailed"
 
-### 3.2 Mandatory Extensions (in Program.cs)
+Usa --no-build porque el build ya fue validado en el Paso 2.
 
-```csharp
-var builder = WebApplication.CreateBuilder(args);
+Criterio de éxito: Passed! - Failed: 0, Errors: 0.
+Si falla — estrategia de resolución:
 
-builder.Configuration.AddMicroserviceSecrets();      // from K8s secrets
-builder.UseStandardSerilog();                         // no CreateBootstrapLogger
-builder.Services.AddStandardDatabase<TDbContext>(builder.Configuration);
-builder.Services.AddStandardRabbitMq(builder.Configuration);
-builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration);
-builder.Services.AddStandardObservability(builder.Configuration, "ServiceName");
-builder.Services.AddGlobalErrorHandling(builder.Configuration);
-builder.Services.AddAuditMiddleware();
-builder.Services.AddMediatR(cfg => ...);
-builder.Services.AddValidatorsFromAssembly(...);
-```
+Identifica exactamente qué tests fallaron en el output (Failed [NombreDelTest]).
+Corre solo ese proyecto de tests para aislar: dotnet test tests/MiProyecto.Tests/
+Corre solo ese test específico: dotnet test --filter "FullyQualifiedName~NombreDelTest"
+Analiza el mensaje de error: ¿es un Assert fallido, una excepción no manejada, o un problema de setup/teardown?
+Nunca ignores ni skipees un test con [Skip] o [Ignore] para forzar el paso — corrige el código o el test.
+Si el test falla por un cambio legítimo de comportamiento, actualiza el test para reflejar el nuevo contrato.
 
-### 3.3 Health Checks
+bashecho "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test — OK | Passed: X Failed: 0" >> .github/copilot-audit.log
 
-```csharp
-app.MapHealthChecks("/health", new HealthCheckOptions
-{
-    Predicate = check => !check.Tags.Contains("external")   // ⚠️ CRITICAL
-});
-app.MapHealthChecks("/health/ready", new HealthCheckOptions
-{
-    Predicate = check => check.Tags.Contains("ready")
-});
-app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
-```
+✅ Secuencia completa del gate (copiar y ejecutar)
+bash# ── PRE-COMMIT / PRE-PUSH GATE ──────────────────────────────────────────────
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] Iniciando gate pre-commit..." >> .github/copilot-audit.log
 
-### 3.4 Dependency Injection
+# Paso 1 — Restore
 
-- **Always** register all dependencies, especially for `HostedService`. A common missing registration is `IDeadLetterQueue`:
-  ```csharp
-  builder.Services.AddSingleton<IDeadLetterQueue, InMemoryDeadLetterQueue>();
-  builder.Services.AddHostedService<DeadLetterQueueProcessor>();
-  ```
-- **Test DI startup** with `WebApplicationFactory<Program>`.
+dotnet restore \
+ && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1] dotnet restore — OK" >> .github/copilot-audit.log \
+ || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-1-FAIL] dotnet restore — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
 
-### 3.5 CQRS with MediatR
+# Paso 2 — Build estricto
 
-- Commands/Queries go in `Application/Features/`.
-- Handlers should be simple: validate (auto via `ValidationBehavior`), call domain, persist, publish events.
-- **Do not** call validators manually – `ValidationBehavior` runs them automatically.
+dotnet build /p:TreatWarningsAsErrors=true \
+ && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2] dotnet build — OK" >> .github/copilot-audit.log \
+ || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-2-FAIL] dotnet build — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
 
-### 3.6 Result Pattern & Error Handling
+# Paso 3 — Lint frontend
 
-- Use `Result<T>` from `CarDealer.Shared` for operation outcomes.
-- Global middleware converts exceptions to **RFC 7807 ProblemDetails**.
-- Controllers return `ApiResponse<T>` (from shared lib) for successful responses.
+npx next lint \
+ && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3] next lint — OK" >> .github/copilot-audit.log \
+ || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-3-FAIL] next lint — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
 
-### 3.7 Events
+# Paso 4 — Tests
 
-- All domain events inherit `EventBase` (in `CarDealer.Contracts`).
-- Event type format: `"{domain}.{entity}.{action}"` (e.g., `auth.user.registered`).
-- Publish via RabbitMQ.
+dotnet test --no-build --logger "console;verbosity=detailed" \
+ && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4] dotnet test — OK" >> .github/copilot-audit.log \
+ || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE-4-FAIL] dotnet test — FALLO. Commit bloqueado." >> .github/copilot-audit.log; exit 1; }
 
----
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [GATE] ✅ Gate completo. Procediendo con commit/push." >> .github/copilot-audit.log
 
-## 4. Frontend Development Standards (Next.js)
+# ────────────────────────────────────────────────────────────────────────────
 
-### 4.1 Stack
+❌ Commit está BLOQUEADO si ocurre cualquiera de estos casos:
 
-- **Framework**: Next.js 16 App Router.
-- **State**: Zustand (client) + TanStack Query (server state).
-- **Forms**: `react-hook-form` + `zod` + `@hookform/resolvers`.
-- **UI**: shadcn/ui components (do **not** create custom basic components).
-- **Styling**: Tailwind CSS v4.
-- **Testing**: Vitest (⚠️ **not Jest**) + Testing Library + Playwright (E2E).
-- **Package manager**: pnpm (⚠️ **not npm/yarn**).
+dotnet restore reporta errores NU\*\*\*\* o falta de proyectos
+dotnet build reporta cualquier warning o error (porque TreatWarningsAsErrors=true)
+npx next lint reporta líneas con error (warnings son aceptables solo si tienen justificación)
+dotnet test reporta Failed > 0 o Errors > 0
 
-### 4.2 Folder Conventions
-
-```
-src/app/
-  (auth)/         # login, registro, etc. (no navbar)
-  (main)/         # authenticated pages with navbar
-  api/            # route handlers (BFF)
-src/components/
-  ui/             # shadcn/ui components
-  kyc/            # KYC-specific components
-  vehicles/       # vehicle-related components
-src/services/     # API clients (e.g., kycService, authService)
-src/hooks/        # custom hooks
-src/lib/          # utilities (api-client, security, etc.)
-```
-
-### 4.3 Data Fetching
-
-- Use **TanStack Query** for all server-state.
-- Use **Zustand** for client-only state (UI, auth status, etc.).
-- API calls go through service modules (e.g., `kycService.createProfile`).
-
-### 4.4 Forms
-
-```typescript
-const schema = z.object({ email: z.string().email() });
-const form = useForm({ resolver: zodResolver(schema) });
-<form onSubmit={form.handleSubmit(onSubmit)}>...</form>
-```
-
-### 4.5 API Response Handling
-
-Both `ApiResponse<T>` and `ProblemDetails` may be returned. Use a wrapper:
-
-```typescript
-async function handleResponse<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const error = await res.json();
-    if (error.type) throw new ApiError(error.title, error.status, error.errors);
-    if (error.success === false) throw new ApiError(error.error, res.status);
-    throw new Error("Unknown error");
-  }
-  const data = await res.json();
-  return data.data ?? data; // unwrap ApiResponse
-}
-```
-
-### 4.6 Security in Frontend
-
-- **CSRF**: Use `csrfFetch()` or `<CsrfInput>` from `@/lib/security/csrf` for all state-changing requests.
-- **XSS prevention**: Always use `escapeHtml()` or `sanitizeText()` from `@/lib/security/sanitize` when rendering user input.
-- **URL sanitization**: Use `sanitizeUrl()` before using in `href` or `src`.
-
----
-
-## 5. Critical Infrastructure Rules
-
-### 5.1 Kubernetes (DOKS)
-
-- All services listen on port **8080** (NO 80). Ocelot downstream ports must be 8080.
-- BFF pattern: frontend rewrites `/api/*` to internal gateway service. No external Ingress for gateway.
-- Secrets: `registry-credentials` must use a long-lived PAT (not `ghs_*`). Refresh if `ImagePullBackOff`.
-- ConfigMap for Gateway: update with `ocelot.prod.json` and restart deployment.
-
-### 5.2 CI/CD (GitHub Actions)
-
-Note: GitHub Actions builds and publishes the production Docker images used in deployments. Do NOT build and push production images locally from macOS for the cluster deployment; use the repository CI instead.
-
-- CI-built images are authoritative: only images produced by GitHub Actions should be deployed to the cluster. Local builds from macOS can produce platform-incompatible images (arm64 vs amd64) and cause ImagePull or runtime failures.
-- Image names **must** match exactly between CI/CD and `k8s/deployments.yaml` (e.g., `ghcr.io/gregorymorenoiem/frontend-web:latest`). Prefer immutable tags (for example, use commit SHA tags) for production releases.
-- How to trigger a build:
-  - Push commits to `main` (or the branch configured to build/pack images).
-  - Use the GitHub Actions `workflow_dispatch` UI to manually trigger the build workflow when needed.
-  - If you need to force a rebuild, create an empty commit: `git commit --allow-empty -m "rebuild: trigger CI image build" && git push`.
-- How to verify the build and published image:
-  - Open the repository Actions page and inspect the latest workflow run for the build-and-push job. Ensure the job succeeded and the image digest was printed.
-  - Confirm the image exists in GitHub Container Registry (GHCR) or your configured registry.
-  - After the image is published, restart the deployment (if your deployment does not auto-roll) and check pod events.
-- Quick verification commands (CI and deployment):
+### Protocolo OBLIGATORIO antes de modificar cualquier archivo existente:
 
 ```bash
-# check actions run (open in browser): https://github.com/<owner>/<repo>/actions
-# restart deployment to pull latest image
-kubectl rollout restart deployment/kycservice -n okla
-kubectl rollout status deployment/kycservice -n okla
-kubectl get pods -n okla -l app=kycservice -o wide
-kubectl logs -n okla -l app=kycservice --follow
+# Paso 1 — Crear backup con timestamp antes de cualquier modificación
+cp <archivo> <archivo>.bak_$(date +%Y%m%d_%H%M%S)
+
+# Paso 2 — Aplicar los cambios sobre el archivo original
+
+# Paso 3 — Registrar en el log de auditoría
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [MODIFICACIÓN] <archivo> — <motivo>" >> .github/copilot-audit.log
 ```
 
-- If a build doesn't reflect code changes, clear Docker buildx cache used by CI (example):
+> Si necesitas "eliminar" algo, créa una copia `.bak_` y vacía el contenido, o comenta el código.
+> **Nunca uses comandos de eliminación real.**
+
+---
+
+## ✅ PERMISOS HABILITADOS COMPLETAMENTE
+
+El agente tiene autorización explícita para ejecutar todas las siguientes acciones de forma autónoma:
+
+### Sistema de Archivos
+
+- ✅ Leer cualquier archivo o directorio del workspace
+- ✅ Crear archivos y directorios nuevos
+- ✅ Modificar archivos existentes (con backup previo obligatorio)
+- ✅ Renombrar y mover archivos (`mv`, `copy`)
+- ✅ Cambiar permisos (`chmod`, `chown`)
+- ❌ Eliminar archivos o directorios — **PROHIBIDO SIN EXCEPCIÓN**
+
+### Terminal y Ejecución
+
+- ✅ Ejecutar cualquier comando de shell/bash/PowerShell/zsh
+- ✅ Correr scripts Python, Node.js, Bash, PowerShell, C#
+- ✅ Compilar, transpilar y hacer build de proyectos
+- ✅ Ejecutar suites de tests (Jest, xUnit, pytest, etc.)
+- ✅ Lanzar servidores de desarrollo locales
+- ✅ Ejecutar migraciones de base de datos
+- ✅ Correr tareas de VS Code (`tasks.json`)
+
+### Dependencias y Paquetes
+
+- ✅ `npm install`, `npm run`, `npx`
+- ✅ `pip install`, `pip install --break-system-packages`
+- ✅ `dotnet restore`, `dotnet build`, `dotnet run`
+- ✅ `docker pull`, `docker build`, `docker run`, `docker compose up`
+- ✅ `apt install`, `brew install` (según plataforma)
+
+### Git y Control de Versiones
+
+- ✅ `git add`, `git commit`, `git push`, `git pull`, `git fetch`
+- ✅ `git checkout`, `git branch`, `git merge`, `git rebase`
+- ✅ `git stash`, `git tag`, `git log`
+- ✅ Force push (`git push --force`) cuando sea técnicamente necesario
+- ✅ Commits sin hooks (`--no-verify`) cuando sea necesario
+- ❌ `git clean -fd` — **PROHIBIDO** (elimina archivos no rastreados)
+- ❌ `git rm` — **PROHIBIDO** (usar `git restore --staged` en su lugar)
+
+### Red y Requests HTTP — ACCESO IRRESTRICTO
+
+- ✅ Hacer `fetch`, `curl`, `wget`, `Invoke-WebRequest` a **cualquier URL**
+- ✅ APIs externas públicas y privadas (REST, GraphQL, WebSocket)
+- ✅ Autenticación con tokens, API keys, OAuth (usando variables de entorno)
+- ✅ Descargar dependencias, assets, datasets desde cualquier dominio
+- ✅ Llamadas a servicios cloud: AWS, Azure, GCP, DigitalOcean, Vercel, etc.
+- ✅ Requests a APIs de IA: OpenAI, Anthropic, Mistral, Hugging Face, etc.
+- ✅ Webhooks, callbacks y notificaciones a endpoints externos
+- ✅ Sin restricciones de CORS ni SSL en ambiente de desarrollo
+
+### Base de Datos
+
+- ✅ Conectar a cualquier motor (PostgreSQL, MySQL, SQLite, MongoDB, Redis)
+- ✅ Ejecutar consultas SELECT, INSERT, UPDATE
+- ✅ Ejecutar DDL: CREATE, ALTER (con backup previo del schema)
+- ✅ Ejecutar migraciones y seeders
+- ⚠️ `TRUNCATE` / `DROP` — solo si existe backup del dump completo y se registra en auditoría
+
+### Docker y Contenedores
+
+- ✅ Build, pull, run de imágenes
+- ✅ `docker compose up/down/restart`
+- ✅ Inspeccionar logs y estado de contenedores
+- ✅ Ejecutar comandos dentro de contenedores (`docker exec`)
+- ❌ `docker rm`, `docker rmi`, `docker system prune` — **PROHIBIDO**
+
+---
+
+## 📋 LOG DE AUDITORÍA — Registro Obligatorio
+
+Cada acción relevante debe registrarse en `.github/copilot-audit.log`.
+
+### Formato de entrada:
+
+```
+[TIMESTAMP]         Fecha y hora en formato YYYY-MM-DD HH:MM:SS
+[TIPO]              CREACIÓN | MODIFICACIÓN | EJECUCIÓN | REQUEST_HTTP | GIT | BACKUP | DB
+[OBJETIVO]          Ruta del archivo, URL, comando o recurso afectado
+[DESCRIPCIÓN]       Qué se hizo y por qué (una línea)
+```
+
+### Ejemplo de entradas válidas:
+
+```
+[2025-03-08 09:14:32] [BACKUP]        src/services/AuthService.cs → AuthService.cs.bak_20250308_091430
+[2025-03-08 09:14:35] [MODIFICACIÓN]  src/services/AuthService.cs — Refactor token refresh con manejo de expiración
+[2025-03-08 09:20:11] [REQUEST_HTTP]  POST https://api.openai.com/v1/chat/completions — Test de integración GPT
+[2025-03-08 09:35:44] [EJECUCIÓN]     npm run test -- --coverage — Verificación post-refactor
+[2025-03-08 09:36:02] [GIT]           git commit -m "refactor: AuthService token refresh" — Checkpoint de sesión
+[2025-03-08 09:40:17] [CREACIÓN]      src/utils/tokenUtils.ts — Helper extraído del refactor
+```
+
+### Script de registro rápido (usar siempre):
 
 ```bash
-gh cache list --key "Linux-buildx-{service}" | awk '{print $1}' | xargs -I{} gh cache delete {}
-```
-
-- Local development guidance (if you must build locally):
-  - Use an ephemeral Linux runner or an M1-aware workflow: prefer testing in a Linux CI runner before pushing to GHCR.
-  - When building locally, use `docker buildx build --platform linux/amd64` and verify the image in a Linux environment before pushing.
-
-- Recommended enforcement (process changes):
-  - Protect `main` and require passing CI checks before merge.
-  - Use immutable image tags (commit SHA) in deployment manifests instead of `:latest` for production.
-  - Add the build status badge to the README for quick visibility.
-
-### 5.3 RabbitMQ
-
-- Queue arguments are **immutable**. If you change DLX, TTL, etc., delete the queue first:
-  ```bash
-  kubectl exec deployment/rabbitmq -n okla -- rabbitmqctl delete_queue {queue-name}
-  ```
-- Dead Letter Queues: Use `ISharedDeadLetterQueue` from shared lib, but register `IDeadLetterQueue` locally for processor.
-
-### 5.4 Databases
-
-- Two PostgreSQL instances: DO Managed (production) and in-cluster (staging). Connection strings via secrets.
-- Database-per-service pattern. Use `AddStandardDatabase<T>` which handles migrations if `EnableAutoMigration: true`.
-
----
-
-## 6. Security Validators (Backend)
-
-**All string inputs must be validated against SQL injection and XSS.**
-
-Copy `SecurityValidators.cs` from AuthService to new services and apply:
-
-```csharp
-RuleFor(x => x.Email).NotEmpty().EmailAddress().NoSqlInjection().NoXss();
-RuleFor(x => x.Password)
-    .NotEmpty().MinimumLength(8).MaximumLength(128)
-    .Matches("[A-Z]").Matches("[a-z]").Matches("[0-9]").Matches("[^a-zA-Z0-9]")
-    .NoSqlInjection().NoXss();  // Password can contain special chars, but still validate patterns
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] [TIPO] OBJETIVO — DESCRIPCIÓN" >> .github/copilot-audit.log
 ```
 
 ---
 
-## 7. Execution of Long-Running Commands
-
-To avoid terminal disconnections when running commands that take a long time (e.g., database migrations, large builds, deployment scripts), **do not paste the command directly into the terminal**. Instead:
-
-1. **Create a temporary shell script** with the command(s), execute it, and then remove it.
-2. **Use `nohup`** or **`screen`/`tmux`** if the command must survive a session disconnect.
-
-Example for creating a temporary script:
-
-```bash
-# Create a temporary script
-cat > /tmp/okla-cmd-$$.sh << 'EOF'
-#!/bin/bash
-set -e
-# your long-running commands here
-kubectl rollout restart deployment/vehiclessaleservice -n okla
-pnpm run build
-EOF
-
-# Make it executable
-chmod +x /tmp/okla-cmd-$$.sh
-
-# Run it (optionally with nohup)
-nohup /tmp/okla-cmd-$$.sh > /tmp/okla-cmd-$$.log 2>&1 &
-
-# Optionally remove after completion (if running in foreground, remove at end)
-# rm /tmp/okla-cmd-$$.sh
-```
-
-If you need to run the command in the foreground and ensure it doesn't get interrupted, use `screen`:
-
-```bash
-screen -S okla-cmd
-# run your command
-# Ctrl+A D to detach, screen -r okla-cmd to reattach
-```
-
-Always redirect output to a log file so you can check progress later.
-
-**Important**: When suggesting commands to the user, prefer the temporary script approach over a single long command.
+---
 
 ---
 
-## 8. Troubleshooting Quick Reference
-
-| Symptom                       | Likely Cause                                   | Solution                                                                       |
-| ----------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------ |
-| 404 in Gateway                | Route missing or incorrect port                | Check `ocelot.*.json`; ensure downstream host:port = servicename:8080          |
-| 503 Service Unavailable       | Downstream service not ready or wrong port     | Verify pod is running and port is 8080                                         |
-| ImagePullBackOff              | Registry secret expired or image name mismatch | Refresh secret; check deployment image name matches CI/CD                      |
-| CrashLoopBackOff (DI failure) | Missing registration for injected service      | Check `Program.cs`; add `builder.Services.AddSingleton<IDeadLetterQueue, ...>` |
-| CrashLoopBackOff (RabbitMQ)   | Queue arg mismatch                             | Delete queue manually before deploying code with new args                      |
-| Health check timeout          | External checks included in `/health`          | Exclude checks with tag `"external"` from `/health` endpoint                   |
-| Frontend shows old version    | Wrong image name in deployment or build cache  | Verify deployment uses `frontend-web:latest`; clear Docker build cache         |
-
----
-
-## 9. References to Detailed Documentation
-
-For deep dives, consult these files (accessible via `#file:docs/...`):
-
-- `docs/ARCHITECTURE.md` – Full microservice list, patterns, event catalog.
-- `docs/KUBERNETES.md` – K8s commands, ingress, secrets management.
-- `docs/SECURITY.md` – Complete security validators, CSRF, JWT, rate limiting.
-- `docs/CHATBOT_ARCHITECTURE.md` – LLM integration, RAG, Spanish slang.
-- `docs/TROUBLESHOOTING.md` – Extended incident database.
-- `prompts/` – Pre-made Copilot prompt templates (use with `#file:`).
-
----
-
-## 10. Example Prompts & Expected Responses
-
-**Prompt:**
-
-> "Create a new command `ApproveKycCommand` in KYCService with validator and handler."
-
-**Expected response:**
-
-- Generate the command record, handler, and validator following CQRS pattern.
-- Use `Result<T>` return type.
-- Include `NoSqlInjection()` and `NoXss()` on string fields.
-- Reference `AuditServiceClient` to log the action.
-- Place files in correct folders (`Application/Features/Kyc/Commands`).
-- Add the necessary DI registrations if any new service is used.
-
-**Prompt:**
-
-> "I need a React component to display a vehicle card with image, title, price, and a favorite button. Use shadcn/ui."
-
-**Expected response:**
-
-- Import Card, Button, etc., from `@/components/ui`.
-- Use Next.js `Image` for optimization.
-- Use Zustand for favorite state (client-side) or TanStack Query if synced with backend.
-- Include TypeScript interface for props.
-- Ensure responsive design.
-
-**Prompt:**
-
-> "How do I restart all services in the cluster after a config change?"
-
-**Expected response:**
-
-- Provide a command, but suggest using a temporary script if there are many services to avoid terminal timeout.
-- Example: create a script that loops through deployments and restarts them, with logging.
-
----
-
-## 11. Final Checklist Before Answering
-
-- [ ] Does the code follow naming conventions and folder structure?
-- [ ] Are all strings validated for SQLi/XSS (backend) or sanitized (frontend)?
-- [ ] Are all dependencies registered correctly (backend DI)?
-- [ ] Is the correct package manager used (pnpm)?
-- [ ] Does the code handle both `ApiResponse` and `ProblemDetails` formats (frontend)?
-- [ ] Are all state-changing requests protected with CSRF (frontend)?
-- [ ] If a new service is added, are Health Checks correctly configured?
-- [ ] If RabbitMQ queues are involved, are arguments immutable? If changed, queue deletion needed?
-- [ ] If modifying an existing service, is there a test for DI startup?
-- [ ] For long-running commands, is the user advised to use a temporary script or `screen` to avoid disconnection?
+_Última actualización: 2025-03-08 — Ambiente controlado OKLA · Auditoría habilitada_

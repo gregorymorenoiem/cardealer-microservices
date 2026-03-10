@@ -39,7 +39,6 @@ import {
   ScrollText,
   ChevronRight,
   Heart,
-  DollarSign,
   Search,
   Bell,
   History,
@@ -67,6 +66,8 @@ import { useFavorites } from '@/hooks/use-favorites';
 import { useAlertStats } from '@/hooks/use-alerts';
 import { PlanBadge } from '@/components/plan/plan-gate';
 import { UpgradeBanner } from '@/components/shared/upgrade-banner';
+import { MissedOpportunityBanner } from '@/components/dealer/missed-opportunity-banner';
+import { BenchmarkComparisonCard } from '@/components/dealer/benchmark-comparison-card';
 
 // ============================================================
 // MAIN EXPORT — dispatches to the right dashboard by role
@@ -290,14 +291,20 @@ function DealerDashboard() {
         upgradeUrl="/cuenta/upgrade?plan=visible&type=dealer"
       />
 
+      {/* Missed opportunity banner — dynamic LIBRE-plan urgency counter */}
+      <MissedOpportunityBanner />
+
+      {/* Benchmark comparison — shows LIBRE dealers how VISIBLE dealers perform */}
+      <BenchmarkComparisonCard />
+
       {dealerLoading ? (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {[1, 2, 3, 4].map(i => (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[1, 2, 3].map(i => (
             <Skeleton key={i} className="h-24 rounded-xl" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-3">
           <MetricCard
             title="Vehículos Activos"
             value={stats?.activeListings ?? 0}
@@ -305,24 +312,16 @@ function DealerDashboard() {
             color="blue"
           />
           <MetricCard
-            title="Vistas del Mes"
+            title="Vistas de la Semana"
             value={stats?.viewsThisMonth ?? 0}
             icon={Eye}
             color="green"
           />
           <MetricCard
-            title="Consultas Activas"
-            value={stats?.pendingInquiries ?? 0}
+            title="Consultas del Mes"
+            value={stats?.inquiriesThisMonth ?? 0}
             icon={MessageSquare}
             color="purple"
-          />
-          <MetricCard
-            title="Ingresos del Mes"
-            value={
-              stats?.revenueThisMonth ? `RD$${(stats.revenueThisMonth / 1000).toFixed(0)}K` : '—'
-            }
-            icon={DollarSign}
-            color="yellow"
           />
         </div>
       )}

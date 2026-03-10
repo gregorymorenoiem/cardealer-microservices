@@ -24,15 +24,18 @@ public record UpdateCommunicationPreferencesCommand(
 public class UpdateCommunicationPreferencesCommandHandler : IRequestHandler<UpdateCommunicationPreferencesCommand, CommunicationPreferencesDto>
 {
     private readonly ICommunicationPreferenceRepository _repository;
+    private readonly IConsentRecordRepository _consentRepository;
     private readonly IEventPublisher _eventPublisher;
     private readonly ILogger<UpdateCommunicationPreferencesCommandHandler> _logger;
 
     public UpdateCommunicationPreferencesCommandHandler(
         ICommunicationPreferenceRepository repository,
+        IConsentRecordRepository consentRepository,
         IEventPublisher eventPublisher,
         ILogger<UpdateCommunicationPreferencesCommandHandler> logger)
     {
         _repository = repository;
+        _consentRepository = consentRepository;
         _eventPublisher = eventPublisher;
         _logger = logger;
     }
@@ -56,12 +59,45 @@ public class UpdateCommunicationPreferencesCommandHandler : IRequestHandler<Upda
         if (prefs.PushNewMessages.HasValue) entity.PushNewMessages = prefs.PushNewMessages.Value;
         if (prefs.PushPriceChanges.HasValue) entity.PushPriceChanges = prefs.PushPriceChanges.Value;
         if (prefs.PushRecommendations.HasValue) entity.PushRecommendations = prefs.PushRecommendations.Value;
+        if (prefs.WhatsAppTransactional.HasValue) entity.WhatsAppTransactional = prefs.WhatsAppTransactional.Value;
+        if (prefs.WhatsAppMarketing.HasValue) entity.WhatsAppMarketing = prefs.WhatsAppMarketing.Value;
+        if (prefs.WhatsAppPriceAlerts.HasValue) entity.WhatsAppPriceAlerts = prefs.WhatsAppPriceAlerts.Value;
         if (prefs.AllowProfiling.HasValue) entity.AllowProfiling = prefs.AllowProfiling.Value;
         if (prefs.AllowThirdPartySharing.HasValue) entity.AllowThirdPartySharing = prefs.AllowThirdPartySharing.Value;
         if (prefs.AllowAnalytics.HasValue) entity.AllowAnalytics = prefs.AllowAnalytics.Value;
         if (prefs.AllowRetargeting.HasValue) entity.AllowRetargeting = prefs.AllowRetargeting.Value;
 
         var saved = await _repository.UpsertAsync(entity);
+
+        // ════════════════════════════════════════════════════════════════
+        // CONSENT AUDIT — Ley 172-13 Art. 27 compliance
+        // Record each marketing-related preference change with timestamp
+        // ════════════════════════════════════════════════════════════════
+        var consentChanges = new List<(string Type, bool? Value)>
+        {
+            ("EmailNewsletter", prefs.EmailNewsletter),
+            ("EmailPromotions", prefs.EmailPromotions),
+            ("SmsPromotions", prefs.SmsPromotions),
+            ("WhatsAppMarketing", prefs.WhatsAppMarketing),
+            ("WhatsAppPriceAlerts", prefs.WhatsAppPriceAlerts),
+            ("PushRecommendations", prefs.PushRecommendations),
+            ("AllowRetargeting", prefs.AllowRetargeting),
+            ("AllowThirdPartySharing", prefs.AllowThirdPartySharing),
+        };
+
+        foreach (var (type, value) in consentChanges)
+        {
+            if (value.HasValue)
+            {
+                await _consentRepository.AddAsync(new ConsentRecord
+                {
+                    UserId = request.UserId,
+                    ConsentType = type,
+                    Granted = value.Value,
+                    Source = "web_settings"
+                });
+            }
+        }
 
         _logger.LogInformation("Updated communication preferences for UserId={UserId}", request.UserId);
 
@@ -97,6 +133,11 @@ public class UpdateCommunicationPreferencesCommandHandler : IRequestHandler<Upda
                 NewMessages: saved.PushNewMessages,
                 PriceChanges: saved.PushPriceChanges,
                 Recommendations: saved.PushRecommendations
+            ),
+            WhatsApp: new WhatsAppPreferencesDto(
+                Transactional: saved.WhatsAppTransactional,
+                Marketing: saved.WhatsAppMarketing,
+                PriceAlerts: saved.WhatsAppPriceAlerts
             ),
             Privacy: new PrivacyPreferencesDto(
                 AllowProfiling: saved.AllowProfiling,

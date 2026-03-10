@@ -52,7 +52,7 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
             return await _configRepo.GetActiveConfigAsync(ct);
         });
 
-        if (!config.IsEnabled)
+        if (config is null || !config.IsEnabled)
         {
             return new SearchAgentResultDto
             {
@@ -177,32 +177,51 @@ public class ProcessSearchQueryHandler : IRequestHandler<ProcessSearchQuery, Sea
                 }
             }
 
-            // 4. Call Claude Haiku 4.5
+            // 4. Call Claude Haiku 4.5 — wrapped in try/catch for graceful degradation
             _logger.LogInformation(
                 "Processing AI search query: {Query}, promptSource={PromptSource}, trafficPct={TrafficPct}",
                 request.Query, promptSource, config.AiSearchTrafficPercent);
-            aiResponse = await _claudeService.ProcessQueryAsync(
-                queryForLlm,
-                systemPrompt,
-                config.Temperature,
-                config.MaxTokens,
-                ct
-            );
 
-            // 5. Enforce business rules post-processing
-            EnforceBusinessRules(aiResponse, config);
-
-            // 6. Anti-hallucination: Sanitize response for system prompt leakage
-            PromptInjectionDetector.SanitizeResponse(aiResponse);
-
-            // 6b. PII sanitization on output (RED TEAM v2)
-            PiiSanitizer.SanitizeResponse(aiResponse);
-
-            // 7. Cache the response
-            if (config.EnableCache)
+            try
             {
-                var responseJson = JsonSerializer.Serialize(aiResponse);
-                await _cacheService.SetCachedResponseAsync(queryHash, responseJson, config.CacheTtlSeconds, ct);
+                aiResponse = await _claudeService.ProcessQueryAsync(
+                    queryForLlm,
+                    systemPrompt,
+                    config.Temperature,
+                    config.MaxTokens,
+                    ct
+                );
+
+                // 5. Enforce business rules post-processing
+                EnforceBusinessRules(aiResponse, config);
+
+                // 6. Anti-hallucination: Sanitize response for system prompt leakage
+                PromptInjectionDetector.SanitizeResponse(aiResponse);
+
+                // 6b. PII sanitization on output (RED TEAM v2)
+                PiiSanitizer.SanitizeResponse(aiResponse);
+
+                // 7. Cache the response
+                if (config.EnableCache)
+                {
+                    var responseJson = JsonSerializer.Serialize(aiResponse);
+                    await _cacheService.SetCachedResponseAsync(queryHash, responseJson, config.CacheTtlSeconds, ct);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Claude AI call failed for query '{Query}'. Returning zero-confidence fallback.",
+                    request.Query);
+
+                aiResponse = new SearchAgentResponse
+                {
+                    Confianza = 0.0f,
+                    ResultadoMinimoGarantizado = 0,
+                    MensajeUsuario = "La búsqueda inteligente no está disponible temporalmente. Usa los filtros manuales para encontrar tu vehículo. 🔍",
+                    Advertencias = new List<string> { "AI temporalmente no disponible — mostrando filtros básicos" },
+                    QueryReformulada = request.Query
+                };
             }
         }
 

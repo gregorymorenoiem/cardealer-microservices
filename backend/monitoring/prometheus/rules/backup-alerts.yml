@@ -1,0 +1,98 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Backup & Disaster Recovery Alert Rules
+# CarDealer Microservices — DOKS (DigitalOcean Kubernetes)
+# Created: 2026-03-09
+#
+# Monitors:
+#   - PostgreSQL backup CronJob success/failure
+#   - Backup freshness (staleness detection)
+#   - Backup PVC disk usage
+# ═══════════════════════════════════════════════════════════════════════════════
+groups:
+  - name: backup-health
+    interval: 60s
+    rules:
+      # ── Backup CronJob failed ──────────────────────────────────────────────
+      - alert: PostgresBackupFailed
+        expr: |
+          kube_job_status_failed{namespace="okla", job_name=~"postgres-backup.*"} > 0
+        for: 0m
+        labels:
+          severity: critical
+          team: platform
+          alert_type: backup_failure
+        annotations:
+          summary: "🔴 PostgreSQL backup FAILED: {{ $labels.job_name }}"
+          description: >-
+            Backup CronJob {{ $labels.job_name }} has failed. Database backups are
+            NOT being created. This directly impacts RPO (24h target). Check job logs:
+            kubectl logs job/{{ $labels.job_name }} -n okla
+          runbook: "1. kubectl describe job {{ $labels.job_name }} -n okla 2. kubectl logs job/{{ $labels.job_name }} -n okla 3. Verify DB connectivity and DO Spaces credentials"
+
+      # ── No successful backup in 36 hours (50% over RPO) ───────────────────
+      - alert: PostgresBackupStale
+        expr: |
+          time() - kube_cronjob_status_last_successful_time{namespace="okla", cronjob="postgres-backup"} > 129600
+        for: 0m
+        labels:
+          severity: critical
+          team: platform
+          alert_type: backup_stale
+        annotations:
+          summary: "🔴 PostgreSQL backup stale — no successful backup in 36+ hours"
+          description: >-
+            The postgres-backup CronJob has not completed successfully in over 36 hours
+            (RPO target: 24h). Last successful run was {{ $value | humanizeDuration }} ago.
+            Data loss risk is increasing.
+          runbook: "1. kubectl get cronjob postgres-backup -n okla 2. kubectl get jobs -n okla | grep postgres-backup 3. Manually trigger: kubectl create job --from=cronjob/postgres-backup manual-backup -n okla"
+
+      # ── Backup CronJob suspended ──────────────────────────────────────────
+      - alert: PostgresBackupSuspended
+        expr: |
+          kube_cronjob_spec_suspend{namespace="okla", cronjob="postgres-backup"} == 1
+        for: 1h
+        labels:
+          severity: warning
+          team: platform
+          alert_type: backup_suspended
+        annotations:
+          summary: "⚠️ PostgreSQL backup CronJob is SUSPENDED"
+          description: >-
+            The postgres-backup CronJob has been suspended for over 1 hour.
+            No automated backups are running. Resume with:
+            kubectl patch cronjob postgres-backup -n okla -p '{"spec":{"suspend":false}}'
+
+      # ── Backup PVC running low on disk ─────────────────────────────────────
+      - alert: BackupStorageLow
+        expr: |
+          kubelet_volume_stats_available_bytes{namespace="okla", persistentvolumeclaim="postgres-backup-pvc"}
+          / kubelet_volume_stats_capacity_bytes{namespace="okla", persistentvolumeclaim="postgres-backup-pvc"}
+          < 0.2
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          alert_type: backup_disk
+        annotations:
+          summary: "💾 Backup PVC disk usage > 80%"
+          description: >-
+            The postgres-backup-pvc has less than 20% available space.
+            Old backups may need manual cleanup or the PVC size needs to be increased.
+
+      # ── Backup job running too long ────────────────────────────────────────
+      - alert: PostgresBackupSlow
+        expr: |
+          time() - kube_job_status_start_time{namespace="okla", job_name=~"postgres-backup.*"}
+          > 2400
+          and kube_job_status_active{namespace="okla", job_name=~"postgres-backup.*"} > 0
+        for: 0m
+        labels:
+          severity: warning
+          team: platform
+          alert_type: backup_slow
+        annotations:
+          summary: "⏳ PostgreSQL backup running for over 40 minutes"
+          description: >-
+            Backup job {{ $labels.job_name }} has been running for over 40 minutes.
+            Normal backup should complete within 20-30 minutes. Check for DB performance
+            issues or network problems with DO Spaces upload.

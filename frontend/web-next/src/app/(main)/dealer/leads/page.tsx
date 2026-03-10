@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useLeadStats, useDeleteLead, useUpdateLead } from '@/hooks/use-crm';
 import { useCurrentDealer } from '@/hooks/use-dealers';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 import {
   getLeadStatusColor,
   getLeadScoreColor,
@@ -222,7 +223,10 @@ function LeadsPageContent() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div>
-          <h1 className="text-foreground text-2xl font-bold">Leads</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-foreground text-2xl font-bold">Leads</h1>
+            <VideoHelpButton sectionKey="leads" variant="icon" />
+          </div>
           <p className="text-muted-foreground">Gestiona tus oportunidades de venta</p>
         </div>
         <div className="flex gap-2">

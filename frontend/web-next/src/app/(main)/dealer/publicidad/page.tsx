@@ -23,6 +23,7 @@ import {
 } from '@/hooks/use-advertising';
 import type { AdCampaignSummary, CampaignStatus } from '@/types/advertising';
 import { PlanGate } from '@/components/plan/plan-gate';
+import { VideoHelpButton } from '@/components/dealer/video-help-button';
 import { formatCurrency, formatShortDate } from '@/lib/utils';
 
 // =============================================================================
@@ -209,7 +210,10 @@ function DealerPublicidadContent() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">📣 Publicidad</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold">📣 Publicidad</h1>
+            <VideoHelpButton sectionKey="publicidad" variant="icon" />
+          </div>
           <p className="text-muted-foreground">
             Gestiona tus campañas publicitarias y potencia la visibilidad de tu inventario.
           </p>

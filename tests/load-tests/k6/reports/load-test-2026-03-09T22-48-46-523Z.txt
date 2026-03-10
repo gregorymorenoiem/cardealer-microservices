@@ -1,0 +1,54 @@
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║                    🚗 OKLA Load Test Report                            ║
+║                    Pre-Launch Performance Audit                        ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║  Date:        2026-03-09T22:48:46.524Z
+║  Environment: staging
+║  Base URL:    http://localhost:8080
+║  Mode:        Quick validation
+╠══════════════════════════════════════════════════════════════════════════╣
+
+📊 REQUEST METRICS
+──────────────────
+  Total Requests:     2966
+  Request Rate:       24.05 req/s
+  Failed Rate:        82.91%
+
+⏱️ LATENCY (http_req_duration)
+──────────────────
+  Average:            4.01ms
+  Median (P50):       3.16ms
+  P90:                8.14ms
+  P95:                10.46ms    ✅ PASS (target < 3000ms)
+  P99:                16.09ms
+  Max:                136.93ms
+
+🔴 ERROR ANALYSIS
+──────────────────
+  5xx Error Rate:     10.35%    ❌ FAIL (target: 0%)
+  4xx Error Rate:     72.58%    (informational)
+
+📈 AUTOSCALING VERIFICATION
+──────────────────
+  Latency Alerts (>2s): 0
+  Alert Threshold:      2000ms
+
+✅ THRESHOLD RESULTS
+──────────────────
+  ❌ http_reqs: rate>50
+  ✅ http_req_duration{endpoint:auth_login}: p(95)<2000
+  ❌ http_req_failed: rate<0.01
+  ✅ http_req_duration{endpoint:media}: p(95)<3000
+  ✅ http_req_duration{endpoint:catalog}: p(95)<2500
+  ✅ http_req_duration{endpoint:vehicles_list}: p(95)<2000
+  ❌ checks: rate>0.95
+  ✅ http_req_duration: avg<1500
+  ✅ http_req_duration: p(95)<3000
+  ✅ http_req_duration: p(99)<5000
+  ✅ http_req_duration{endpoint:vehicles_detail}: p(95)<2000
+  ✅ http_req_duration{endpoint:health}: p(95)<500
+
+╠══════════════════════════════════════════════════════════════════════════╣
+║  OVERALL: ❌ SOME THRESHOLDS FAILED — SEE ABOVE
+╚══════════════════════════════════════════════════════════════════════════╝

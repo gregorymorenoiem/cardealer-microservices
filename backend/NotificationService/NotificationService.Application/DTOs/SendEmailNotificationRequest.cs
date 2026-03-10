@@ -7,5 +7,7 @@ public record SendEmailNotificationRequest(
     string Subject,
     string Body,
     bool IsHtml = true,
+    bool IsMarketing = false,
+    Guid? RecipientUserId = null,
     Dictionary<string, object>? Metadata = null
 );

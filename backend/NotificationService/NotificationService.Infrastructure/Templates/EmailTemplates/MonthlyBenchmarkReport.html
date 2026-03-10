@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tu resumen mensual en OKLA — {{ MonthName }} {{ Year }}</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { margin: 0; font-size: 22px; }
+        .header p { margin: 6px 0 0; opacity: 0.9; font-size: 14px; }
+        .content { background: #ffffff; padding: 30px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
+        .section-title { font-size: 16px; font-weight: bold; color: #1e293b; margin: 24px 0 12px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        .comparison-table th { background: #f1f5f9; padding: 10px 12px; text-align: left; font-size: 13px; color: #475569; border-bottom: 2px solid #e2e8f0; }
+        .comparison-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .comparison-table .you { font-weight: bold; color: #1e293b; }
+        .comparison-table .avg { color: #64748b; }
+        .comparison-table .better { color: #16a34a; }
+        .comparison-table .worse { color: #dc2626; }
+        .highlight-box { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 16px; margin: 20px 0; }
+        .highlight-box h3 { margin: 0 0 8px; font-size: 15px; color: #92400e; }
+        .highlight-box p { margin: 0; font-size: 13px; color: #78350f; }
+        .insight-list { margin: 12px 0; padding-left: 0; list-style: none; }
+        .insight-list li { padding: 8px 0; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
+        .insight-list li:before { content: "💡 "; }
+        .cta-section { text-align: center; padding: 24px 0; }
+        .button { display: inline-block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; }
+        .rank-badge { display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
+        .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px; }
+        .footer a { color: #3b82f6; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Resumen Mensual — {{ MonthName }} {{ Year }}</h1>
+            <p>{{ DealerName }} · Plan {{ CurrentPlan }}</p>
+        </div>
+        <div class="content">
+            <p>Hola {{ DealerName }},</p>
+            <p>Aquí tienes tu reporte de rendimiento de <strong>{{ MonthName }} {{ Year }}</strong> comparado con el promedio de dealers en plan <strong>Visible</strong> en OKLA.</p>
+
+            <!-- ═══ TUS MÉTRICAS ═══ -->
+            <div class="section-title">📈 Tus Métricas del Mes</div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 12px 0;">
+                <tr>
+                    <td width="32%" style="text-align: center; padding: 14px; background: #f0f9ff; border-radius: 8px;">
+                        <div style="font-size: 28px; font-weight: bold; color: #1e40af;">{{ TotalViews }}</div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Vistas</div>
+                        <div style="font-size: 11px; color: {{ ViewsChangeColor }};">{{ ViewsChangeText }}</div>
+                    </td>
+                    <td width="2%"></td>
+                    <td width="32%" style="text-align: center; padding: 14px; background: #f0fdf4; border-radius: 8px;">
+                        <div style="font-size: 28px; font-weight: bold; color: #166534;">{{ TotalContacts }}</div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Consultas</div>
+                        <div style="font-size: 11px; color: {{ ContactsChangeColor }};">{{ ContactsChangeText }}</div>
+                    </td>
+                    <td width="2%"></td>
+                    <td width="32%" style="text-align: center; padding: 14px; background: #faf5ff; border-radius: 8px;">
+                        <div style="font-size: 28px; font-weight: bold; color: #7c3aed;">{{ TotalSales }}</div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Ventas</div>
+                        <div style="font-size: 11px; color: {{ SalesChangeColor }};">{{ SalesChangeText }}</div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- ═══ COMPARACIÓN VS VISIBLE ═══ -->
+            <div class="section-title">⚖️ Tú vs. Promedio Plan Visible</div>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Métrica</th>
+                        <th>Tu Resultado</th>
+                        <th>Promedio Visible</th>
+                        <th>Diferencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>👁️ Vistas</td>
+                        <td class="you">{{ TotalViews }}</td>
+                        <td class="avg">{{ AvgVisibleViews }}</td>
+                        <td class="{{ ViewsDiffClass }}">{{ ViewsDiffText }}</td>
+                    </tr>
+                    <tr>
+                        <td>💬 Consultas</td>
+                        <td class="you">{{ TotalContacts }}</td>
+                        <td class="avg">{{ AvgVisibleContacts }}</td>
+                        <td class="{{ ContactsDiffClass }}">{{ ContactsDiffText }}</td>
+                    </tr>
+                    <tr>
+                        <td>📊 Tasa de conversión</td>
+                        <td class="you">{{ ConversionRate }}</td>
+                        <td class="avg">{{ AvgVisibleConversion }}</td>
+                        <td class="{{ ConversionDiffClass }}">{{ ConversionDiffText }}</td>
+                    </tr>
+                    <tr>
+                        <td>⏱️ Tiempo de respuesta</td>
+                        <td class="you">{{ AvgResponseTime }}</td>
+                        <td class="avg">{{ AvgVisibleResponseTime }}</td>
+                        <td class="{{ ResponseTimeDiffClass }}">{{ ResponseTimeDiffText }}</td>
+                    </tr>
+                    <tr>
+                        <td>📅 Días en mercado</td>
+                        <td class="you">{{ DaysOnMarket }}</td>
+                        <td class="avg">{{ AvgVisibleDaysOnMarket }}</td>
+                        <td class="{{ DaysOnMarketDiffClass }}">{{ DaysOnMarketDiffText }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- ═══ TU RANKING ═══ -->
+            <div style="text-align: center; margin: 20px 0;">
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 6px;">Tu posición entre {{ TotalDealers }} dealers activos</p>
+                <span class="rank-badge">🏆 Posición #{{ OverallRank }} de {{ TotalDealers }}</span>
+            </div>
+
+            <!-- ═══ HIGHLIGHT BOX — UPGRADE CTA ═══ -->
+            <div class="highlight-box">
+                <h3>💡 ¿Sabías que los dealers en plan Visible tienen hasta {{ VisibleMultiplier }} más vistas?</h3>
+                <p>Si hubieras estado en plan <strong>Visible</strong> este mes, podrías haber recibido aproximadamente <strong>{{ ProjectedViews }} vistas</strong> y <strong>{{ ProjectedContacts }} consultas</strong> adicionales. Eso representa más oportunidades reales de venta.</p>
+            </div>
+
+            <!-- ═══ INSIGHTS ═══ -->
+            <div class="section-title">🧠 Recomendaciones para {{ NextMonthName }}</div>
+            <ul class="insight-list">
+                <li>{{ Insight1 }}</li>
+                <li>{{ Insight2 }}</li>
+                <li>{{ Insight3 }}</li>
+            </ul>
+
+            <!-- ═══ CTA ═══ -->
+            <div class="cta-section">
+                <p style="font-size: 14px; color: #475569; margin-bottom: 12px;">Mejora tu posicionamiento y recibe más consultas</p>
+                <a href="{{ UpgradeUrl }}" class="button" style="color: white;">
+                    Ver Planes — Desde US$29/mes →
+                </a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>OKLA — El marketplace automotriz #1 de República Dominicana</p>
+            <p>Este email se envía el 1er día de cada mes a todos los dealers activos.</p>
+            <p><a href="{{ UnsubscribeUrl }}">Configurar notificaciones</a> · <a href="{{ DashboardUrl }}">Ver mi dashboard</a></p>
+            <p>© {{ Year }} OKLA. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>

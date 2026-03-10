@@ -16,6 +16,7 @@ public class SendWhatsAppNotificationCommandHandler
     private readonly IWhatsAppProvider _whatsAppProvider;
     private readonly INotificationRepository _notificationRepo;
     private readonly INotificationLogRepository _logRepo;
+    private readonly IUserConsentClient _consentClient;
     private readonly ILogger<SendWhatsAppNotificationCommandHandler> _logger;
 
     public SendWhatsAppNotificationCommandHandler(
@@ -23,12 +24,14 @@ public class SendWhatsAppNotificationCommandHandler
         IWhatsAppProvider whatsAppProvider,
         INotificationRepository notificationRepo,
         INotificationLogRepository logRepo,
+        IUserConsentClient consentClient,
         ILogger<SendWhatsAppNotificationCommandHandler> logger)
     {
         _configClient = configClient;
         _whatsAppProvider = whatsAppProvider;
         _notificationRepo = notificationRepo;
         _logRepo = logRepo;
+        _consentClient = consentClient;
         _logger = logger;
     }
 
@@ -42,6 +45,23 @@ public class SendWhatsAppNotificationCommandHandler
         {
             _logger.LogInformation("WhatsApp is disabled in configuration. Skipping message to {To}", request.To);
             return new SendWhatsAppNotificationResponse(false, Error: "WhatsApp is disabled in configuration");
+        }
+
+        // ═══ CONSENT GATE — Ley 172-13 + Meta Business Policy ═══
+        // WhatsApp marketing messages require explicit user opt-in.
+        // Transactional messages (IsMarketing=false) always proceed.
+        if (request.IsMarketing && request.RecipientUserId.HasValue)
+        {
+            var hasConsent = await _consentClient.IsWhatsAppMarketingAllowedAsync(
+                request.RecipientUserId.Value, cancellationToken);
+            if (!hasConsent)
+            {
+                _logger.LogInformation(
+                    "WhatsApp marketing blocked for UserId={UserId} — no opt-in consent. Skipping send to {To}",
+                    request.RecipientUserId.Value, request.To);
+                return new SendWhatsAppNotificationResponse(
+                    false, Error: "User has not opted in to WhatsApp marketing");
+            }
         }
 
         // 2. Create notification record

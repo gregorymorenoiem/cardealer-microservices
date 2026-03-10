@@ -12,6 +12,7 @@ using ChatbotService.Infrastructure.Persistence.Repositories;
 using ChatbotService.Infrastructure.Services;
 using ChatbotService.Infrastructure.Services.Strategies;
 using CarDealer.Shared.Resilience.Extensions;
+using CarDealer.Shared.Encryption;
 
 namespace ChatbotService.Infrastructure;
 
@@ -24,6 +25,9 @@ public static class DependencyInjection
         // Database
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+        // ── PII Encryption — Ley 172-13 ──
+        services.AddPiiEncryption(configuration);
 
         services.AddDbContext<ChatbotDbContext>(options =>
             options.UseNpgsql(connectionString, npgsqlOptions =>

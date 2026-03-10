@@ -116,4 +116,28 @@ public class ContentReportRepository : IContentReportRepository
                 r.Status != ContentReportStatus.Dismissed,
                 cancellationToken);
     }
+
+    public async Task<int> CountActiveByTargetIdAsync(
+        string targetId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.ContentReports
+            .CountAsync(r =>
+                r.TargetId == targetId &&
+                (r.Status == ContentReportStatus.Pending || r.Status == ContentReportStatus.Investigating),
+                cancellationToken);
+    }
+
+    public async Task<ContentReport?> FindByTargetAndIpAsync(
+        string targetId, string ipAddress,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.ContentReports
+            .FirstOrDefaultAsync(r =>
+                r.TargetId == targetId &&
+                r.ReporterIpAddress == ipAddress &&
+                r.Status != ContentReportStatus.Resolved &&
+                r.Status != ContentReportStatus.Dismissed,
+                cancellationToken);
+    }
 }

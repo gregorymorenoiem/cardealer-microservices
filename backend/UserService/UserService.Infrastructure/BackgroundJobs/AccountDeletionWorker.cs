@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CarDealer.Contracts.Events.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,6 +18,13 @@ namespace UserService.Infrastructure.BackgroundJobs;
 /// Background worker that runs daily and anonymizes accounts whose 15-day
 /// grace period has elapsed since the deletion request was confirmed.
 /// Complies with Ley 172-13 (Dominican Republic data protection law).
+/// 
+/// After anonymization, publishes UserDeletedEvent so all downstream services
+/// can cascade-delete their user data:
+///   - ChatbotService: conversation history, leads
+///   - AuthService: sessions, login history, refresh tokens, Redis cache
+///   - NotificationService: saved searches, price alerts, notification logs
+///   - ContactService: contact inquiries
 /// </summary>
 public class AccountDeletionWorker : BackgroundService
 {
@@ -61,8 +69,11 @@ public class AccountDeletionWorker : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var privacyRepo = scope.ServiceProvider.GetRequiredService<IPrivacyRequestRepository>();
         var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var eventPublisher = scope.ServiceProvider.GetRequiredService<IEventPublisher>();
 
-        // Find all confirmed deletion requests whose grace period has ended
+        // Find all confirmed deletion requests whose grace period has ended.
+        // NOTE: GetExpiredGracePeriodRequestsAsync now correctly queries for
+        // Status == Processing (set by ConfirmAccountDeletion handler).
         var expiredRequests = await privacyRepo.GetExpiredGracePeriodRequestsAsync();
         var toProcess = expiredRequests
             .Where(r => r.IsConfirmed && r.Status == PrivacyRequestStatus.Processing)
@@ -80,7 +91,7 @@ public class AccountDeletionWorker : BackgroundService
         {
             try
             {
-                await AnonymizeUserAsync(request, userRepo, privacyRepo, ct);
+                await AnonymizeUserAsync(request, userRepo, privacyRepo, eventPublisher, ct);
             }
             catch (Exception ex)
             {
@@ -94,6 +105,7 @@ public class AccountDeletionWorker : BackgroundService
         PrivacyRequest request,
         IUserRepository userRepo,
         IPrivacyRequestRepository privacyRepo,
+        IEventPublisher eventPublisher,
         CancellationToken ct)
     {
         var user = await userRepo.GetByIdAsync(request.UserId);
@@ -105,6 +117,9 @@ public class AccountDeletionWorker : BackgroundService
             await privacyRepo.UpdateAsync(request);
             return;
         }
+
+        // Capture email before anonymization for the confirmation email
+        var originalEmail = user.Email;
 
         // Anonymize PII — replace real data with non-identifying placeholders
         // Keeps the record for audit / billing integrity (Ley 172-13 permits retention of non-PII)
@@ -130,6 +145,37 @@ public class AccountDeletionWorker : BackgroundService
         request.Status = PrivacyRequestStatus.Completed;
         request.CompletedAt = DateTime.UtcNow;
         await privacyRepo.UpdateAsync(request);
+
+        // ══════════════════════════════════════════════════════════════
+        // PUBLISH UserDeletedEvent — cascade deletion to all services
+        // Ley 172-13: all user data must be removed across the platform
+        // ══════════════════════════════════════════════════════════════
+        try
+        {
+            var deletionEvent = new UserDeletedEvent
+            {
+                UserId = request.UserId,
+                Email = originalEmail,
+                DeletedAt = DateTime.UtcNow,
+                Reason = request.DeletionReason ?? "Solicitud de supresión Ley 172-13"
+            };
+
+            await eventPublisher.PublishAsync(deletionEvent, ct);
+
+            _logger.LogInformation(
+                "AccountDeletionWorker: published UserDeletedEvent for user {UserId} (request {RequestId}). " +
+                "Downstream services will cascade-delete user data.",
+                request.UserId, request.Id);
+        }
+        catch (Exception ex)
+        {
+            // Don't fail the anonymization if event publishing fails.
+            // The local anonymization is already done. Log for retry/manual cascade.
+            _logger.LogError(ex,
+                "AccountDeletionWorker: failed to publish UserDeletedEvent for user {UserId}. " +
+                "Manual cascade deletion may be needed for downstream services.",
+                request.UserId);
+        }
 
         _logger.LogInformation(
             "AccountDeletionWorker: anonymized user {UserId} (request {RequestId}).",

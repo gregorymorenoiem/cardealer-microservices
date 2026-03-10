@@ -90,6 +90,21 @@ public class ChatSession
     // Lead generado
     public Guid? LeadId { get; set; }
     
+    // ══════════════════════════════════════════════════════════════
+    // BOT DISCLOSURE CONSENT — Obligatorio antes de enviar mensajes
+    // ══════════════════════════════════════════════════════════════
+    
+    /// <summary>
+    /// El comprador aceptó el disclosure de bot + política de privacidad.
+    /// Debe ser true antes de que SendMessage procese mensajes.
+    /// </summary>
+    public bool ConsentAccepted { get; set; }
+    
+    /// <summary>
+    /// Timestamp de aceptación del disclosure.
+    /// </summary>
+    public DateTime? ConsentAcceptedAt { get; set; }
+    
     // Timestamps
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime LastActivityAt { get; set; } = DateTime.UtcNow;

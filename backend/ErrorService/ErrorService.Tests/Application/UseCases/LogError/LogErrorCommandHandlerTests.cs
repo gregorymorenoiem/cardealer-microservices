@@ -19,7 +19,7 @@ namespace ErrorService.Tests.Application.UseCases.LogError
         {
             // Arrange
             var repoMock = new Mock<IErrorLogRepository>();
-            repoMock.Setup(r => r.AddAsync(It.IsAny<ErrorLog>()))
+            repoMock.Setup(r => r.AddAsync(It.IsAny<ErrorLog>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
             var metricsMock = new Mock<ErrorServiceMetrics>();
@@ -33,7 +33,7 @@ namespace ErrorService.Tests.Application.UseCases.LogError
 
             // Assert
             Assert.NotEqual(Guid.Empty, response.ErrorId);
-            repoMock.Verify(r => r.AddAsync(It.IsAny<ErrorLog>()), Times.Once);
+            repoMock.Verify(r => r.AddAsync(It.IsAny<ErrorLog>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

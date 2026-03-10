@@ -568,6 +568,7 @@ export default function ProfilePage() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              capture="user"
               onChange={handleAvatarChange}
               className="hidden"
             />

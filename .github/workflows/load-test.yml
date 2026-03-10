@@ -1,0 +1,173 @@
+# OKLA Load Test CI Workflow
+#
+# Runs k6 smoke test on every deployment to staging/production.
+# Full load test runs weekly (Thursday 2 AM AST = 6 AM UTC).
+#
+# Triggers:
+#   - workflow_dispatch: Manual trigger with test type selection
+#   - schedule: Weekly full load test
+#   - workflow_call: Called after deploy-digitalocean.yml succeeds
+
+name: Load Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: "Test type to run"
+        required: true
+        default: "smoke"
+        type: choice
+        options:
+          - smoke
+          - load
+          - autoscale
+      base_url:
+        description: "Target URL"
+        required: true
+        default: "https://api.okla.do"
+      vus:
+        description: "Max VUs (load test only)"
+        required: false
+        default: "500"
+      duration:
+        description: "Sustained duration (load test only)"
+        required: false
+        default: "10m"
+
+  schedule:
+    # Weekly full load test: Thursday 6 AM UTC (2 AM AST)
+    - cron: "0 6 * * 4"
+
+  workflow_call:
+    inputs:
+      test_type:
+        description: "Test type"
+        required: false
+        default: "smoke"
+        type: string
+      base_url:
+        description: "Target URL"
+        required: false
+        default: "https://api.okla.do"
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  BASE_URL: ${{ inputs.base_url || 'https://api.okla.do' }}
+  K6_VERSION: "0.54.0"
+
+jobs:
+  load-test:
+    name: "🔥 k6 ${{ inputs.test_type || 'smoke' }} test"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: "📥 Checkout"
+        uses: actions/checkout@v4
+
+      - name: "⬇️ Install k6"
+        run: |
+          curl -fsSL https://github.com/grafana/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux-amd64.tar.gz | tar xz
+          sudo mv k6-v${K6_VERSION}-linux-amd64/k6 /usr/local/bin/
+          k6 version
+
+      - name: "🏃 Run k6 test"
+        id: k6
+        env:
+          TEST_EMAIL: ${{ secrets.LOADTEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.LOADTEST_PASSWORD }}
+          VUS: ${{ inputs.vus || '500' }}
+          DURATION: ${{ inputs.duration || '10m' }}
+        run: |
+          mkdir -p results
+
+          TEST_TYPE="${{ inputs.test_type || 'smoke' }}"
+          SCRIPT="tests/load/k6-${TEST_TYPE}-test.js"
+
+          if [ ! -f "$SCRIPT" ]; then
+            echo "❌ Script not found: $SCRIPT"
+            exit 1
+          fi
+
+          echo "🔥 Running k6 ${TEST_TYPE} test against ${BASE_URL}"
+          echo "   VUs: ${VUS}, Duration: ${DURATION}"
+
+          # Run k6 with JSON output for analysis
+          k6 run \
+            --out json=results/${TEST_TYPE}-$(date +%Y%m%d-%H%M).json \
+            --summary-export=results/${TEST_TYPE}-summary.json \
+            "$SCRIPT" \
+            && echo "result=pass" >> "$GITHUB_OUTPUT" \
+            || echo "result=fail" >> "$GITHUB_OUTPUT"
+
+      - name: "📊 Upload results"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results-${{ inputs.test_type || 'smoke' }}-${{ github.run_number }}
+          path: results/
+          retention-days: 30
+
+      - name: "📝 Generate summary"
+        if: always()
+        run: |
+          TEST_TYPE="${{ inputs.test_type || 'smoke' }}"
+          RESULT="${{ steps.k6.outputs.result }}"
+
+          if [ "$RESULT" = "pass" ]; then
+            EMOJI="✅"
+            STATUS="PASSED"
+          else
+            EMOJI="❌"
+            STATUS="FAILED"
+          fi
+
+          cat >> "$GITHUB_STEP_SUMMARY" << EOF
+          ## ${EMOJI} k6 ${TEST_TYPE} Test ${STATUS}
+
+          | Parameter | Value |
+          |-----------|-------|
+          | Test Type | \`${TEST_TYPE}\` |
+          | Target | \`${BASE_URL}\` |
+          | Max VUs | \`${{ inputs.vus || '500' }}\` |
+          | Duration | \`${{ inputs.duration || '10m' }}\` |
+          | Result | **${STATUS}** |
+          | Timestamp | \`$(date -u '+%Y-%m-%d %H:%M:%S UTC')\` |
+
+          ### SLO Results
+          $(if [ -f results/${TEST_TYPE}-summary.json ]; then
+            echo "\`\`\`json"
+            cat results/${TEST_TYPE}-summary.json | python3 -m json.tool 2>/dev/null || cat results/${TEST_TYPE}-summary.json
+            echo "\`\`\`"
+          else
+            echo "No summary file generated."
+          fi)
+          EOF
+
+      - name: "🚨 Create issue on failure"
+        if: steps.k6.outputs.result == 'fail' && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const testType = '${{ inputs.test_type || 'smoke' }}';
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔴 Load Test Failed: k6 ${testType} test SLO breach`,
+              body: `## Load Test Failure Report\n\n` +
+                `**Test Type:** ${testType}\n` +
+                `**Target:** ${process.env.BASE_URL}\n` +
+                `**Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\n` +
+                `### Action Required\n` +
+                `1. Review k6 results artifact\n` +
+                `2. Check Grafana dashboards for latency spikes\n` +
+                `3. Profile slow endpoints\n` +
+                `4. Verify HPA scaling events\n\n` +
+                `See \`docs/LOAD-TEST-RUNBOOK.md\` for troubleshooting guide.`,
+              labels: ['performance', 'p0-critical', 'automated'],
+            });

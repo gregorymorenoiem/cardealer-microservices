@@ -10,4 +10,9 @@ public interface IRefreshTokenRepository
     Task UpdateAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default);
     Task RevokeAllForUserAsync(string userId, string reason, CancellationToken cancellationToken = default);
     Task CleanupExpiredTokensAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Ley 172-13: Hard-deletes ALL refresh tokens for a user (cascade deletion).
+    /// </summary>
+    Task<int> DeleteAllByUserIdAsync(string userId, CancellationToken cancellationToken = default);
 }

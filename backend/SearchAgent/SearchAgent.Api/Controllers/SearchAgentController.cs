@@ -8,6 +8,7 @@ using SearchAgent.Application.DTOs;
 using SearchAgent.Application.Features.Config.Commands;
 using SearchAgent.Application.Features.Config.Queries;
 using SearchAgent.Application.Features.Search.Queries;
+using SearchAgent.Domain.Models;
 
 namespace SearchAgent.Api.Controllers;
 
@@ -45,13 +46,45 @@ public class SearchAgentController : ControllerBase
             ipAddress
         );
 
-        var result = await _mediator.Send(query, ct);
-
-        return Ok(new
+        try
         {
-            success = true,
-            data = result
-        });
+            var result = await _mediator.Send(query, ct);
+
+            return Ok(new
+            {
+                success = true,
+                data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            // Graceful degradation: when AI is unavailable, return a safe response
+            // that tells the frontend to fall back to basic filter-based search
+            _logger.LogWarning(ex,
+                "AI search failed for query '{Query}'. Returning degraded response (filter-only mode).",
+                request.Query);
+
+            Response.Headers["X-Degraded-Response"] = "true";
+            Response.Headers["X-Degraded-Service"] = "SearchAgent";
+
+            return Ok(new
+            {
+                success = true,
+                data = new SearchAgentResultDto
+                {
+                    IsAiSearchEnabled = false,
+                    WasCached = false,
+                    LatencyMs = 0,
+                    AiFilters = new SearchAgentResponse
+                    {
+                        Confianza = 0.0f,
+                        ResultadoMinimoGarantizado = 0,
+                        MensajeUsuario = "La búsqueda inteligente no está disponible temporalmente. Usa los filtros manuales para encontrar tu vehículo. 🔍",
+                        Advertencias = new List<string> { "AI temporalmente no disponible — mostrando filtros básicos" }
+                    }
+                }
+            });
+        }
     }
 
     /// <summary>
