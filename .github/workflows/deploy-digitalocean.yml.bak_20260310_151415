@@ -245,17 +245,17 @@ jobs:
           echo "⏳ Waiting for infrastructure initialization..."
           sleep 10
 
+      - name: 🔐 Login to GHCR (image existence check)
+        run: |
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io \
+            -u ${{ github.repository_owner }} --password-stdin
+
       - name: Deploy services
         env:
           IMAGE_TAG: sha-${{ github.sha }}
-          # Use GHCR OCI API instead of docker login to check image existence.
-          # docker login fails on macOS self-hosted runners because the credential
-          # helper tries to store in Keychain, which is non-interactive (-25308).
-          GHCR_TOKEN: ${{ secrets.GHCR_PAT }}
         run: |
           SERVICES="${{ needs.prepare.outputs.services }}"
           REGISTRY="ghcr.io/${{ github.repository_owner }}"
-          OWNER="${{ github.repository_owner }}"
 
           echo "🚀 Applying all deployments..."
           kubectl apply -f k8s/deployments.yaml
@@ -272,11 +272,6 @@ jobs:
           # in GHCR. CI builds images only for services with code changes — services
           # whose code did not change will NOT have an image for the current SHA, and
           # blindly pinning them causes ImagePullBackOff → rollout failure.
-          #
-          # Check via GHCR OCI API (no docker daemon / keychain needed):
-          #   GET https://ghcr.io/v2/{owner}/{image}/manifests/{tag}
-          #   Authorization: Bearer <base64-encoded PAT>
-          GHCR_AUTH=$(echo -n "$GHCR_TOKEN" | base64)
           echo "📌 Pinning images to immutable tag: $IMAGE_TAG (skipping if not built)"
           PINNED=""
           SKIPPED=""
@@ -284,13 +279,10 @@ jobs:
           for SERVICE in $(echo $SERVICES | tr ',' ' '); do
             IMAGE_NAME="$SERVICE"
             FULL_IMAGE="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
-            API_URL="https://ghcr.io/v2/${OWNER}/${IMAGE_NAME}/manifests/${IMAGE_TAG}"
 
-            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              -H "Authorization: Bearer $GHCR_AUTH" \
-              "$API_URL")
-
-            if [ "$HTTP_STATUS" = "200" ]; then
+            # docker manifest inspect uses the local docker login (no daemon needed).
+            # Returns 0 if the manifest exists in the registry, non-zero otherwise.
+            if docker manifest inspect "$FULL_IMAGE" > /dev/null 2>&1; then
               echo "  🏷️  $SERVICE → $FULL_IMAGE"
               if ! kubectl set image deployment/$SERVICE \
                 $SERVICE=$FULL_IMAGE \
@@ -301,7 +293,7 @@ jobs:
                 PINNED="$PINNED $SERVICE"
               fi
             else
-              echo "  ⏭️  $SERVICE — no image for $IMAGE_TAG (HTTP $HTTP_STATUS, not rebuilt), keeping current"
+              echo "  ⏭️  $SERVICE — no image for $IMAGE_TAG (not rebuilt), keeping current"
               SKIPPED="$SKIPPED $SERVICE"
             fi
           done
