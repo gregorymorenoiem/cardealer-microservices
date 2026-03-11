@@ -684,10 +684,12 @@ jobs:
         run: flake8 AIProcessingService/workers
 
       - name: 🎨 black --check (formatting)
-        run: black --check --diff backend/AIProcessingService/workers
+        working-directory: backend
+        run: black --check --diff AIProcessingService/workers
 
       - name: 📦 isort --check (import order)
-        run: isort --check-only --diff backend/AIProcessingService/workers
+        working-directory: backend
+        run: isort --check-only --diff AIProcessingService/workers
 
   vehicleintelligenceservice:
     name: 🚘 VehicleIntelligenceService
