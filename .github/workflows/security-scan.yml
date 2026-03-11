@@ -190,13 +190,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: 📦 Install Bandit
-        run: pip install bandit bandit-sarif-formatter
+      - name: � Install Bandit
+        run: |
+          python3 -m venv /tmp/bandit-venv
+          /tmp/bandit-venv/bin/pip install --quiet bandit bandit-sarif-formatter
+          echo "/tmp/bandit-venv/bin" >> $GITHUB_PATH
 
       - name: 🔒 Run Bandit scan
         run: |
@@ -240,13 +238,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: 📦 Install pip-audit
-        run: pip install pip-audit
+      - name: � Install pip-audit
+        run: |
+          python3 -m venv /tmp/pipaudit-venv
+          /tmp/pipaudit-venv/bin/pip install --quiet pip-audit
+          echo "/tmp/pipaudit-venv/bin" >> $GITHUB_PATH
 
       - name: 🔍 Audit AI Workers dependencies
         run: |
@@ -292,12 +288,16 @@ jobs:
   semgrep-frontend:
     name: 🛡️ Semgrep (Frontend SAST)
     runs-on: [self-hosted, macOS, ARM64]
-    container:
-      image: semgrep/semgrep
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: 🛡️ Install Semgrep
+        run: |
+          python3 -m venv /tmp/semgrep-venv
+          /tmp/semgrep-venv/bin/pip install --quiet semgrep
+          echo "/tmp/semgrep-venv/bin" >> $GITHUB_PATH
 
       - name: 🔒 Run Semgrep scan
         run: |

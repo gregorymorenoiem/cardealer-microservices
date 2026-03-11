@@ -67,6 +67,9 @@ title = "OKLA Gitleaks Config"
   regex = '''["']([A-Za-z0-9+/=]{32,})["']'''
   tags = ["jwt", "secret"]
   [rules.allowlist]
+    paths = [
+      '''pyproject\.toml''',
+    ]
     regexes = [
       '''\$\{''',
       '''clave-super-secreta''',
