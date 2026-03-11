@@ -132,7 +132,10 @@ builder.Services.AddHostedService<VehiclePublishedAlertMatcherConsumer>(); // �
 builder.Services.AddHostedService<UserLoggedInEventConsumer>(); // Security in-app notifications on login
 builder.Services.AddHostedService<UserSettingsChangedEventConsumer>(); // In-app confirmation when user saves settings
 
-// 🔔 LEAD NOTIFICATIONS: Email + WhatsApp to dealer when buyer contacts about a vehicle
+// �️ BROKEN IMAGES ALERT: WhatsApp + Email + In-app when >50% of listing photos are broken
+builder.Services.AddHostedService<BrokenImageAlertConsumer>();
+
+// �🔔 LEAD NOTIFICATIONS: Email + WhatsApp to dealer when buyer contacts about a vehicle
 builder.Services.AddHostedService<LeadCreatedNotificationConsumer>();
 
 // 📊 ONBOARDING: 7-day dealer performance report (email + WhatsApp + in-app)
@@ -155,6 +158,7 @@ builder.Services.AddHostedService<SubscriptionCancelledNotificationConsumer>(); 
 builder.Services.AddHostedService<RevenueThresholdAlertConsumer>();                  // Revenue < OPEX threshold alert → founder (CONTRA #7)
 builder.Services.AddHostedService<InfrastructureCostAlertConsumer>();                // Cloud cost > $210 budget alert → CTO (CONTRA #8)
 builder.Services.AddHostedService<UserDataDeletionConsumer>();                       // Ley 172-13 cascade user data deletion
+builder.Services.AddHostedService<ReportPurchaseReceiptConsumer>();                  // OKLA Score report purchase receipt email
 
 // Dead Letter Queue — PostgreSQL-backed (survives pod restarts during auto-scaling)
 builder.Services.AddPostgreSqlDeadLetterQueue(builder.Configuration, "NotificationService");

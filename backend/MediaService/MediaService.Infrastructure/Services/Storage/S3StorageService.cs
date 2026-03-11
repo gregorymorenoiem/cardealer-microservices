@@ -89,6 +89,10 @@ public class S3StorageService : IMediaStorageService
             ContentType = contentType
         };
 
+        // Enforce public-read ACL on pre-signed uploads so files uploaded
+        // via pre-signed URL are publicly accessible (same as UploadFileAsync).
+        request.Headers["x-amz-acl"] = "public-read";
+
         var uploadUrl = _s3Client.GetPreSignedURL(request);
 
         var response = new UploadUrlResponse
@@ -97,7 +101,8 @@ public class S3StorageService : IMediaStorageService
             ExpiresAt = expires,
             Headers = new Dictionary<string, string>
             {
-                ["Content-Type"] = contentType
+                ["Content-Type"] = contentType,
+                ["x-amz-acl"] = "public-read"
             },
             StorageKey = storageKey
         };
@@ -173,7 +178,8 @@ public class S3StorageService : IMediaStorageService
             Key = storageKey,
             InputStream = fileStream,
             ContentType = contentType,
-            AutoCloseStream = false
+            AutoCloseStream = false,
+            CannedACL = S3CannedACL.PublicRead // Ensure all uploaded objects are publicly readable
         };
 
         try
@@ -230,7 +236,8 @@ public class S3StorageService : IMediaStorageService
             SourceBucket = _options.BucketName,
             SourceKey = sourceKey,
             DestinationBucket = _options.BucketName,
-            DestinationKey = destinationKey
+            DestinationKey = destinationKey,
+            CannedACL = S3CannedACL.PublicRead // Preserve public-read on copied objects
         };
 
         await _resiliencePipeline.ExecuteAsync(async ct =>

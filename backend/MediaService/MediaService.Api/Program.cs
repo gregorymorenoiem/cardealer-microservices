@@ -242,6 +242,7 @@ builder.Services.Configure<RabbitMQSettings>(options =>
 if (rabbitMQEnabled)
 {
     builder.Services.AddSingleton<IRabbitMQMediaProducer, RabbitMQMediaProducer>();
+    builder.Services.AddSingleton<MediaService.Domain.Interfaces.IEventPublisher, MediaService.Infrastructure.Messaging.RabbitMqEventPublisher>();
     builder.Services.AddHostedService<RabbitMQMediaConsumer>();
 }
 
