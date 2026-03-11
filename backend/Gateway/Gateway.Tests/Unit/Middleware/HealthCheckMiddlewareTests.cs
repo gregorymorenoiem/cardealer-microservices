@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentAssertions;
 using Gateway.Api.Middleware;
 using Microsoft.AspNetCore.Http;
@@ -33,13 +34,15 @@ public class HealthCheckMiddlewareTests
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Response.ContentType.Should().Be("text/plain");
+        context.Response.ContentType.Should().Be("application/json; charset=utf-8");
         _nextCalled.Should().BeFalse();
 
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         var reader = new StreamReader(context.Response.Body);
         var responseText = await reader.ReadToEndAsync();
-        responseText.Should().Be("Gateway is healthy");
+        var json = JsonDocument.Parse(responseText);
+        json.RootElement.GetProperty("status").GetString().Should().Be("Healthy");
+        json.RootElement.GetProperty("service").GetString().Should().Be("Gateway");
     }
 
     [Fact]
