@@ -673,16 +673,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: 📦 Install lint tools
-        run: pip install -r backend/requirements-lint.txt
+      - name: � Install lint tools
+        run: |
+          python3 -m venv /tmp/lint-venv
+          /tmp/lint-venv/bin/pip install --quiet -r backend/requirements-lint.txt
+          echo "/tmp/lint-venv/bin" >> $GITHUB_PATH
 
       - name: 🔍 flake8 (PEP8)
-        run: flake8 backend/AIProcessingService/workers
+        working-directory: backend
+        run: flake8 AIProcessingService/workers
 
       - name: 🎨 black --check (formatting)
         run: black --check --diff backend/AIProcessingService/workers
