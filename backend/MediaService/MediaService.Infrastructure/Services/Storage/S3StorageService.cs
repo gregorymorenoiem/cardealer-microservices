@@ -29,35 +29,35 @@ public class S3StorageService : IMediaStorageService
     {
         _logger = logger;
         _resiliencePipeline = resiliencePipelineProvider.GetPipeline("media-circuit-breaker");
-        
+
         // Bind options directly from configuration
         _options = new S3StorageOptions();
         var section = configuration.GetSection("Storage:S3");
         section.Bind(_options);
-        
+
         _logger.LogInformation("S3StorageService: AccessKey={HasKey}, SecretKey={HasSecret}, Region={Region}, Bucket={Bucket}",
             !string.IsNullOrEmpty(_options.AccessKey) ? "PRESENT" : "MISSING",
             !string.IsNullOrEmpty(_options.SecretKey) ? "PRESENT" : "MISSING",
             _options.Region,
             _options.BucketName);
-        
+
         if (string.IsNullOrEmpty(_options.AccessKey))
         {
             throw new InvalidOperationException($"S3 AccessKey is not configured. Check Storage:S3:AccessKey configuration.");
         }
-        
+
         if (string.IsNullOrEmpty(_options.SecretKey))
         {
             throw new InvalidOperationException($"S3 SecretKey is not configured. Check Storage:S3:SecretKey configuration.");
         }
-        
+
         // Parse region string to RegionEndpoint
         var region = Amazon.RegionEndpoint.GetBySystemName(_options.Region);
 
         // AWS SDK v3.7+ handles clock skew correction automatically via its retry mechanism.
         // See UploadFileAsync for explicit retry handling when Docker clock drift is extreme.
         var s3Config = new AmazonS3Config();
-        
+
         // Support DigitalOcean Spaces and other S3-compatible providers via custom ServiceUrl
         if (!string.IsNullOrEmpty(_options.ServiceUrl))
         {
@@ -69,10 +69,10 @@ public class S3StorageService : IMediaStorageService
         {
             s3Config.RegionEndpoint = region;
         }
-        
+
         _s3Client = new AmazonS3Client(_options.AccessKey, _options.SecretKey, s3Config);
-        
-        _logger.LogInformation("S3StorageService initialized successfully with bucket: {Bucket}, region: {Region}", 
+
+        _logger.LogInformation("S3StorageService initialized successfully with bucket: {Bucket}, region: {Region}",
             _options.BucketName, _options.Region);
     }
 
