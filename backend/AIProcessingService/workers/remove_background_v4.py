@@ -12,6 +12,7 @@ Usage:
 """
 
 import os
+import subprocess
 import sys
 import time
 import argparse
@@ -75,7 +76,10 @@ def remove_bg_local(image_path: Path) -> Image.Image:
         from torchvision import transforms
     except ImportError:
         print("\n⚠️  Installing required packages for BRIA RMBG 2.0...")
-        os.system(f"{sys.executable} -m pip install transformers torch torchvision --quiet")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "transformers", "torch", "torchvision", "--quiet"],
+            check=False
+        )
         from transformers import AutoModelForImageSegmentation
         import torch
         from torchvision import transforms

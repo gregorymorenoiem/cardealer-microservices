@@ -9,6 +9,7 @@ Usage:
 """
 
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -29,8 +30,15 @@ def setup_directories():
 def install_sam2():
     """Install SAM 2 dependencies."""
     print("📦 Installing SAM 2 dependencies...")
-    os.system(f"{sys.executable} -m pip install torch torchvision --quiet")
-    os.system(f"{sys.executable} -m pip install git+https://github.com/facebookresearch/segment-anything-2.git --quiet")
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", "torch", "torchvision", "--quiet"],
+        check=False
+    )
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install",
+         "git+https://github.com/facebookresearch/segment-anything-2.git", "--quiet"],
+        check=False
+    )
 
 def remove_bg_sam2(image_path: Path) -> Image.Image:
     """
