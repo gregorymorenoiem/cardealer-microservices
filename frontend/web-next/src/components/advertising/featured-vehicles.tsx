@@ -221,8 +221,12 @@ export default function FeaturedVehicles({
     .filter(v => v.title && v.imageUrl && v.price)
     .slice(0, maxItems);
 
-  // Slots to fill to complete the last row
-  const fillCount = vehicles.length > 0 ? (columns - (vehicles.length % columns)) % columns : 0;
+  // Slots to fill to complete the last row.
+  // Use the xl column count (not the `columns` prop) because the grid is
+  // xl:grid-cols-4 for FeaturedSpot and xl:grid-cols-5 for PremiumSpot.
+  const xlColumns = columns === 4 ? 5 : 4;
+  const fillCount =
+    vehicles.length > 0 ? (xlColumns - (vehicles.length % xlColumns)) % xlColumns : 0;
 
   // When no paid vehicles are active — show placeholder slots so the section is always visible
   if (!vehicles.length) {

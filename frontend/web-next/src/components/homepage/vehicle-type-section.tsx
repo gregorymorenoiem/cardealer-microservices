@@ -360,8 +360,10 @@ export default function VehicleTypeSection({
 
   const vehicles = data?.vehicles?.slice(0, maxItems) ?? [];
 
-  // Empty slots to complete the last row (4-col desktop grid)
-  const fillCount = (4 - (vehicles.length % 4)) % 4;
+  // Empty slots to complete the last row.
+  // Grid is xl:grid-cols-5 — fill based on 5 so the last row is always
+  // complete on large screens.
+  const fillCount = (5 - (vehicles.length % 5)) % 5;
 
   // Loading skeleton
   if (isLoading) {

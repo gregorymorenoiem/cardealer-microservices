@@ -124,15 +124,8 @@ export default function HomepageClient() {
       </section>
 
       {/* ── 🏆 VEHÍCULO DEL DÍA ─────────────────────────────────────────── */}
-      {/* CWV FIX: Always reserve space for VehicleOfTheDay to prevent CLS.
-          The section is ~300px tall; when data loads and it renders, no shift occurs. */}
-      {vodVehicles && vodVehicles.length > 0 ? (
-        <VehicleOfTheDay vehicles={vodVehicles} />
-      ) : (
-        <section className="container mx-auto px-4 py-8" aria-hidden="true">
-          <div className="h-[280px] animate-pulse rounded-xl border-2 border-amber-200/50 bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-950/10 dark:to-orange-950/10" />
-        </section>
-      )}
+      {/* Only render when vehicles are available — no empty placeholder */}
+      {vodVehicles && vodVehicles.length > 0 && <VehicleOfTheDay vehicles={vodVehicles} />}
 
       {/* ── SECCIONES PAGADAS CON FOTOS GRANDES (primeras) ───────────────── */}
 
@@ -237,7 +230,7 @@ export default function HomepageClient() {
       {/* Deportivos */}
       <LazySection minHeight={400}>
         <VehicleTypeSection
-          filterValue="Sport"
+          filterValue="SportsCar"
           title="Deportivos"
           subtitle="Rendimiento y adrenalina en cada curva"
           icon={<Gauge className="inline-block h-6 w-6" />}
