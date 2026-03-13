@@ -18,7 +18,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Car, Megaphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
 import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
@@ -244,16 +243,6 @@ function VehicleCard({
             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
             onError={() => setImageError(true)}
           />
-          {vehicle.isFeatured && (
-            <Badge className="absolute top-2 left-2 border-0 bg-amber-500 text-white">
-              ⭐ Destacado
-            </Badge>
-          )}
-          {vehicle.isPremium && !vehicle.isFeatured && (
-            <Badge className="absolute top-2 left-2 border-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-              💎 Premium
-            </Badge>
-          )}
           {/* Ley 358-05 Art. 88 — Identificación de publicidad */}
           <span
             className="absolute right-2 bottom-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur-sm"
@@ -404,11 +393,11 @@ export default function VehicleTypeSection({
               {/* Ley 358-05 Art. 88 — Identificación de espacio publicitario */}
               <span
                 title="Contenido publicitario pagado por anunciantes. Ley 358-05."
-                aria-label="Espacio publicitario patrocinado"
+                aria-label="Espacio publicitario pagado"
                 className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-slate-200/60 bg-slate-50/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700/60 dark:bg-slate-800/20 dark:text-slate-400"
               >
                 <Megaphone className="h-2.5 w-2.5" />
-                Espacio Patrocinado
+                Publicidad
               </span>
             </div>
             <Link href={viewAllHref}>
@@ -451,11 +440,11 @@ export default function VehicleTypeSection({
             {/* Ley 358-05 Art. 88 — Identificación de espacio publicitario */}
             <span
               title="Contenido publicitario pagado por anunciantes. Ley 358-05."
-              aria-label="Espacio publicitario patrocinado"
+              aria-label="Espacio publicitario pagado"
               className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-slate-200/60 bg-slate-50/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700/60 dark:bg-slate-800/20 dark:text-slate-400"
             >
               <Megaphone className="h-2.5 w-2.5" />
-              Espacio Patrocinado
+              Publicidad
             </span>
           </div>
           <Link href={viewAllHref}>

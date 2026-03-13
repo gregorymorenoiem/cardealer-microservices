@@ -65,13 +65,11 @@ export function useServiceWorker(config: ServiceWorkerConfig = {}): UseServiceWo
   // Register service worker
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-      console.log('[SW] Service workers not supported');
       return;
     }
 
     // Only register in production or when explicitly enabled
     if (process.env.NODE_ENV !== 'production' && !process.env.NEXT_PUBLIC_ENABLE_SW) {
-      console.log('[SW] Skipping registration in development');
       return;
     }
 
@@ -82,7 +80,6 @@ export function useServiceWorker(config: ServiceWorkerConfig = {}): UseServiceWo
           updateViaCache: 'none',
         });
 
-        console.log('[SW] Service worker registered:', reg.scope);
         setRegistration(reg);
         setIsRegistered(true);
 
@@ -100,7 +97,6 @@ export function useServiceWorker(config: ServiceWorkerConfig = {}): UseServiceWo
 
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[SW] New version available');
               setWaitingWorker(newWorker);
               setHasUpdate(true);
               onUpdate?.(reg);
@@ -136,7 +132,6 @@ export function useServiceWorker(config: ServiceWorkerConfig = {}): UseServiceWo
 
     // Listen for controller change (new SW activated)
     const handleControllerChange = () => {
-      console.log('[SW] Controller changed, reloading...');
       window.location.reload();
     };
 
@@ -166,7 +161,6 @@ export function useServiceWorker(config: ServiceWorkerConfig = {}): UseServiceWo
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
-      console.log('[SW] All caches cleared');
     }
   }, []);
 

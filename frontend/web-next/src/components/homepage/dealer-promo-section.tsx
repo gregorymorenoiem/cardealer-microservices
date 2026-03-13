@@ -151,7 +151,7 @@ export function DealerPromoSection({
           {/* Paid badge */}
           <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-800">
             <Star className="h-3 w-3 fill-current" />
-            Espacio Patrocinado
+            Publicidad
           </span>
           <h2 className="text-foreground mb-2 text-2xl font-bold tracking-tight lg:text-3xl">
             Concesionarios en OKLA

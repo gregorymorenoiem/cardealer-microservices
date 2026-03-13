@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Car, Megaphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useHomepageRotation, useRecordImpression, useRecordClick } from '@/hooks/use-advertising';
 import type { RotatedVehicle } from '@/types/advertising';
@@ -78,19 +77,9 @@ function FeaturedVehicleCard({
               <span className="text-5xl text-slate-300">🚗</span>
             </div>
           )}
-          {vehicle.isPremium && (
-            <Badge className="absolute top-2 left-2 border-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-              💎 Premium
-            </Badge>
-          )}
-          {vehicle.isFeatured && !vehicle.isPremium && (
-            <Badge className="absolute top-2 left-2 border-0 bg-amber-500 text-white">
-              ⭐ Destacado
-            </Badge>
-          )}
-          {/* Sponsored disclosure */}
+          {/* Publicidad disclosure — Ley 358-05 Art. 88 */}
           <span className="absolute right-2 bottom-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur-sm">
-            Patrocinado
+            Publicidad
           </span>
         </div>
         <CardContent className="p-4">
@@ -191,11 +180,11 @@ export default function FeaturedVehicles({
               <h2 className="text-2xl font-bold">{title}</h2>
               <span
                 title="Contenido publicitario pagado por anunciantes"
-                aria-label="Espacio publicitario patrocinado"
+                aria-label="Espacio publicitario pagado"
                 className={sponsoredBadgeClass}
               >
                 <Megaphone className="h-2.5 w-2.5" />
-                Espacio Patrocinado
+                Publicidad
               </span>
             </div>
           </div>
@@ -240,11 +229,11 @@ export default function FeaturedVehicles({
               </h2>
               <span
                 title="Contenido publicitario pagado por anunciantes"
-                aria-label="Espacio publicitario patrocinado"
+                aria-label="Espacio publicitario pagado"
                 className={sponsoredBadgeClass}
               >
                 <Megaphone className="h-2.5 w-2.5" />
-                Espacio Patrocinado
+                Publicidad
               </span>
             </div>
             <Link href={viewAllHref}>
@@ -274,11 +263,11 @@ export default function FeaturedVehicles({
             </h2>
             <span
               title="Contenido publicitario pagado por anunciantes"
-              aria-label="Espacio publicitario patrocinado"
+              aria-label="Espacio publicitario pagado"
               className={sponsoredBadgeClass}
             >
               <Megaphone className="h-2.5 w-2.5" />
-              Espacio Patrocinado
+              Publicidad
             </span>
           </div>
           <Link href={viewAllHref}>

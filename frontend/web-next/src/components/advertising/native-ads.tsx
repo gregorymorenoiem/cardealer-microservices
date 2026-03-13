@@ -27,17 +27,17 @@ interface SponsoredBadgeProps {
 export function SponsoredBadge({ tier, className, size = 'sm' }: SponsoredBadgeProps) {
   const configs = {
     sponsored: {
-      label: 'Patrocinado',
+      label: 'Publicidad',
       icon: TrendingUp,
       className: 'bg-slate-100/90 text-slate-600 border-slate-200/60',
     },
     featured: {
-      label: 'Anuncio Destacado',
+      label: 'Publicidad',
       icon: Sparkles,
       className: 'bg-amber-50/90 text-amber-700 border-amber-200/60',
     },
     premium: {
-      label: 'Anuncio Premium',
+      label: 'Publicidad',
       icon: Sparkles,
       className:
         'bg-gradient-to-r from-violet-50/90 to-purple-50/90 text-purple-700 border-purple-200/60',
