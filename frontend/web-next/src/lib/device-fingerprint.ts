@@ -195,7 +195,7 @@ function fnv1aHash(str: string): string {
 
 function getConnectionType(): string | undefined {
   if (typeof navigator === 'undefined') return undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const conn =
     (navigator as any).connection ||
     (navigator as any).mozConnection ||

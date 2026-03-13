@@ -496,7 +496,7 @@ export function SmartPublishWizard({
     } catch {
       /* ignore corrupt data */
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Auto-save to localStorage on step change

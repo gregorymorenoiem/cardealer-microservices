@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Car, Megaphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useHomepageRotation, useRecordImpression, useRecordClick } from '@/hooks/use-advertising';
 import type { RotatedVehicle } from '@/types/advertising';
@@ -77,9 +78,19 @@ function FeaturedVehicleCard({
               <span className="text-5xl text-slate-300">🚗</span>
             </div>
           )}
-          {/* Publicidad disclosure — Ley 358-05 Art. 88 */}
+          {vehicle.isPremium && (
+            <Badge className="absolute top-2 left-2 border-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+              💎 Premium
+            </Badge>
+          )}
+          {vehicle.isFeatured && !vehicle.isPremium && (
+            <Badge className="absolute top-2 left-2 border-0 bg-amber-500 text-white">
+              ⭐ Destacado
+            </Badge>
+          )}
+          {/* Sponsored disclosure */}
           <span className="absolute right-2 bottom-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur-sm">
-            Publicidad
+            Patrocinado
           </span>
         </div>
         <CardContent className="p-4">
@@ -161,11 +172,9 @@ export default function FeaturedVehicles({
     placementType === 'PremiumSpot' ? '/vehiculos?sortBy=price_desc' : '/vehiculos?sortBy=newest';
 
   const gridClass =
-    placementType === 'FeaturedSpot'
-      ? 'grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
-      : (columns === 4
-        ? 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-        : 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4');
+    columns === 4
+      ? 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+      : 'grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4';
 
   // Complies with Ley 358-05 — must disclose paid/sponsored content
   const sponsoredBadgeClass =
@@ -182,11 +191,11 @@ export default function FeaturedVehicles({
               <h2 className="text-2xl font-bold">{title}</h2>
               <span
                 title="Contenido publicitario pagado por anunciantes"
-                aria-label="Espacio publicitario pagado"
+                aria-label="Espacio publicitario patrocinado"
                 className={sponsoredBadgeClass}
               >
                 <Megaphone className="h-2.5 w-2.5" />
-                Publicidad
+                Espacio Patrocinado
               </span>
             </div>
           </div>
@@ -231,11 +240,11 @@ export default function FeaturedVehicles({
               </h2>
               <span
                 title="Contenido publicitario pagado por anunciantes"
-                aria-label="Espacio publicitario pagado"
+                aria-label="Espacio publicitario patrocinado"
                 className={sponsoredBadgeClass}
               >
                 <Megaphone className="h-2.5 w-2.5" />
-                Publicidad
+                Espacio Patrocinado
               </span>
             </div>
             <Link href={viewAllHref}>
@@ -265,11 +274,11 @@ export default function FeaturedVehicles({
             </h2>
             <span
               title="Contenido publicitario pagado por anunciantes"
-              aria-label="Espacio publicitario pagado"
+              aria-label="Espacio publicitario patrocinado"
               className={sponsoredBadgeClass}
             >
               <Megaphone className="h-2.5 w-2.5" />
-              Publicidad
+              Espacio Patrocinado
             </span>
           </div>
           <Link href={viewAllHref}>

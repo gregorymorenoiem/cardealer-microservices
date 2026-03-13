@@ -170,7 +170,7 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
   // Restore session on mount
   // ─────────────────────────────────────────────────────────────────────────
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   useEffect(() => {
     // Restore dealer-scoped session on mount.
     // SESSION_KEY / MESSAGES_KEY / BOT_NAME_KEY are stable for the lifetime of
@@ -513,7 +513,7 @@ export function useChatbot(options: UseChatbotOptions = {}): UseChatbotReturn {
     if (autoStart && !sessionToken && !sessionStartedRef.current) {
       handleStartSession();
     }
-  }, [autoStart, sessionToken, handleStartSession]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoStart, sessionToken, handleStartSession]);  
 
   // ─────────────────────────────────────────────────────────────────────────
   // Return

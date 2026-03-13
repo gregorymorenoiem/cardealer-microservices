@@ -368,7 +368,7 @@ export default function DealerBotPanel({
       setShowAppointmentScheduler(true);
       setCalendarAutoShown(true); // Mark as auto-shown — won't auto-trigger again
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [chat.messages, calendarAutoShown, appointmentBooked, lastSchedulerMsgId]);
 
   const handleSend = () => {
