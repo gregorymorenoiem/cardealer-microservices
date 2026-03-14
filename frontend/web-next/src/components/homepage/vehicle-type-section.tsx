@@ -351,10 +351,10 @@ export default function VehicleTypeSection({
 
   // Responsive count: default grid is 2/3/4/5 cols → complete rows at each bp
   const effectiveMaxItems = useResponsiveMaxItems(
-    maxItemsResponsive?.mobile  ?? maxItems,
-    maxItemsResponsive?.tablet  ?? maxItems,
+    maxItemsResponsive?.mobile ?? maxItems,
+    maxItemsResponsive?.tablet ?? maxItems,
     maxItemsResponsive?.desktop ?? maxItems,
-    maxItemsResponsive?.xl      ?? maxItems,
+    maxItemsResponsive?.xl ?? maxItems
   );
 
   const { data, isLoading } = useQuery<VehiclesApiResponse>({
@@ -371,9 +371,6 @@ export default function VehicleTypeSection({
   });
 
   const vehicles = data?.vehicles?.slice(0, effectiveMaxItems) ?? [];
-
-  // Fill to complete the last row on xl (5 cols).
-  const fillCount = (5 - (vehicles.length % 5)) % 5;
 
   // Loading skeleton
   if (isLoading) {
@@ -395,52 +392,9 @@ export default function VehicleTypeSection({
     );
   }
 
-  // Render empty placeholder cards when no vehicles are available for this type
+  // Hide section entirely when no vehicles exist for this type
   if (!vehicles.length) {
-    return (
-      <section className="py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-foreground text-xl leading-tight font-bold tracking-tight sm:text-2xl">
-                {icon && <span className="mr-2">{icon}</span>}
-                {title}
-              </h2>
-              {subtitle && (
-                <p className="text-muted-foreground mt-1 text-xs leading-relaxed sm:text-sm">
-                  {subtitle}
-                </p>
-              )}
-              {/* Ley 358-05 Art. 88 — Identificación de espacio publicitario */}
-              <span
-                title="Contenido publicitario pagado por anunciantes. Ley 358-05."
-                aria-label="Espacio publicitario pagado"
-                className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-slate-200/60 bg-slate-50/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700/60 dark:bg-slate-800/20 dark:text-slate-400"
-              >
-                <Megaphone className="h-2.5 w-2.5" />
-                Publicidad
-              </span>
-            </div>
-            <Link href={viewAllHref}>
-              <Button
-                variant="outline"
-                size="sm"
-                className={`group text-xs sm:text-sm ${colors.viewAll}`}
-              >
-                <span className="hidden sm:inline">Ver todos</span>
-                <span className="sm:hidden">Ver</span>
-                <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <EmptyVehicleCard key={i} icon={icon} accentColor={accentColor} />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   return (
@@ -485,10 +439,6 @@ export default function VehicleTypeSection({
           {vehicles.map(vehicle => (
             <VehicleCard key={vehicle.id} vehicle={vehicle} accentColor={accentColor} />
           ))}
-          {fillCount > 0 &&
-            Array.from({ length: fillCount }).map((_, i) => (
-              <EmptyVehicleCard key={`fill-${i}`} icon={icon} accentColor={accentColor} />
-            ))}
         </div>
         {/* Ley 358-05 Art. 84 — Transparencia en precios */}
         <p className="text-muted-foreground mt-3 text-center text-[10px] leading-relaxed">

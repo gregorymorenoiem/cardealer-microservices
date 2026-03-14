@@ -8,8 +8,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useHomepageRotation, useRecordImpression, useRecordClick } from '@/hooks/use-advertising';
 import { useResponsiveMaxItems } from '@/hooks/use-responsive-max-items';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
 import type { RotatedVehicle } from '@/types/advertising';
 import { formatPrice } from '@/lib/format';
+import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
 
 function FeaturedVehicleCard({
   vehicle,
@@ -24,6 +27,14 @@ function FeaturedVehicleCard({
   const recordImpression = useRecordImpression();
   const recordClick = useRecordClick();
   const [imageError, setImageError] = useState(false);
+
+  // Use Unsplash fallback when primary image URL is missing or fails
+  const fallbackImage = getVehicleFallbackImage(
+    vehicle.vehicleId || '',
+    vehicle.title?.split(' ')[1], // extract make from title like "2023 Ford Explorer"
+    undefined
+  );
+  const effectiveImageUrl = imageError || !vehicle.imageUrl ? fallbackImage : vehicle.imageUrl;
 
   // Record impression once when visible
   useEffect(() => {
@@ -61,25 +72,19 @@ function FeaturedVehicleCard({
       <Card className="flex h-full flex-col overflow-hidden border-0 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-xl">
         {/* Larger aspect ratio than regular cards — "bigger than all others" */}
         <div className="bg-muted relative" style={{ aspectRatio: '4/3' }}>
-          {vehicle.imageUrl && !imageError ? (
-            <Image
-              src={vehicle.imageUrl}
-              alt={vehicle.title || 'Vehículo'}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              quality={75}
-              loading={priority ? 'eager' : 'lazy'}
-              priority={priority}
-              placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+" 
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-slate-100 dark:bg-slate-800">
-              <span className="text-5xl text-slate-300">🚗</span>
-            </div>
-          )}
+          <Image
+            src={effectiveImageUrl}
+            alt={vehicle.title || 'Vehículo'}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            quality={75}
+            loading={priority ? 'eager' : 'lazy'}
+            priority={priority}
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
+            onError={() => setImageError(true)}
+          />
           {/* Publicidad disclosure — Ley 358-05 Art. 88 */}
           <span className="absolute right-2 bottom-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/80 backdrop-blur-sm">
             Publicidad
@@ -171,15 +176,67 @@ export default function FeaturedVehicles({
 }: FeaturedVehiclesProps) {
   // Responsive item count — falls back to flat maxItems on all breakpoints
   const responsiveCount = useResponsiveMaxItems(
-    maxItemsResponsive?.mobile  ?? maxItems,
-    maxItemsResponsive?.tablet  ?? maxItems,
+    maxItemsResponsive?.mobile ?? maxItems,
+    maxItemsResponsive?.tablet ?? maxItems,
     maxItemsResponsive?.desktop ?? maxItems,
-    maxItemsResponsive?.xl      ?? maxItems,
+    maxItemsResponsive?.xl ?? maxItems
   );
-  const { data: rotation, isLoading } = useHomepageRotation(placementType);
+  const { data: rotation, isLoading: isRotationLoading } = useHomepageRotation(placementType);
 
   // Use responsive count for all item-count decisions
   const effectiveMaxItems = responsiveCount;
+
+  // Fallback: when the advertising rotation API returns empty (no active campaigns),
+  // fetch real vehicles from the regular API so sections are never empty.
+  const rotationEmpty = !isRotationLoading && (!rotation?.items || rotation.items.length === 0);
+  const sortParam = placementType === 'PremiumSpot' ? 'price_desc' : 'featured';
+  const { data: fallbackData, isLoading: isFallbackLoading } = useQuery({
+    queryKey: ['featured-fallback', placementType, effectiveMaxItems, sortParam],
+    queryFn: async () => {
+      const res = await apiClient.get<{
+        vehicles?: Array<{
+          id: string;
+          title: string;
+          make: string;
+          model: string;
+          year: number;
+          price: number;
+          currency: string;
+          city?: string;
+          state?: string;
+          slug?: string;
+          images?: Array<{ url: string; isPrimary: boolean; sortOrder: number }>;
+        }>;
+      }>(`/api/vehicles?limit=${effectiveMaxItems}&sortBy=${sortParam}`);
+      return res.data.vehicles ?? [];
+    },
+    enabled: rotationEmpty,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isLoading = isRotationLoading || (rotationEmpty && isFallbackLoading);
+
+  // Map fallback vehicles to RotatedVehicle shape for FeaturedVehicleCard reuse
+  const fallbackVehicles: RotatedVehicle[] = useMemo(() => {
+    if (!fallbackData) return [];
+    return fallbackData.slice(0, effectiveMaxItems).map((v, i) => {
+      const primaryImg = v.images
+        ?.filter(img => img.url && !img.url.startsWith('blob:'))
+        .sort((a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder))[0]?.url;
+      return {
+        vehicleId: v.id,
+        campaignId: '',
+        position: i,
+        qualityScore: 0,
+        title: v.title || `${v.year} ${v.make} ${v.model}`,
+        slug: v.slug,
+        imageUrl: primaryImg,
+        price: v.price,
+        currency: v.currency || 'DOP',
+        location: [v.city, v.state].filter(Boolean).join(', ') || 'R.D.',
+      };
+    });
+  }, [fallbackData, effectiveMaxItems]);
 
   const accentColor =
     placementType === 'PremiumSpot'
@@ -236,51 +293,15 @@ export default function FeaturedVehicles({
     );
   }
 
-  // Only show vehicles that have been enriched (have title + image + price)
-  const vehicles = (rotation?.items || [])
+  // Use rotation items if available, otherwise fallback to regular vehicles
+  const rotationVehicles = (rotation?.items || [])
     .filter(v => v.title && v.imageUrl && v.price)
     .slice(0, effectiveMaxItems);
+  const vehicles = rotationVehicles.length > 0 ? rotationVehicles : fallbackVehicles;
 
-  // Slots to fill to complete the last row.
-  // xl column counts: FeaturedSpot=3, PremiumSpot (columns=4)=4.
-  const xlColumns = placementType === 'FeaturedSpot' ? 3 : 4;
-  const fillCount =
-    vehicles.length > 0 ? (xlColumns - (vehicles.length % xlColumns)) % xlColumns : 0;
-
-  // When no paid vehicles are active — show placeholder slots so the section is always visible
+  // When no paid vehicles are active AND no fallback vehicles — hide the section entirely
   if (!vehicles.length) {
-    return (
-      <section className="py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 2xl:max-w-[1600px]">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-foreground text-2xl leading-tight font-bold tracking-tight">
-                {title}
-              </h2>
-              <span
-                title="Contenido publicitario pagado por anunciantes"
-                aria-label="Espacio publicitario pagado"
-                className={sponsoredBadgeClass}
-              >
-                <Megaphone className="h-2.5 w-2.5" />
-                Publicidad
-              </span>
-            </div>
-            <Link href={viewAllHref}>
-              <Button variant="outline" className={`group ${accentColor.border}`}>
-                Ver todos
-                <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
-          </div>
-          <div className={gridClass}>
-            {Array.from({ length: effectiveMaxItems }).map((_, i) => (
-              <EmptyFeaturedSlot key={i} placementType={placementType} />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   return (
@@ -316,10 +337,6 @@ export default function FeaturedVehicles({
               priority={index < 2}
             />
           ))}
-          {fillCount > 0 &&
-            Array.from({ length: fillCount }).map((_, i) => (
-              <EmptyFeaturedSlot key={`fill-${i}`} placementType={placementType} />
-            ))}
         </div>
       </div>
     </section>

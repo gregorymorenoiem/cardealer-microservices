@@ -13,17 +13,17 @@ const makeImages: Record<string, string[]> = {
   toyota: [
     'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=75',
     'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=75',
-    'https://images.unsplash.com/photo-1568844293986-8d0400f4f36d?w=800&q=75',
+    'https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&q=75',
   ],
   honda: [
-    'https://images.unsplash.com/photo-1606611013016-969c19ba27c5?w=800&q=75',
+    'https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800&q=75',
     'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=75',
     'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&q=75',
   ],
   hyundai: [
     'https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=800&q=75',
-    'https://images.unsplash.com/photo-1625231334168-32354e3b4f4b?w=800&q=75',
     'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&q=75',
+    'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=75',
   ],
   kia: [
     'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=75',
@@ -31,7 +31,7 @@ const makeImages: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=75',
   ],
   nissan: [
-    'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+    'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&q=75',
     'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=75',
     'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=75',
   ],
@@ -62,8 +62,8 @@ const makeImages: Record<string, string[]> = {
   ],
   ford: [
     'https://images.unsplash.com/photo-1551830820-330a71b99659?w=800&q=75',
-    'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
     'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=75',
+    'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=75',
   ],
   chevrolet: [
     'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=75',
@@ -73,7 +73,7 @@ const makeImages: Record<string, string[]> = {
   volkswagen: [
     'https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=800&q=75',
     'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&q=75',
-    'https://images.unsplash.com/photo-1606611013016-969c19ba27c5?w=800&q=75',
+    'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=75',
   ],
   tesla: [
     'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&q=75',
@@ -92,11 +92,11 @@ const bodyStyleImages: Record<string, string[]> = {
   suv: [
     'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=75',
     'https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=800&q=75',
-    'https://images.unsplash.com/photo-1606611013016-969c19ba27c5?w=800&q=75',
+    'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=75',
   ],
   crossover: [
-    'https://images.unsplash.com/photo-1625231334168-32354e3b4f4b?w=800&q=75',
     'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&q=75',
+    'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=75',
     'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=75',
   ],
   sedan: [
@@ -107,10 +107,10 @@ const bodyStyleImages: Record<string, string[]> = {
   hatchback: [
     'https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=800&q=75',
     'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=75',
-    'https://images.unsplash.com/photo-1606611013016-969c19ba27c5?w=800&q=75',
+    'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=75',
   ],
   pickup: [
-    'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=75',
     'https://images.unsplash.com/photo-1551830820-330a71b99659?w=800&q=75',
     'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=75',
   ],
@@ -130,12 +130,12 @@ const bodyStyleImages: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&q=75',
   ],
   van: [
-    'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+    'https://images.unsplash.com/photo-1612825173281-9a193378527e?w=800&q=75',
     'https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=800&q=75',
-    'https://images.unsplash.com/photo-1568844293986-8d0400f4f36d?w=800&q=75',
+    'https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&q=75',
   ],
   minivan: [
-    'https://images.unsplash.com/photo-1568844293986-8d0400f4f36d?w=800&q=75',
+    'https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&q=75',
     'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=75',
     'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=75',
   ],
