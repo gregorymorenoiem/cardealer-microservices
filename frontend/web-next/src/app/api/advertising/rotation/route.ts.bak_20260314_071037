@@ -122,7 +122,7 @@ async function enrichWithRealVehicles(
 ): Promise<Record<string, unknown>[]> {
   try {
     const isPremium = section.includes('Premium');
-    const targetCount = isPremium ? 12 : 9;
+    const targetCount = isPremium ? 12 : 6;
     // Fetch 2x to have rotation pool
     const fetchCount = Math.min(targetCount * 3, 50);
     const sortBy = isPremium ? 'price_desc' : 'newest';
@@ -351,9 +351,9 @@ function getDemoRotationItems(section: string) {
       vehicleId: '839fdf79-3887-4703-89ce-f3db75cde273',
       title: '2023 Honda CR-V EX-L',
       slug: '2023-honda-cr-v-839fdf79',
-      imageUrl: 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&q=75',
+      imageUrl: 'https://images.unsplash.com/photo-1606611013016-969c19ba27c5?w=800&q=75',
       imageUrls: [
-        'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&q=75',
+        'https://images.unsplash.com/photo-1606611013016-969c19ba27c5?w=800&q=75',
         'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=75',
         'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&q=75',
       ],
@@ -425,66 +425,6 @@ function getDemoRotationItems(section: string) {
       isFeatured: true,
       placementType: section,
       position: 6,
-    },
-    {
-      campaignId: 'demo-f7',
-      vehicleId: 'd4e5f6a7-b8c9-0123-defa-234567890abc',
-      title: '2024 Mazda CX-5 Signature',
-      slug: '2024-mazda-cx-5-d4e5f6a7',
-      imageUrl: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&q=75',
-      imageUrls: [
-        'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&q=75',
-        'https://images.unsplash.com/photo-1553440569-bcc63803a83d?w=800&q=75',
-        'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=75',
-      ],
-      price: 2400000,
-      currency: 'DOP',
-      qualityScore: 90,
-      location: 'Santo Domingo',
-      photoCount: 3,
-      isFeatured: true,
-      placementType: section,
-      position: 7,
-    },
-    {
-      campaignId: 'demo-f8',
-      vehicleId: 'e5f6a7b8-c9d0-1234-efab-345678901bcd',
-      title: '2023 Ford Escape Titanium',
-      slug: '2023-ford-escape-e5f6a7b8',
-      imageUrl: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=75',
-      imageUrls: [
-        'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=75',
-        'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&q=75',
-        'https://images.unsplash.com/photo-1625231334168-32354e3b4f4b?w=800&q=75',
-      ],
-      price: 1850000,
-      currency: 'DOP',
-      qualityScore: 88,
-      location: 'Santiago',
-      photoCount: 3,
-      isFeatured: true,
-      placementType: section,
-      position: 8,
-    },
-    {
-      campaignId: 'demo-f9',
-      vehicleId: 'f6a7b8c9-d0e1-2345-fabc-456789012cde',
-      title: '2024 Chevrolet Equinox RS',
-      slug: '2024-chevrolet-equinox-f6a7b8c9',
-      imageUrl: 'https://images.unsplash.com/photo-1556189250-72ba954cfc2b?w=800&q=75',
-      imageUrls: [
-        'https://images.unsplash.com/photo-1556189250-72ba954cfc2b?w=800&q=75',
-        'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=75',
-        'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=75',
-      ],
-      price: 1750000,
-      currency: 'DOP',
-      qualityScore: 87,
-      location: 'Distrito Nacional',
-      photoCount: 3,
-      isFeatured: true,
-      placementType: section,
-      position: 9,
     },
   ];
 
@@ -594,9 +534,9 @@ function getDemoRotationItems(section: string) {
       vehicleId: 'f6a7b8c9-d0e1-2345-fabc-456789012345',
       title: '2024 Range Rover Sport',
       slug: '2024-range-rover-sport-f6a7b8c9',
-      imageUrl: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=75',
+      imageUrl: 'https://images.unsplash.com/photo-1606611013016-969c19ba27c5?w=800&q=75',
       imageUrls: [
-        'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=75',
+        'https://images.unsplash.com/photo-1606611013016-969c19ba27c5?w=800&q=75',
         'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=75',
         'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
       ],

@@ -42,7 +42,7 @@ interface DealerPromoSectionProps {
 // =============================================================================
 
 /** Min slots always rendered so the grid looks full even with few dealers */
-const DEFAULT_SLOTS = 10;
+const DEFAULT_SLOTS = 8;
 
 // =============================================================================
 // SINGLE DEALER CARD

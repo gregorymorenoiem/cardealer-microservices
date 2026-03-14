@@ -65,7 +65,13 @@ export default function HomepageClient() {
   const dealerSponsors = useMemo(() => {
     if (!apiBrands || apiBrands.length === 0) return undefined;
     return apiBrands
-      .filter((b: BrandConfig) => b.isActive && b.logoUrl)
+      .filter(
+        (b: BrandConfig) =>
+          b.isActive &&
+          b.logoUrl &&
+          'dealerId' in b &&
+          (b as unknown as Record<string, unknown>).dealerId
+      )
       .sort((a: BrandConfig, b: BrandConfig) => a.displayOrder - b.displayOrder)
       .slice(0, 10)
       .map((b: BrandConfig) => ({
@@ -74,7 +80,7 @@ export default function HomepageClient() {
         slug: b.brandKey.toLowerCase(),
         logoUrl: b.logoUrl || undefined,
         vehicleCount: b.vehicleCount,
-        isActive: b.isActive,
+        isDealer: true,
         portalSlug: b.brandKey.toLowerCase().replace(/\s+/g, '-'),
       }));
   }, [apiBrands]);
@@ -141,7 +147,7 @@ export default function HomepageClient() {
       />
 
       {/* 4. Dealers Patrocinados — espacios pagados por dealers */}
-      <DealerPromoSection dealers={dealerSponsors} totalSlots={10} />
+      <DealerPromoSection dealers={dealerSponsors} totalSlots={8} />
 
       {/* ── SECCIONES POR TIPO DE VEHÍCULO ──────────────────────────────── */}
       {/* Same card size as ⭐ Destacados — 4-column large-photo grid.      */}
