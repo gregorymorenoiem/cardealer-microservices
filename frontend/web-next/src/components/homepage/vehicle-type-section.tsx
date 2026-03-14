@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
 import { getVehicleFallbackImage } from '@/lib/vehicle-image-fallbacks';
 import { formatPrice } from '@/lib/format';
+import { useResponsiveMaxItems } from '@/hooks/use-responsive-max-items';
 
 // ─────────────────────────────────────────────
 // Types
@@ -319,7 +320,20 @@ function EmptyVehicleCard({
 // ─────────────────────────────────────────────
 
 interface VehicleTypeSectionProps extends VehicleTypeSectionConfig {
+  /** Flat item count used when maxItemsResponsive is not set. Default: 10. */
   maxItems?: number;
+  /**
+   * Responsive item counts per breakpoint.
+   * When provided, overrides maxItems.
+   * Defaults: mobile=10, tablet=9, desktop=8, xl=10
+   * (chosen so each breakpoint fills complete rows in the 2/3/4/5-col grid)
+   */
+  maxItemsResponsive?: {
+    mobile: number;
+    tablet: number;
+    desktop: number;
+    xl: number;
+  };
 }
 
 export default function VehicleTypeSection({
@@ -330,16 +344,25 @@ export default function VehicleTypeSection({
   icon,
   viewAllHref,
   accentColor = 'blue',
-  maxItems = 8,
+  maxItems = 10,
+  maxItemsResponsive,
 }: VehicleTypeSectionProps) {
   const colors = accentClasses[accentColor] || accentClasses.blue;
 
+  // Responsive count: default grid is 2/3/4/5 cols → complete rows at each bp
+  const effectiveMaxItems = useResponsiveMaxItems(
+    maxItemsResponsive?.mobile  ?? maxItems,
+    maxItemsResponsive?.tablet  ?? maxItems,
+    maxItemsResponsive?.desktop ?? maxItems,
+    maxItemsResponsive?.xl      ?? maxItems,
+  );
+
   const { data, isLoading } = useQuery<VehiclesApiResponse>({
-    queryKey: ['vehicles-by-type', filterType, filterValue, maxItems],
+    queryKey: ['vehicles-by-type', filterType, filterValue, effectiveMaxItems],
     queryFn: async () => {
       const param = filterType === 'fuelType' ? 'fuelType' : 'bodyStyle';
       const res = await apiClient.get<VehiclesApiResponse>(
-        `/api/vehicles?${param}=${encodeURIComponent(filterValue)}&limit=${maxItems}&sortBy=featured`
+        `/api/vehicles?${param}=${encodeURIComponent(filterValue)}&limit=${effectiveMaxItems}&sortBy=featured`
       );
       return res.data;
     },
@@ -347,11 +370,9 @@ export default function VehicleTypeSection({
     retry: 1,
   });
 
-  const vehicles = data?.vehicles?.slice(0, maxItems) ?? [];
+  const vehicles = data?.vehicles?.slice(0, effectiveMaxItems) ?? [];
 
-  // Empty slots to complete the last row.
-  // Grid is xl:grid-cols-5 — fill based on 5 so the last row is always
-  // complete on large screens.
+  // Fill to complete the last row on xl (5 cols).
   const fillCount = (5 - (vehicles.length % 5)) % 5;
 
   // Loading skeleton
@@ -365,7 +386,7 @@ export default function VehicleTypeSection({
             </h2>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {Array.from({ length: maxItems }).map((_, i) => (
+            {Array.from({ length: effectiveMaxItems }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>

@@ -130,13 +130,19 @@ export default function HomepageClient() {
       {/* ── SECCIONES PAGADAS CON FOTOS GRANDES (primeras) ───────────────── */}
 
       {/* 2. ⭐ Vehículos Destacados — espacio pagado FeaturedSpot */}
-      <FeaturedVehicles title="⭐ Vehículos Destacados" placementType="FeaturedSpot" maxItems={6} />
+      <FeaturedVehicles
+        title="⭐ Vehículos Destacados"
+        placementType="FeaturedSpot"
+        maxItems={9}
+        maxItemsResponsive={{ mobile: 9, tablet: 10, desktop: 9, xl: 9 }}
+      />
 
       {/* 3. 💎 Vehículos Premium — espacio pagado PremiumSpot (sección más grande = precio más alto) */}
       <FeaturedVehicles
         title="💎 Vehículos Premium"
         placementType="PremiumSpot"
         maxItems={12}
+        maxItemsResponsive={{ mobile: 12, tablet: 12, desktop: 12, xl: 12 }}
         columns={4}
       />
 

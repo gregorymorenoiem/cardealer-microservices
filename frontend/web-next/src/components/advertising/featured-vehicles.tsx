@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Car, Megaphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useHomepageRotation, useRecordImpression, useRecordClick } from '@/hooks/use-advertising';
+import { useResponsiveMaxItems } from '@/hooks/use-responsive-max-items';
 import type { RotatedVehicle } from '@/types/advertising';
 import { formatPrice } from '@/lib/format';
 
@@ -22,6 +23,7 @@ function FeaturedVehicleCard({
   const impressionRecorded = useRef(false);
   const recordImpression = useRecordImpression();
   const recordClick = useRecordClick();
+  const [imageError, setImageError] = useState(false);
 
   // Record impression once when visible
   useEffect(() => {
@@ -59,7 +61,7 @@ function FeaturedVehicleCard({
       <Card className="flex h-full flex-col overflow-hidden border-0 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-xl">
         {/* Larger aspect ratio than regular cards — "bigger than all others" */}
         <div className="bg-muted relative" style={{ aspectRatio: '4/3' }}>
-          {vehicle.imageUrl ? (
+          {vehicle.imageUrl && !imageError ? (
             <Image
               src={vehicle.imageUrl}
               alt={vehicle.title || 'Vehículo'}
@@ -70,7 +72,8 @@ function FeaturedVehicleCard({
               loading={priority ? 'eager' : 'lazy'}
               priority={priority}
               placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+" 
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="flex h-full items-center justify-center bg-slate-100 dark:bg-slate-800">
@@ -136,10 +139,25 @@ function EmptyFeaturedSlot({ placementType }: { placementType: 'FeaturedSpot' | 
   );
 }
 
+/** Configurable items per breakpoint. When provided, overrides `maxItems`. */
+export interface ResponsiveMaxItems {
+  /** mobile  < 768px  */
+  mobile: number;
+  /** tablet  768–1023px */
+  tablet: number;
+  /** desktop 1024–1279px */
+  desktop: number;
+  /** xl      ≥ 1280px */
+  xl: number;
+}
+
 interface FeaturedVehiclesProps {
   title?: string;
   placementType?: 'FeaturedSpot' | 'PremiumSpot';
+  /** Flat item count (used when maxItemsResponsive is not provided). */
   maxItems?: number;
+  /** Responsive item counts per breakpoint — overrides maxItems when set. */
+  maxItemsResponsive?: ResponsiveMaxItems;
   /** Number of columns in the grid. 4 = bigger/premium section; 3 = standard. */
   columns?: 3 | 4;
 }
@@ -148,9 +166,20 @@ export default function FeaturedVehicles({
   title = 'Vehículos Destacados',
   placementType = 'FeaturedSpot',
   maxItems = 6,
+  maxItemsResponsive,
   columns = 3,
 }: FeaturedVehiclesProps) {
+  // Responsive item count — falls back to flat maxItems on all breakpoints
+  const responsiveCount = useResponsiveMaxItems(
+    maxItemsResponsive?.mobile  ?? maxItems,
+    maxItemsResponsive?.tablet  ?? maxItems,
+    maxItemsResponsive?.desktop ?? maxItems,
+    maxItemsResponsive?.xl      ?? maxItems,
+  );
   const { data: rotation, isLoading } = useHomepageRotation(placementType);
+
+  // Use responsive count for all item-count decisions
+  const effectiveMaxItems = responsiveCount;
 
   const accentColor =
     placementType === 'PremiumSpot'
@@ -191,7 +220,7 @@ export default function FeaturedVehicles({
             </div>
           </div>
           <div className={gridClass}>
-            {Array.from({ length: maxItems }).map((_, i) => (
+            {Array.from({ length: effectiveMaxItems }).map((_, i) => (
               <Card key={i} className="animate-pulse overflow-hidden border-0 shadow-md">
                 <div className="bg-muted" style={{ aspectRatio: '4/3' }} />
                 <CardContent className="space-y-2 p-4">
@@ -210,12 +239,11 @@ export default function FeaturedVehicles({
   // Only show vehicles that have been enriched (have title + image + price)
   const vehicles = (rotation?.items || [])
     .filter(v => v.title && v.imageUrl && v.price)
-    .slice(0, maxItems);
+    .slice(0, effectiveMaxItems);
 
   // Slots to fill to complete the last row.
-  // Use the xl column count (not the `columns` prop) because the grid is
-  // xl:grid-cols-4 for FeaturedSpot and xl:grid-cols-5 for PremiumSpot.
-  const xlColumns = columns === 4 ? 5 : 4;
+  // xl column counts: FeaturedSpot=3, PremiumSpot (columns=4)=4.
+  const xlColumns = placementType === 'FeaturedSpot' ? 3 : 4;
   const fillCount =
     vehicles.length > 0 ? (xlColumns - (vehicles.length % xlColumns)) % xlColumns : 0;
 
@@ -246,7 +274,7 @@ export default function FeaturedVehicles({
             </Link>
           </div>
           <div className={gridClass}>
-            {Array.from({ length: maxItems }).map((_, i) => (
+            {Array.from({ length: effectiveMaxItems }).map((_, i) => (
               <EmptyFeaturedSlot key={i} placementType={placementType} />
             ))}
           </div>
