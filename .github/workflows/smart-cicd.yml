@@ -987,7 +987,17 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: � Create CI secrets for Docker Compose
+      - name: 🔧 Configure Docker for headless CI (disable macOS Keychain)
+        run: |
+          mkdir -p ~/.docker
+          # On macOS self-hosted runners the Docker credential helper
+          # (docker-credential-osxkeychain) fails in headless/non-interactive
+          # sessions because the Keychain is locked. All images pulled here are
+          # public Docker Hub images that require no authentication, so we
+          # override ~/.docker/config.json to use no credential store.
+          echo '{"auths":{}}' > ~/.docker/config.json
+
+      - name: 🔑 Create CI secrets for Docker Compose
         run: |
           mkdir -p secrets
           echo "ci_test_password_123" > secrets/db_password.txt
