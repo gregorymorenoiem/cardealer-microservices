@@ -1019,10 +1019,10 @@ jobs:
       - name: �🐳 Start infrastructure (Docker Compose)
         run: |
           echo "🚀 Starting infrastructure services..."
-          docker compose -f compose.docker.yaml up -d postgres redis rabbitmq
+          docker-compose -f compose.docker.yaml up -d postgres redis rabbitmq
           echo "⏳ Waiting for PostgreSQL to be healthy..."
           for i in $(seq 1 30); do
-            if docker compose -f compose.docker.yaml exec -T postgres pg_isready -U postgres 2>/dev/null; then
+            if docker-compose -f compose.docker.yaml exec -T postgres pg_isready -U postgres 2>/dev/null; then
               echo "✅ PostgreSQL is ready"
               break
             fi
@@ -1065,7 +1065,7 @@ jobs:
       - name: 🧹 Cleanup infrastructure
         if: always()
         run: |
-          docker compose -f compose.docker.yaml down -v 2>/dev/null || true
+          docker-compose -f compose.docker.yaml down -v 2>/dev/null || true
 
   # ============================================
   # DEPLOY TO DIGITAL OCEAN (Only on main)
