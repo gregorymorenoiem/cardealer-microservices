@@ -991,12 +991,18 @@ jobs:
         run: |
           mkdir -p /tmp/.docker.ci
           # Write a clean docker config without credential store to a temp dir.
-          # Use DOCKER_CONFIG env var to make Docker respect this config.
-          # The osxkeychain cred helper is loaded from ~/.docker/config.json by
-          # default, which fails in headless sessions. Pointing to our temp config
-          # bypasses that entirely.
           echo '{"auths":{}}' > /tmp/.docker.ci/config.json
           echo "DOCKER_CONFIG=/tmp/.docker.ci" >> "$GITHUB_ENV"
+          # Restart Docker daemon to clear osxkeychain state from memory
+          # On macOS, docker-compose reads ~/.docker/config.json AND the daemon
+          # may have osxkeychain hardcoded. Restarting the daemon clears this.
+          for service in com.docker.service com.docker.vmnetd; do
+            launchctl stop $service 2>/dev/null || true
+            sleep 2
+            launchctl start $service 2>/dev/null || true
+            sleep 5
+          done
+          echo "✅ Docker daemon restarted"
 
       - name: 🔑 Create CI secrets for Docker Compose
         run: |
