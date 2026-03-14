@@ -419,7 +419,7 @@ public sealed class InMemoryAdvertisingService : IAdvertisingService
         _rotationConfigs.TryAdd(AdPlacementType.PremiumSpot, new RotationConfigEntity
         {
             Section = AdPlacementType.PremiumSpot,
-            MaxSlots = 12,
+            MaxSlots = 15,
             RotationIntervalMinutes = 30,
             MinQualityScore = 0,
             IsActive = true,
@@ -454,19 +454,20 @@ public sealed class InMemoryAdvertisingService : IAdvertisingService
             });
         }
 
-        // Seed brand configs with Unsplash vehicle photos as logos
+        // Seed brand configs con logos oficiales de Wikimedia Commons (dominio público / CC)
+        // Los logos SVG renderizados como PNG garantizan un aspecto profesional en la sección de concesionarios.
         var brands = new[]
         {
-            ("toyota", "Toyota", 25, "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&q=80"),
-            ("honda", "Honda", 20, "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=400&q=80"),
-            ("hyundai", "Hyundai", 18, "https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&q=80"),
-            ("kia", "Kia", 15, "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&q=80"),
-            ("nissan", "Nissan", 14, "https://images.unsplash.com/photo-1617788138017-80ad40651399?w=400&q=80"),
-            ("ford", "Ford", 12, "https://images.unsplash.com/photo-1612825173281-9a193378527e?w=400&q=80"),
-            ("chevrolet", "Chevrolet", 10, "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=80"),
-            ("mazda", "Mazda", 8, "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400&q=80"),
-            ("bmw", "BMW", 6, "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&q=80"),
-            ("mercedes-benz", "Mercedes-Benz", 5, "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400&q=80"),
+            ("toyota", "Toyota", 25, "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Toyota_logo_%28Red%29.svg/320px-Toyota_logo_%28Red%29.svg.png"),
+            ("honda", "Honda", 20, "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/320px-Honda.svg.png"),
+            ("hyundai", "Hyundai", 18, "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Hyundai_Motor_Company_logo.svg/320px-Hyundai_Motor_Company_logo.svg.png"),
+            ("kia", "Kia", 15, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Kia-logo.svg/320px-Kia-logo.svg.png"),
+            ("nissan", "Nissan", 14, "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Nissan_2020_logo.svg/320px-Nissan_2020_logo.svg.png"),
+            ("ford", "Ford", 12, "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ford_logo_flat.svg/320px-Ford_logo_flat.svg.png"),
+            ("chevrolet", "Chevrolet", 10, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Chevrolet_logo.svg/320px-Chevrolet_logo.svg.png"),
+            ("mazda", "Mazda", 8, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Mazda_logo.svg/320px-Mazda_logo.svg.png"),
+            ("bmw", "BMW", 6, "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/220px-BMW.svg.png"),
+            ("mercedes-benz", "Mercedes-Benz", 5, "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Mercedes-Logo.svg/220px-Mercedes-Logo.svg.png"),
         };
 
         for (var i = 0; i < brands.Length; i++)

@@ -122,7 +122,7 @@ async function enrichWithRealVehicles(
 ): Promise<Record<string, unknown>[]> {
   try {
     const isPremium = section.includes('Premium');
-    const targetCount = isPremium ? 12 : 9;
+    const targetCount = isPremium ? 15 : 9;
     // Fetch 2x to have rotation pool
     const fetchCount = Math.min(targetCount * 3, 50);
     const sortBy = isPremium ? 'price_desc' : 'newest';
@@ -728,6 +728,67 @@ function getDemoRotationItems(section: string) {
       isPremium: true,
       placementType: 'PremiumSpot',
       position: 12,
+    },
+    // 3 nuevos vehículos Premium — slots adicionales para publicidad de alto valor
+    {
+      campaignId: 'demo-p13',
+      vehicleId: 'a3b4c5d6-e7f8-9012-abcd-123456789abc',
+      title: '2024 BMW X7 xDrive40i',
+      slug: '2024-bmw-x7-a3b4c5d6',
+      imageUrl: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=75',
+      imageUrls: [
+        'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=75',
+        'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=75',
+        'https://images.unsplash.com/photo-1616422285623-13ff0162193c?w=800&q=75',
+      ],
+      price: 7800000,
+      currency: 'DOP',
+      qualityScore: 97,
+      location: 'Distrito Nacional',
+      photoCount: 3,
+      isPremium: true,
+      placementType: 'PremiumSpot',
+      position: 13,
+    },
+    {
+      campaignId: 'demo-p14',
+      vehicleId: 'b4c5d6e7-f8a9-0123-bcde-234567890bcd',
+      title: '2023 Maserati Ghibli Modena',
+      slug: '2023-maserati-ghibli-b4c5d6e7',
+      imageUrl: 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&q=75',
+      imageUrls: [
+        'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&q=75',
+        'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&q=75',
+        'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&q=75',
+      ],
+      price: 9200000,
+      currency: 'DOP',
+      qualityScore: 98,
+      location: 'Casa de Campo',
+      photoCount: 3,
+      isPremium: true,
+      placementType: 'PremiumSpot',
+      position: 14,
+    },
+    {
+      campaignId: 'demo-p15',
+      vehicleId: 'c5d6e7f8-a9b0-1234-cdef-345678901cde',
+      title: '2024 Land Rover Defender 110',
+      slug: '2024-land-rover-defender-c5d6e7f8',
+      imageUrl: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=75',
+      imageUrls: [
+        'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=75',
+        'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+        'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=75',
+      ],
+      price: 8900000,
+      currency: 'DOP',
+      qualityScore: 96,
+      location: 'Punta Cana',
+      photoCount: 3,
+      isPremium: true,
+      placementType: 'PremiumSpot',
+      position: 15,
     },
   ];
 

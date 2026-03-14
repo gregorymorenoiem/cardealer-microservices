@@ -65,12 +65,15 @@ export async function PUT(request: NextRequest) {
 }
 
 function getDemoBrands(includeHidden: boolean) {
+  // Logos de marcas: SVGs oficiales alojados en Wikimedia Commons (dominio público / CC).
+  // Estos son logotipos de marcas reales, no fotos de vehículos, para un aspecto profesional.
   const allBrands = [
     {
       id: 'brand-toyota',
       brandKey: 'toyota',
       displayName: 'Toyota',
-      logoUrl: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Toyota_logo_%28Red%29.svg/320px-Toyota_logo_%28Red%29.svg.png',
       displayOrder: 1,
       isActive: true,
       vehicleCount: 25,
@@ -79,7 +82,8 @@ function getDemoBrands(includeHidden: boolean) {
       id: 'brand-honda',
       brandKey: 'honda',
       displayName: 'Honda',
-      logoUrl: 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/320px-Honda.svg.png',
       displayOrder: 2,
       isActive: true,
       vehicleCount: 20,
@@ -88,7 +92,8 @@ function getDemoBrands(includeHidden: boolean) {
       id: 'brand-hyundai',
       brandKey: 'hyundai',
       displayName: 'Hyundai',
-      logoUrl: 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Hyundai_Motor_Company_logo.svg/320px-Hyundai_Motor_Company_logo.svg.png',
       displayOrder: 3,
       isActive: true,
       vehicleCount: 18,
@@ -97,7 +102,8 @@ function getDemoBrands(includeHidden: boolean) {
       id: 'brand-kia',
       brandKey: 'kia',
       displayName: 'Kia',
-      logoUrl: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Kia-logo.svg/320px-Kia-logo.svg.png',
       displayOrder: 4,
       isActive: true,
       vehicleCount: 15,
@@ -106,7 +112,8 @@ function getDemoBrands(includeHidden: boolean) {
       id: 'brand-nissan',
       brandKey: 'nissan',
       displayName: 'Nissan',
-      logoUrl: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Nissan_2020_logo.svg/320px-Nissan_2020_logo.svg.png',
       displayOrder: 5,
       isActive: true,
       vehicleCount: 14,
@@ -115,7 +122,8 @@ function getDemoBrands(includeHidden: boolean) {
       id: 'brand-ford',
       brandKey: 'ford',
       displayName: 'Ford',
-      logoUrl: 'https://images.unsplash.com/photo-1612825173281-9a193378527e?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ford_logo_flat.svg/320px-Ford_logo_flat.svg.png',
       displayOrder: 6,
       isActive: true,
       vehicleCount: 12,
@@ -124,7 +132,8 @@ function getDemoBrands(includeHidden: boolean) {
       id: 'brand-chevrolet',
       brandKey: 'chevrolet',
       displayName: 'Chevrolet',
-      logoUrl: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Chevrolet_logo.svg/320px-Chevrolet_logo.svg.png',
       displayOrder: 7,
       isActive: true,
       vehicleCount: 10,
@@ -133,7 +142,8 @@ function getDemoBrands(includeHidden: boolean) {
       id: 'brand-mazda',
       brandKey: 'mazda',
       displayName: 'Mazda',
-      logoUrl: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Mazda_logo.svg/320px-Mazda_logo.svg.png',
       displayOrder: 8,
       isActive: true,
       vehicleCount: 8,
@@ -142,7 +152,8 @@ function getDemoBrands(includeHidden: boolean) {
       id: 'brand-bmw',
       brandKey: 'bmw',
       displayName: 'BMW',
-      logoUrl: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/220px-BMW.svg.png',
       displayOrder: 9,
       isActive: true,
       vehicleCount: 6,
@@ -151,7 +162,8 @@ function getDemoBrands(includeHidden: boolean) {
       id: 'brand-mercedes-benz',
       brandKey: 'mercedes-benz',
       displayName: 'Mercedes-Benz',
-      logoUrl: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400&q=80',
+      logoUrl:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Mercedes-Logo.svg/220px-Mercedes-Logo.svg.png',
       displayOrder: 10,
       isActive: true,
       vehicleCount: 5,

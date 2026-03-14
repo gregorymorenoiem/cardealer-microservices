@@ -92,6 +92,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Wikimedia Commons — logos de marcas automotrices para DealerPromoSection
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+        port: '',
+        pathname: '/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],

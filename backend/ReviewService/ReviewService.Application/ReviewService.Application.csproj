@@ -10,7 +10,7 @@
     <PackageReference Include="MediatR" Version="12.4.1" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="AutoMapper" Version="16.1.1" /> <!-- Updated from 13.0.1: fixes GHSA-rvv3-g6hj-g44x high-severity vulnerability -->
   </ItemGroup>
 
   <ItemGroup>

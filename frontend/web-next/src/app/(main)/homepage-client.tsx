@@ -135,8 +135,8 @@ export default function HomepageClient() {
       <FeaturedVehicles
         title="💎 Vehículos Premium"
         placementType="PremiumSpot"
-        maxItems={12}
-        maxItemsResponsive={{ mobile: 12, tablet: 12, desktop: 12, xl: 12 }}
+        maxItems={15}
+        maxItemsResponsive={{ mobile: 12, tablet: 12, desktop: 15, xl: 15 }}
         columns={4}
       />
 
