@@ -188,6 +188,9 @@ try
     // Banner repository — singleton so in-memory data survives across requests in the same pod
     builder.Services.AddSingleton<AdminService.Domain.Interfaces.IBannerRepository,
         AdminService.Infrastructure.Persistence.InMemoryBannerRepository>();
+    // Advertising service — singleton in-memory (same pattern as banner repository)
+    builder.Services.AddSingleton<AdminService.Application.Interfaces.IAdvertisingService,
+        AdminService.Infrastructure.Services.InMemoryAdvertisingService>();
 
     // Reports Service Client (for admin content moderation reports → ReportsService)
     builder.Services.AddHttpClient<IReportsServiceClient, ReportsServiceClient>(client =>
