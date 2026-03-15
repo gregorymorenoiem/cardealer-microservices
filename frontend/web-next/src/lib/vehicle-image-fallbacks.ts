@@ -63,12 +63,12 @@ const makeImages: Record<string, string[]> = {
   ford: [
     'https://images.unsplash.com/photo-1551830820-330a71b99659?w=800&q=75',
     'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=75',
-    'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=75',
+    'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=75',
   ],
   chevrolet: [
     'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=75',
     'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&q=75',
-    'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+    'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=75',
   ],
   volkswagen: [
     'https://images.unsplash.com/photo-1609521263047-f8f205293f24?w=800&q=75',

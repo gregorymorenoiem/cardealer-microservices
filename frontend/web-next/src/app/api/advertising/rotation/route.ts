@@ -411,9 +411,9 @@ function getDemoRotationItems(section: string) {
       vehicleId: 'c3d4e5f6-a7b8-9012-cdef-123456789012',
       title: '2024 Nissan Pathfinder SV',
       slug: '2024-nissan-pathfinder-c3d4e5f6',
-      imageUrl: 'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+      imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&q=75',
       imageUrls: [
-        'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+        'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&q=75',
         'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=75',
         'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=75',
       ],
@@ -597,8 +597,8 @@ function getDemoRotationItems(section: string) {
       imageUrl: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=75',
       imageUrls: [
         'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=75',
-        'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&q=75',
-        'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+        'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&q=75',
+        'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=75',
       ],
       price: 6800000,
       currency: 'DOP',
@@ -697,7 +697,7 @@ function getDemoRotationItems(section: string) {
       imageUrl: 'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=75',
       imageUrls: [
         'https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=75',
-        'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+        'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=75',
         'https://images.unsplash.com/photo-1556189250-72ba954cfc2b?w=800&q=75',
       ],
       price: 4600000,
@@ -778,7 +778,7 @@ function getDemoRotationItems(section: string) {
       imageUrl: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=75',
       imageUrls: [
         'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=75',
-        'https://images.unsplash.com/photo-1533473359331-2969f3c6b787?w=800&q=75',
+        'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=75',
         'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=75',
       ],
       price: 8900000,
