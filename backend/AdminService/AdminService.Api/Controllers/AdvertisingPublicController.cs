@@ -1,3 +1,4 @@
+// AdvertisingPublicController — public advertising API (campaigns, rotation, tracking)
 using AdminService.Application.Interfaces;
 using AdminService.Domain.Entities.Advertising;
 using Microsoft.AspNetCore.Authorization;
