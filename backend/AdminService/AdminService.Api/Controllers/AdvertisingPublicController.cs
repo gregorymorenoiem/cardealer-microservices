@@ -1,5 +1,5 @@
 // AdvertisingPublicController — public advertising API (campaigns, rotation, tracking)
-// v2: CreateCampaignApiRequest includes VehicleTitle, VehicleSlug, VehicleImageUrl, VehiclePrice, etc.
+// v3: Built with linux/amd64 platform for DigitalOcean K8s compatibility
 using AdminService.Application.Interfaces;
 using AdminService.Domain.Entities.Advertising;
 using Microsoft.AspNetCore.Authorization;
