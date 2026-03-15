@@ -57,7 +57,13 @@ public class AdvertisingPublicController : ControllerBase
             DailyBudget: request.DailyBudget,
             BidAmount: request.BidAmount,
             StartDate: request.StartDate,
-            EndDate: request.EndDate
+            EndDate: request.EndDate,
+            VehicleTitle: request.VehicleTitle,
+            VehicleSlug: request.VehicleSlug,
+            VehicleImageUrl: request.VehicleImageUrl,
+            VehiclePrice: request.VehiclePrice,
+            VehicleCurrency: request.VehicleCurrency,
+            VehicleLocation: request.VehicleLocation
         );
 
         var campaign = await _advertisingService.CreateCampaignAsync(dto);
@@ -426,6 +432,13 @@ public record CreateCampaignApiRequest
     public decimal? BidAmount { get; init; }
     public DateTime StartDate { get; init; }
     public DateTime EndDate { get; init; }
+    // Vehicle metadata for rotation cache pre-population
+    public string? VehicleTitle { get; init; }
+    public string? VehicleSlug { get; init; }
+    public string? VehicleImageUrl { get; init; }
+    public decimal? VehiclePrice { get; init; }
+    public string? VehicleCurrency { get; init; }
+    public string? VehicleLocation { get; init; }
 }
 
 public record TrackingApiRequest
