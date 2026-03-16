@@ -216,6 +216,9 @@ export async function serverCreateKYCProfile(data: {
   sourceOfFunds?: string;
   occupation?: string;
   expectedMonthlyTransaction?: number;
+  dataProcessingConsent: boolean;
+  biometricProcessingConsent: boolean;
+  consentVersion: string;
 }): Promise<ActionResult<KYCProfileResult>> {
   try {
     // SECURITY: Read access token from HttpOnly cookie (set by AuthController on login)
@@ -251,6 +254,10 @@ export async function serverCreateKYCProfile(data: {
       occupation: data.occupation,
       expectedTransactionVolume: data.expectedMonthlyTransaction?.toString(),
       entityType: 1, // Individual
+      // Ley 172-13 Art. 5 — Explicit consent required
+      dataProcessingConsent: data.dataProcessingConsent,
+      biometricProcessingConsent: data.biometricProcessingConsent,
+      consentVersion: data.consentVersion,
     };
 
     const idempotencyKey = generateIdempotencyKey();

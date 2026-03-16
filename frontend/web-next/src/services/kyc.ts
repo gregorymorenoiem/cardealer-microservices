@@ -303,6 +303,10 @@ export interface CreateKYCProfileRequest {
   sourceOfFunds?: string;
   occupation?: string;
   expectedMonthlyTransaction?: number;
+  // Ley 172-13 Art. 5 — Consentimiento obligatorio
+  dataProcessingConsent: boolean;
+  biometricProcessingConsent: boolean;
+  consentVersion: string;
 }
 
 export interface UpdateKYCProfileRequest extends Partial<CreateKYCProfileRequest> {
@@ -446,17 +450,20 @@ export async function createKYCProfile(data: CreateKYCProfileRequest): Promise<K
     sourceOfFunds: data.sourceOfFunds,
     occupation: data.occupation,
     expectedMonthlyTransaction: data.expectedMonthlyTransaction,
+    dataProcessingConsent: data.dataProcessingConsent,
+    biometricProcessingConsent: data.biometricProcessingConsent,
+    consentVersion: data.consentVersion,
   });
 
   if (!result.success || !result.data) {
-    throw new Error(result.error || 'Error al crear el perfil KYC');
+    throw new Error(result.error || 'Error al actualizar el perfil KYC');
   }
 
   return result.data as unknown as KYCProfile;
 }
 
 /**
- * Update KYC profile
+ * Update existing KYC profile
  */
 export async function updateKYCProfile(
   id: string,

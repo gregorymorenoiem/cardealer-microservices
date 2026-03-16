@@ -160,6 +160,10 @@ export default function VerificacionPage() {
     'front'
   );
 
+  // Consent State (Ley 172-13 Art. 5)
+  const [dataProcessingConsent, setDataProcessingConsent] = useState(false);
+  const [biometricProcessingConsent, setBiometricProcessingConsent] = useState(false);
+
   // ============================================================================
   // KYC Draft Autosave Hook
   // ============================================================================
@@ -413,6 +417,14 @@ export default function VerificacionPage() {
       return;
     }
 
+    // Ley 172-13 Art. 5 — Validate explicit consents before processing
+    if (!dataProcessingConsent || !biometricProcessingConsent) {
+      toast.error(
+        'Debes aceptar el procesamiento de datos y la verificación biométrica para continuar.'
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     // Track created resources for potential cleanup on error
@@ -445,6 +457,10 @@ export default function VerificacionPage() {
         sourceOfFunds: 'Ingresos laborales',
         occupation: sanitizeText(personalInfo.occupation.trim(), { maxLength: 100 }),
         expectedMonthlyTransaction: 10000,
+        // Ley 172-13 Art. 5 — Explicit consent (validated above)
+        dataProcessingConsent: dataProcessingConsent,
+        biometricProcessingConsent: biometricProcessingConsent,
+        consentVersion: 'v1.0',
       };
 
       const profile = await kycService.createProfile(profileRequest);
@@ -1123,14 +1139,43 @@ export default function VerificacionPage() {
                   </div>
                 </div>
 
-                {/* Terms */}
-                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Al enviar esta solicitud:</strong>
-                    <br />
+                {/* Consent Checkboxes — Ley 172-13 Art. 5 */}
+                <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <p className="text-sm font-semibold text-blue-900">
+                    Consentimiento de Datos (Ley 172-13 Art. 5) *
+                  </p>
+
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={dataProcessingConsent}
+                      onChange={e => setDataProcessingConsent(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-blue-800">
+                      Autorizo a OKLA a procesar mis datos personales (nombre, cédula, dirección,
+                      fecha de nacimiento) para verificar mi identidad, cumplir con la Ley 155-17 de
+                      Prevención de Lavado de Activos, y mejorar la seguridad de la plataforma.{' '}
+                      <strong>Este consentimiento es requerido por la Ley 172-13 Art. 5.</strong>
+                    </span>
+                  </label>
+
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={biometricProcessingConsent}
+                      onChange={e => setBiometricProcessingConsent(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-blue-800">
+                      Autorizo el procesamiento de mis datos biométricos (fotografía de mi rostro y
+                      cédula) con el único propósito de verificar mi identidad. Entiendo que estos
+                      datos son sensibles y están protegidos bajo la legislación dominicana.
+                    </span>
+                  </label>
+
+                  <p className="text-xs text-blue-700">
                     • Confirmo que toda la información proporcionada es verdadera y precisa
-                    <br />
-                    • Autorizo a OKLA a verificar mi identidad según la Ley 155-17
                     <br />• Entiendo que proporcionar información falsa puede resultar en suspensión
                     de cuenta
                   </p>
@@ -1166,7 +1211,7 @@ export default function VerificacionPage() {
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !dataProcessingConsent || !biometricProcessingConsent}
                 className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-2.5 font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? (
