@@ -26,6 +26,7 @@ import {
   Lock,
   Check,
   Loader2,
+  CreditCard,
 } from 'lucide-react';
 import { useCurrentDealer } from '@/hooks/use-dealers';
 import { useDealerEmployees } from '@/hooks/use-dealer-employees';
@@ -33,6 +34,8 @@ import {
   useDealerSettings,
   useUpdateNotificationSettings,
   useUpdateSecuritySettings,
+  usePaymentGatewaySettings,
+  useUpdatePaymentGatewaySettings,
 } from '@/hooks/use-dealer-settings';
 import { defaultNotificationSettings, type NotificationSettings } from '@/services/dealer-settings';
 import { toast } from 'sonner';
@@ -99,6 +102,10 @@ export default function DealerSettingsPage() {
   // Mutations
   const updateNotifications = useUpdateNotificationSettings(dealerId);
   const updateSecurity = useUpdateSecuritySettings(dealerId);
+
+  // Payment gateway preferences
+  const { data: gatewayData, isLoading: gatewaysLoading } = usePaymentGatewaySettings();
+  const updateGateways = useUpdatePaymentGatewaySettings();
 
   // Local state for form
   const [notifications, setNotifications] = useState<NotificationSettings>(
@@ -344,6 +351,126 @@ export default function DealerSettingsPage() {
                   Ir a Seguridad de la Cuenta
                 </Link>
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Payment Gateways */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Pasarelas de Pago
+                  </CardTitle>
+                  <CardDescription>
+                    Activa las pasarelas que aceptarás para pagos de tu suscripción OKLA
+                  </CardDescription>
+                </div>
+                {updateGateways.isPending && (
+                  <Loader2 className="text-primary mt-1 h-4 w-4 animate-spin" />
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {gatewaysLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between rounded-xl border p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="bg-muted h-10 w-10 animate-pulse rounded-lg" />
+                        <div>
+                          <div className="bg-muted mb-1 h-4 w-24 animate-pulse rounded" />
+                          <div className="bg-muted h-3 w-36 animate-pulse rounded" />
+                        </div>
+                      </div>
+                      <div className="bg-muted h-6 w-10 animate-pulse rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {(gatewayData ?? []).map(gateway => (
+                    <div
+                      key={gateway.id}
+                      className="flex items-center justify-between rounded-xl border p-4 transition-colors hover:bg-gray-50/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={[
+                            'flex h-10 w-10 items-center justify-center rounded-lg text-lg',
+                            gateway.isEnabled ? 'bg-blue-50' : 'bg-muted',
+                          ].join(' ')}
+                        >
+                          {gateway.isLocal ? '🇷🇩' : '🌐'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={[
+                                'font-medium',
+                                !gateway.isEnabled && 'text-muted-foreground',
+                              ]
+                                .filter(Boolean)
+                                .join(' ')}
+                            >
+                              {gateway.name}
+                            </span>
+                            <span
+                              className={[
+                                'rounded-full px-2 py-0.5 text-xs font-medium',
+                                gateway.isLocal
+                                  ? 'bg-blue-50 text-blue-700'
+                                  : 'bg-purple-50 text-purple-700',
+                              ].join(' ')}
+                            >
+                              {gateway.isLocal ? 'Rep. Dom.' : 'Internacional'}
+                            </span>
+                            {gateway.recommended && gateway.isEnabled && (
+                              <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                                Recomendado
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-muted-foreground mt-0.5 truncate text-sm">
+                            {gateway.description}
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={gateway.isEnabled}
+                        disabled={updateGateways.isPending}
+                        onCheckedChange={async checked => {
+                          const current = gatewayData ?? [];
+                          const next = current.map(g =>
+                            g.id === gateway.id ? { ...g, isEnabled: checked } : g
+                          );
+                          const enabledIds = next.filter(g => g.isEnabled).map(g => g.id);
+                          if (enabledIds.length === 0) {
+                            toast.error('Debes tener al menos una pasarela habilitada.');
+                            return;
+                          }
+                          try {
+                            await updateGateways.mutateAsync(enabledIds);
+                            toast.success(
+                              `${gateway.name} ${checked ? 'habilitada' : 'deshabilitada'} correctamente`
+                            );
+                          } catch {
+                            toast.error('No se pudo actualizar la pasarela de pago.');
+                          }
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-muted-foreground mt-4 text-xs">
+                Las pasarelas habilitadas aparecerán como opciones cuando agregues un método de
+                pago.
+              </p>
             </CardContent>
           </Card>
 

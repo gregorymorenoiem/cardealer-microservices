@@ -57,6 +57,7 @@ import {
   type PaymentGateway,
   type TokenizationInitResponse,
 } from '@/services/user-billing';
+import { PayPalPaymentButton } from '@/components/checkout/PayPalPaymentButton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -451,8 +452,8 @@ function AddPaymentMethodDialog({
       icon: '🔐',
     },
     PayPal: {
-      name: 'PayPal / Braintree',
-      description: 'Vault API con Braintree SDK.',
+      name: 'PayPal',
+      description: 'SDK oficial de PayPal.',
       note: 'Tarjetas internacionales y cuenta PayPal.',
       integrationType: 'sdk',
       icon: '🌐',
@@ -744,90 +745,84 @@ function AddPaymentMethodDialog({
     </div>
   );
 
-  // Render SDK integration (for PayPal/Braintree)
-  const renderSdk = () => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-medium">PayPal / Tarjeta de crédito</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            setStep('select');
-            setTokenizationResponse(null);
-          }}
-        >
-          ← Volver
-        </Button>
-      </div>
+  // Render SDK integration (for PayPal — official @paypal/react-paypal-js)
+  const renderSdk = () => {
+    const clientId = tokenizationResponse?.sdkConfig?.clientId;
+    const currency = tokenizationResponse?.sdkConfig?.styles?.currency as string | undefined;
 
-      {/* PayPal Buttons Container */}
+    return (
       <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium">Pagar con PayPal</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setStep('select');
+              setTokenizationResponse(null);
+            }}
+          >
+            ← Volver
+          </Button>
+        </div>
+
         <div className="bg-muted/50 rounded-lg border p-4">
           <p className="text-muted-foreground mb-4 text-sm">
-            Puedes vincular tu cuenta de PayPal o agregar una tarjeta de crédito/débito.
+            Autoriza el pago con tu cuenta PayPal o con tu tarjeta de crédito/débito.
           </p>
 
-          {/* PayPal SDK Container */}
-          <div
-            id="paypal-button-container"
-            className="flex min-h-[150px] items-center justify-center"
-          >
-            {tokenizationResponse?.sdkConfig ? (
-              <div className="text-center">
-                <div className="mb-4 animate-pulse rounded-lg bg-blue-100 p-6">
-                  <p className="text-sm text-blue-700">Cargando opciones de pago de PayPal...</p>
-                </div>
-                <p className="text-muted-foreground text-xs">
-                  Ambiente: {tokenizationResponse.sdkConfig.environment}
-                </p>
-              </div>
-            ) : (
+          {clientId ? (
+            <PayPalPaymentButton
+              clientId={clientId}
+              amount="0.01"
+              currency={currency || 'USD'}
+              onCreateOrder={async () => {
+                // Create a real PayPal order via backend
+                const res = await fetch('/api/payments/paypal/create-order', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    amount: 1,
+                    currency: 'USD',
+                    description: 'Método de pago',
+                  }),
+                  credentials: 'include',
+                });
+                const data = (await res.json()) as { orderId?: string };
+                if (!data.orderId) throw new Error('No se pudo crear la orden');
+                return data.orderId;
+              }}
+              onApprove={async (orderId: string) => {
+                if (tokenizationResponse?.sessionId) {
+                  await userBillingService.completeTokenization({
+                    sessionId: tokenizationResponse.sessionId,
+                    gateway: 'PayPal',
+                    setAsDefault,
+                    payPalVaultId: orderId,
+                  });
+                }
+                toast.success('PayPal vinculado correctamente');
+                onSuccess?.();
+                onOpenChange(false);
+              }}
+              onError={msg => {
+                setError(msg);
+                toast.error(msg);
+              }}
+              onCancel={() => {
+                setStep('select');
+                setTokenizationResponse(null);
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center py-8">
               <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-            )}
-          </div>
-        </div>
-
-        {/* Manual Card Entry Option */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="border-border w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="text-muted-foreground bg-white px-2">O ingresa tu tarjeta</span>
-          </div>
-        </div>
-
-        {/* Braintree Hosted Fields Container */}
-        <div id="braintree-hosted-fields" className="space-y-3">
-          <div className="bg-card rounded-lg border p-3">
-            <Label className="text-muted-foreground text-xs">Número de tarjeta</Label>
-            <div id="card-number" className="border-border h-10 border-b" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-card rounded-lg border p-3">
-              <Label className="text-muted-foreground text-xs">Fecha de vencimiento</Label>
-              <div id="expiration-date" className="border-border h-10 border-b" />
             </div>
-            <div className="bg-card rounded-lg border p-3">
-              <Label className="text-muted-foreground text-xs">CVV</Label>
-              <div id="cvv" className="border-border h-10 border-b" />
-            </div>
-          </div>
+          )}
         </div>
-
-        <Button className="w-full" disabled>
-          <CreditCard className="mr-2 h-4 w-4" />
-          Guardar tarjeta
-        </Button>
-
-        <p className="text-muted-foreground text-center text-xs">
-          <Shield className="mr-1 inline h-3 w-3" />
-          Procesado de forma segura por PayPal/Braintree
-        </p>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Render loading state
   const renderLoading = () => (

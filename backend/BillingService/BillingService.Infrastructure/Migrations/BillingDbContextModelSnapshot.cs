@@ -22,6 +22,30 @@ namespace BillingService.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("BillingService.Domain.Entities.DealerGatewayPreferences", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DealerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EnabledGateways")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DealerId")
+                        .IsUnique();
+
+                    b.ToTable("DealerGatewayPreferences");
+                });
+
             modelBuilder.Entity("BillingService.Domain.Entities.AzulTransaction", b =>
                 {
                     b.Property<Guid>("Id")

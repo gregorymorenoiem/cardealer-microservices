@@ -12,6 +12,8 @@ import {
   enableTwoFactor,
   disableTwoFactor,
   changePassword,
+  getPaymentGatewaySettings,
+  updatePaymentGatewaySettings,
   type NotificationSettings,
   type SecuritySettings,
 } from '@/services/dealer-settings';
@@ -26,6 +28,7 @@ export const dealerSettingsKeys = {
   notifications: (dealerId: string) =>
     [...dealerSettingsKeys.settings(dealerId), 'notifications'] as const,
   security: (dealerId: string) => [...dealerSettingsKeys.settings(dealerId), 'security'] as const,
+  paymentGateways: () => [...dealerSettingsKeys.all, 'payment-gateways'] as const,
 };
 
 // ============================================================================
@@ -124,5 +127,35 @@ export function useChangePassword(dealerId: string) {
       currentPassword: string;
       newPassword: string;
     }) => changePassword(dealerId, currentPassword, newPassword),
+  });
+}
+
+// ==============================================================================
+// Payment Gateway Hooks
+// ==============================================================================
+
+/**
+ * Get the authenticated dealer's payment gateway enable/disable preferences.
+ */
+export function usePaymentGatewaySettings() {
+  return useQuery({
+    queryKey: dealerSettingsKeys.paymentGateways(),
+    queryFn: getPaymentGatewaySettings,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Update which payment gateways the dealer has enabled.
+ * Optimistically updates the cache on success.
+ */
+export function useUpdatePaymentGatewaySettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (enabledIds: string[]) => updatePaymentGatewaySettings(enabledIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: dealerSettingsKeys.paymentGateways() });
+    },
   });
 }

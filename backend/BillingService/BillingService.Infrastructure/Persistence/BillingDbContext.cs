@@ -29,6 +29,9 @@ public class BillingDbContext : DbContext
     public DbSet<ReconciliationDiscrepancy> ReconciliationDiscrepancies => Set<ReconciliationDiscrepancy>();
     public DbSet<ReportPurchase> ReportPurchases => Set<ReportPurchase>();
 
+    // Dealer payment gateway preferences — which gateways are enabled per dealer
+    public DbSet<DealerGatewayPreferences> DealerGatewayPreferences => Set<DealerGatewayPreferences>();
+
     public BillingDbContext(DbContextOptions<BillingDbContext> options) : base(options)
     {
     }
@@ -341,6 +344,13 @@ public class BillingDbContext : DbContext
             entity.Property(e => e.SuggestedAction).HasMaxLength(1000);
             entity.Property(e => e.ResolutionNotes).HasMaxLength(2000);
             entity.Property(e => e.ResolvedBy).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<DealerGatewayPreferences>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DealerId).IsUnique();
+            entity.Property(e => e.EnabledGateways).HasMaxLength(500);
         });
     }
 
