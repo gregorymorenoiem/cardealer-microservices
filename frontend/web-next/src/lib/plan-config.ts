@@ -13,8 +13,10 @@
 export const DealerPlan = {
   LIBRE: 'libre',
   VISIBLE: 'visible',
+  STARTER: 'starter',
   PRO: 'pro',
   ELITE: 'elite',
+  ENTERPRISE: 'enterprise',
 } as const;
 export type DealerPlan = (typeof DealerPlan)[keyof typeof DealerPlan];
 
@@ -34,7 +36,13 @@ export interface DealerPlanFeatures {
   // OKLA v2 fields
   searchPriority: 'standard' | 'medium' | 'high' | 'top';
   monthlyOklaCoinsCredits: number;
-  badgeType: 'none' | 'verified' | 'verified-gold' | 'verified-premium';
+  badgeType:
+    | 'none'
+    | 'verified'
+    | 'verified-plus'
+    | 'verified-gold'
+    | 'verified-premium'
+    | 'enterprise';
   chatAgentWeb: number; // conversations/month, -1 = unlimited
   chatAgentWhatsApp: number;
   chatAgentOverageCostUsd: number; // USD per conversation above monthly limit (0 = no overage)
@@ -53,8 +61,10 @@ export interface DealerPlanFeatures {
 export const DEALER_PLAN_PRICES: Record<DealerPlan, number> = {
   [DealerPlan.LIBRE]: 0,
   [DealerPlan.VISIBLE]: 29,
+  [DealerPlan.STARTER]: 59,
   [DealerPlan.PRO]: 99,
-  [DealerPlan.ELITE]: 249,
+  [DealerPlan.ELITE]: 349,
+  [DealerPlan.ENTERPRISE]: 599,
 };
 
 export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
@@ -118,6 +128,36 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     maxVideos: 1,
     view360Available: false,
   },
+  [DealerPlan.STARTER]: {
+    maxListings: 999999,
+    maxImages: 12,
+    analyticsAccess: true,
+    marketPriceAnalysis: false,
+    bulkUpload: true,
+    featuredListings: 5,
+    leadManagement: true,
+    emailAutomation: false,
+    customBranding: false,
+    apiAccess: false,
+    prioritySupport: false,
+    whatsappIntegration: false,
+    searchPriority: 'high',
+    monthlyOklaCoinsCredits: 30,
+    badgeType: 'verified-plus',
+    chatAgentWeb: 100,
+    chatAgentWhatsApp: 100,
+    chatAgentOverageCostUsd: 0.1,
+    autoScheduling: false,
+    whatsAppReminders: false,
+    pricingAgentFree: 0,
+    pricingAgentMonthly: 10,
+    pricingAgentPdf: false,
+    dashboardLevel: 'basic',
+    canExportAnalytics: false,
+    videoTour: false,
+    maxVideos: 1,
+    view360Available: false,
+  },
   [DealerPlan.PRO]: {
     maxListings: 999999,
     maxImages: 15,
@@ -164,8 +204,8 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     searchPriority: 'top',
     monthlyOklaCoinsCredits: 120,
     badgeType: 'verified-premium',
-    chatAgentWeb: 2000,
-    chatAgentWhatsApp: 2000,
+    chatAgentWeb: 5000,
+    chatAgentWhatsApp: 5000,
     chatAgentOverageCostUsd: 0.06,
     autoScheduling: true,
     whatsAppReminders: true,
@@ -178,6 +218,36 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
     maxVideos: 5,
     view360Available: true,
   },
+  [DealerPlan.ENTERPRISE]: {
+    maxListings: 999999,
+    maxImages: 20,
+    analyticsAccess: true,
+    marketPriceAnalysis: true,
+    bulkUpload: true,
+    featuredListings: 50,
+    leadManagement: true,
+    emailAutomation: true,
+    customBranding: true,
+    apiAccess: true,
+    prioritySupport: true,
+    whatsappIntegration: true,
+    searchPriority: 'top',
+    monthlyOklaCoinsCredits: 300,
+    badgeType: 'enterprise',
+    chatAgentWeb: -1,
+    chatAgentWhatsApp: -1,
+    chatAgentOverageCostUsd: 0,
+    autoScheduling: true,
+    whatsAppReminders: true,
+    pricingAgentFree: 0,
+    pricingAgentMonthly: -1,
+    pricingAgentPdf: true,
+    dashboardLevel: 'complete',
+    canExportAnalytics: true,
+    videoTour: true,
+    maxVideos: -1,
+    view360Available: true,
+  },
 };
 
 // =============================================================================
@@ -185,9 +255,9 @@ export const DEALER_PLAN_LIMITS: Record<DealerPlan, DealerPlanFeatures> = {
 // =============================================================================
 
 export const SellerPlan = {
-  GRATIS: 'gratis',
-  PREMIUM: 'premium',
-  PRO: 'pro',
+  LIBRE: 'libre_seller',
+  ESTANDAR: 'estandar',
+  VERIFICADO: 'verificado',
 } as const;
 export type SellerPlan = (typeof SellerPlan)[keyof typeof SellerPlan];
 
@@ -208,10 +278,16 @@ export interface SellerPlanFeatures {
   view360Available: boolean;
 }
 
+export const SELLER_PLAN_PRICES: Record<SellerPlan, number> = {
+  [SellerPlan.LIBRE]: 0,
+  [SellerPlan.ESTANDAR]: 9.99, // USD per listing (one-time)
+  [SellerPlan.VERIFICADO]: 34.99, // USD/mes
+};
+
 export const SELLER_PLAN_LIMITS: Record<SellerPlan, SellerPlanFeatures> = {
-  [SellerPlan.GRATIS]: {
+  [SellerPlan.LIBRE]: {
     maxListings: 1,
-    maxImages: 15,
+    maxImages: 5,
     listingDuration: 30,
     analyticsAccess: false,
     searchPriority: false,
@@ -225,36 +301,36 @@ export const SELLER_PLAN_LIMITS: Record<SellerPlan, SellerPlanFeatures> = {
     maxVideos: 0,
     view360Available: false,
   },
-  [SellerPlan.PREMIUM]: {
-    maxListings: 5,
-    maxImages: 30,
-    listingDuration: 0,
-    analyticsAccess: true,
+  [SellerPlan.ESTANDAR]: {
+    maxListings: 1, // 1 por pago (por listing)
+    maxImages: 10,
+    listingDuration: 60,
+    analyticsAccess: false,
     searchPriority: true,
     verifiedBadge: true,
-    featuredListings: 2,
+    featuredListings: 0,
     whatsappContact: true,
-    detailedStats: true,
+    detailedStats: false,
     boostAvailable: true,
     socialSharing: true,
     priceDropAlerts: false,
-    maxVideos: 1,
-    view360Available: true,
+    maxVideos: 0,
+    view360Available: false,
   },
-  [SellerPlan.PRO]: {
-    maxListings: 15,
-    maxImages: 50,
-    listingDuration: 0,
+  [SellerPlan.VERIFICADO]: {
+    maxListings: 3,
+    maxImages: 12,
+    listingDuration: 90,
     analyticsAccess: true,
     searchPriority: true,
     verifiedBadge: true,
-    featuredListings: 5,
+    featuredListings: 0,
     whatsappContact: true,
     detailedStats: true,
     boostAvailable: true,
     socialSharing: true,
     priceDropAlerts: true,
-    maxVideos: 3,
+    maxVideos: 0,
     view360Available: true,
   },
 };

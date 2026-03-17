@@ -235,15 +235,21 @@ public static class StripePriceMapping
         { (SubscriptionPlan.Professional, BillingCycle.Monthly), "price_professional_monthly" },
         { (SubscriptionPlan.Professional, BillingCycle.Yearly), "price_professional_yearly" },
         { (SubscriptionPlan.Enterprise, BillingCycle.Monthly), "price_enterprise_monthly" },
-        { (SubscriptionPlan.Enterprise, BillingCycle.Yearly), "price_enterprise_yearly" }
+        { (SubscriptionPlan.Enterprise, BillingCycle.Yearly), "price_enterprise_yearly" },
+        { (SubscriptionPlan.Starter, BillingCycle.Monthly), "price_starter_monthly" },
+        { (SubscriptionPlan.Starter, BillingCycle.Yearly), "price_starter_yearly" },
+        { (SubscriptionPlan.Corporate, BillingCycle.Monthly), "price_corporate_monthly" },
+        { (SubscriptionPlan.Corporate, BillingCycle.Yearly), "price_corporate_yearly" }
     };
 
     private static readonly Dictionary<SubscriptionPlan, (decimal Monthly, decimal Yearly)> Prices = new()
     {
         { SubscriptionPlan.Free, (0m, 0m) },
-        { SubscriptionPlan.Basic, (29m, 290m) },        // ~17% descuento anual
-        { SubscriptionPlan.Professional, (99m, 990m) }, // ~17% descuento anual
-        { SubscriptionPlan.Enterprise, (249m, 2490m) }  // ~17% descuento anual
+        { SubscriptionPlan.Basic, (29m, 290m) },         // ~17% descuento anual
+        { SubscriptionPlan.Starter, (59m, 590m) },       // NEW: STARTER plan
+        { SubscriptionPlan.Professional, (99m, 990m) },  // ~17% descuento anual
+        { SubscriptionPlan.Enterprise, (349m, 3490m) },  // ÉLITE — was $249, updated to $349
+        { SubscriptionPlan.Corporate, (599m, 5990m) }    // NEW: ENTERPRISE tier
     };
 
     private static readonly Dictionary<SubscriptionPlan, (int Users, int Vehicles)> Limits = new()
@@ -252,8 +258,10 @@ public static class StripePriceMapping
         // Differentiation is via premium features (photos, search priority, ChatAgent, etc.)
         { SubscriptionPlan.Free, (1, -1) },          // ∞ listings, 1 user
         { SubscriptionPlan.Basic, (5, -1) },          // ∞ listings, 5 users
+        { SubscriptionPlan.Starter, (10, -1) },       // ∞ listings, 10 users — NEW
         { SubscriptionPlan.Professional, (20, -1) },  // ∞ listings, 20 users
-        { SubscriptionPlan.Enterprise, (-1, -1) }     // ∞ listings, ∞ users
+        { SubscriptionPlan.Enterprise, (-1, -1) },    // ∞ listings, ∞ users (ÉLITE)
+        { SubscriptionPlan.Corporate, (-1, -1) }      // ∞ listings, ∞ users — NEW ENTERPRISE
     };
 
     private static readonly Dictionary<SubscriptionPlan, List<string>> Features = new()
@@ -283,6 +291,22 @@ public static class StripePriceMapping
                 "Soporte email 48h"
             }
         },
+        { SubscriptionPlan.Starter, new List<string>
+            {
+                "Publicaciones ilimitadas de vehículos",
+                "Hasta 12 fotos por vehículo",
+                "Alta prioridad en búsquedas",
+                "5 vehículos destacados/mes",
+                "$30 créditos publicitarios/mes",
+                "Badge Verificado+",
+                "ChatAgent Web 100 conv/mes",
+                "ChatAgent WhatsApp 100 conv/mes",
+                "Overage $0.10/conv adicional",
+                "Dashboard Analytics básico",
+                "10 usuarios",
+                "Soporte email prioritario"
+            }
+        },
         { SubscriptionPlan.Professional, new List<string>
             {
                 "Publicaciones ilimitadas de vehículos",
@@ -309,9 +333,9 @@ public static class StripePriceMapping
                 "Top prioridad en búsquedas",
                 "25 vehículos destacados/mes",
                 "$120 créditos publicitarios/mes",
-                "Badge Premium dorado",
-                "ChatAgent Web 2,000 conv/mes",
-                "ChatAgent WhatsApp 2,000 conv/mes",
+                "Badge Verificado Premium",
+                "ChatAgent Web 5,000 conv/mes",
+                "ChatAgent WhatsApp 5,000 conv/mes",
                 "Agendamiento + recordatorios WA",
                 "Live chat + CRM handoff",
                 "Valoración IA ilimitada + informe PDF",
@@ -319,6 +343,23 @@ public static class StripePriceMapping
                 "Perfil premium + showcase homepage",
                 "Usuarios ilimitados",
                 "Soporte dedicado 4h"
+            }
+        },
+        { SubscriptionPlan.Corporate, new List<string>
+            {
+                "Publicaciones ilimitadas de vehículos",
+                "Hasta 20 fotos + video tour",
+                "#1 GARANTIZADO en búsquedas",
+                "50 vehículos destacados/mes",
+                "$300 créditos publicitarios/mes",
+                "Badge Enterprise",
+                "ChatAgent SIN LÍMITE",
+                "Agendamiento + CRM completo + recordatorios WA",
+                "Acceso completo a API OKLA",
+                "Dashboard + API + reportes custom",
+                "Empleados ilimitados",
+                "Manager dedicado + SLA garantizado",
+                "Soporte 24/7"
             }
         }
     };

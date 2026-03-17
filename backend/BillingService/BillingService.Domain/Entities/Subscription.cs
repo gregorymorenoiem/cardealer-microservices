@@ -4,11 +4,13 @@ namespace BillingService.Domain.Entities;
 
 public enum SubscriptionPlan
 {
-    Free,
-    Basic,
-    Professional,
-    Enterprise,
-    Custom
+    Free = 0,           // LIBRE
+    Basic = 1,          // VISIBLE
+    Professional = 2,   // PRO
+    Enterprise = 3,     // ÉLITE ($349) — was $249, int preserved to avoid DB migration
+    Custom = 4,
+    Starter = 5,        // STARTER ($59) — NEW
+    Corporate = 6,      // ENTERPRISE ($599) — NEW
 }
 
 public enum SubscriptionStatus

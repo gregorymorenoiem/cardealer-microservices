@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   calculateOverage,
   ELITE_SOFT_LIMIT,
+  STARTER_SOFT_LIMIT,
   OVERAGE_COST_RD,
   ALERT_THRESHOLD_YELLOW,
   ALERT_THRESHOLD_RED,
@@ -21,12 +22,14 @@ import { DealerPlan, DEALER_PLAN_LIMITS } from '@/lib/plan-config';
 // =============================================================================
 
 describe('Dealer Plan Features', () => {
-  it('should define exactly 4 plans', () => {
-    expect(Object.values(DealerPlan)).toHaveLength(4);
+  it('should define exactly 6 plans', () => {
+    expect(Object.values(DealerPlan)).toHaveLength(6);
     expect(DealerPlan.LIBRE).toBe('libre');
     expect(DealerPlan.VISIBLE).toBe('visible');
+    expect(DealerPlan.STARTER).toBe('starter');
     expect(DealerPlan.PRO).toBe('pro');
     expect(DealerPlan.ELITE).toBe('elite');
+    expect(DealerPlan.ENTERPRISE).toBe('enterprise');
   });
 
   it('should have limits defined for every plan', () => {
@@ -154,6 +157,35 @@ describe('Dealer Plan Features', () => {
     });
   });
 
+  describe('STARTER plan', () => {
+    const features = DEALER_PLAN_LIMITS[DealerPlan.STARTER];
+
+    it('should have 12 images', () => {
+      expect(features.maxImages).toBe(12);
+    });
+
+    it('should have 5 featured listings', () => {
+      expect(features.featuredListings).toBe(5);
+    });
+
+    it('should have 100 ChatAgent conversations/month', () => {
+      expect(features.chatAgentWeb).toBe(100);
+      expect(features.chatAgentWhatsApp).toBe(100);
+    });
+
+    it('should have $30 OKLA Coins/month', () => {
+      expect(features.monthlyOklaCoinsCredits).toBe(30);
+    });
+
+    it('should have verified-plus badge', () => {
+      expect(features.badgeType).toBe('verified-plus');
+    });
+
+    it('should NOT have API access', () => {
+      expect(features.apiAccess).toBe(false);
+    });
+  });
+
   describe('ELITE plan', () => {
     const features = DEALER_PLAN_LIMITS[DealerPlan.ELITE];
 
@@ -169,9 +201,9 @@ describe('Dealer Plan Features', () => {
       expect(features.whatsappIntegration).toBe(true);
     });
 
-    it('should have 2000 ChatAgent conversations/month', () => {
-      expect(features.chatAgentWeb).toBe(2000);
-      expect(features.chatAgentWhatsApp).toBe(2000);
+    it('should have 5000 ChatAgent conversations/month', () => {
+      expect(features.chatAgentWeb).toBe(5000);
+      expect(features.chatAgentWhatsApp).toBe(5000);
     });
 
     it('should have the most OKLA Coins credits', () => {
@@ -202,30 +234,36 @@ describe('Dealer Plan Features', () => {
     it('maxImages should increase with plan tier', () => {
       const libre = DEALER_PLAN_LIMITS[DealerPlan.LIBRE].maxImages;
       const visible = DEALER_PLAN_LIMITS[DealerPlan.VISIBLE].maxImages;
+      const starter = DEALER_PLAN_LIMITS[DealerPlan.STARTER].maxImages;
       const pro = DEALER_PLAN_LIMITS[DealerPlan.PRO].maxImages;
       const elite = DEALER_PLAN_LIMITS[DealerPlan.ELITE].maxImages;
       expect(libre).toBeLessThan(visible);
-      expect(visible).toBeLessThan(pro);
+      expect(visible).toBeLessThan(starter);
+      expect(starter).toBeLessThan(pro);
       expect(pro).toBeLessThanOrEqual(elite);
     });
 
     it('featuredListings should increase with plan tier', () => {
       const libre = DEALER_PLAN_LIMITS[DealerPlan.LIBRE].featuredListings;
       const visible = DEALER_PLAN_LIMITS[DealerPlan.VISIBLE].featuredListings;
+      const starter = DEALER_PLAN_LIMITS[DealerPlan.STARTER].featuredListings;
       const pro = DEALER_PLAN_LIMITS[DealerPlan.PRO].featuredListings;
       const elite = DEALER_PLAN_LIMITS[DealerPlan.ELITE].featuredListings;
       expect(libre).toBeLessThan(visible);
-      expect(visible).toBeLessThan(pro);
+      expect(visible).toBeLessThan(starter);
+      expect(starter).toBeLessThan(pro);
       expect(pro).toBeLessThan(elite);
     });
 
     it('monthlyOklaCoinsCredits should increase with plan tier', () => {
       const libre = DEALER_PLAN_LIMITS[DealerPlan.LIBRE].monthlyOklaCoinsCredits;
       const visible = DEALER_PLAN_LIMITS[DealerPlan.VISIBLE].monthlyOklaCoinsCredits;
+      const starter = DEALER_PLAN_LIMITS[DealerPlan.STARTER].monthlyOklaCoinsCredits;
       const pro = DEALER_PLAN_LIMITS[DealerPlan.PRO].monthlyOklaCoinsCredits;
       const elite = DEALER_PLAN_LIMITS[DealerPlan.ELITE].monthlyOklaCoinsCredits;
       expect(libre).toBeLessThan(visible);
-      expect(visible).toBeLessThan(pro);
+      expect(visible).toBeLessThan(starter);
+      expect(starter).toBeLessThan(pro);
       expect(pro).toBeLessThan(elite);
     });
   });
@@ -237,8 +275,12 @@ describe('Dealer Plan Features', () => {
 
 describe('ELITE Overage Calculation', () => {
   describe('Constants', () => {
-    it('ELITE soft limit should be 2000 conversations/month', () => {
-      expect(ELITE_SOFT_LIMIT).toBe(2000);
+    it('ELITE soft limit should be 5000 conversations/month', () => {
+      expect(ELITE_SOFT_LIMIT).toBe(5000);
+    });
+
+    it('STARTER soft limit should be 100 conversations/month', () => {
+      expect(STARTER_SOFT_LIMIT).toBe(100);
     });
 
     it('Overage cost should be RD$5 per conversation', () => {
@@ -312,7 +354,7 @@ describe('ELITE Overage Calculation', () => {
     });
 
     it('should be "yellow" between 80% and 95%', () => {
-      const result = calculateOverage(1800); // 90%
+      const result = calculateOverage(ELITE_SOFT_LIMIT * 0.9); // 90%
       expect(result.alertLevel).toBe('yellow');
     });
 
@@ -322,7 +364,7 @@ describe('ELITE Overage Calculation', () => {
     });
 
     it('should be "red" between 95% and 100%', () => {
-      const result = calculateOverage(1950); // 97.5%
+      const result = calculateOverage(ELITE_SOFT_LIMIT * 0.975); // 97.5%
       expect(result.alertLevel).toBe('red');
     });
 
@@ -334,7 +376,7 @@ describe('ELITE Overage Calculation', () => {
 
   describe('Usage percentage', () => {
     it('should calculate correct usage percent', () => {
-      const result = calculateOverage(1000);
+      const result = calculateOverage(ELITE_SOFT_LIMIT * 0.5); // 50%
       expect(result.usagePercent).toBe(0.5);
     });
 
@@ -344,8 +386,10 @@ describe('ELITE Overage Calculation', () => {
     });
 
     it('should be > 1.0 when over limit', () => {
-      const result = calculateOverage(ELITE_SOFT_LIMIT + 500);
-      expect(result.usagePercent).toBe(1.25);
+      const excess = 500;
+      const result = calculateOverage(ELITE_SOFT_LIMIT + excess);
+      const expected = parseFloat(((ELITE_SOFT_LIMIT + excess) / ELITE_SOFT_LIMIT).toFixed(10));
+      expect(result.usagePercent).toBeCloseTo(expected, 5);
     });
   });
 });

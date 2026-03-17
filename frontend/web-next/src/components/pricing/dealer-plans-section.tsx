@@ -1,8 +1,8 @@
 /**
- * Dealer Plans Section (Client Component) — OKLA v2
+ * Dealer Plans Section (Client Component) — OKLA v3
  *
  * Renders dealer pricing plans with full feature comparison.
- * Shows 4-tier visibility-based plans (Libre/Visible/Pro/Elite).
+ * Shows 6-tier visibility-based plans (Libre/Visible/Starter/Pro/Elite/Enterprise).
  */
 
 'use client';
@@ -10,7 +10,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, X, Crown, Sparkles, Shield, Zap } from 'lucide-react';
+import { CheckCircle, X, Crown, Sparkles, Shield, Zap, Star, Building2 } from 'lucide-react';
 import { usePlatformPricing } from '@/hooks/use-platform-pricing';
 
 export function DealerPlansSection() {
@@ -23,16 +23,16 @@ export function DealerPlansSection() {
       period: '/mes',
       icon: Shield,
       description: 'Para empezar sin costo',
+      color: 'gray',
       features: [
         { text: 'Publicaciones ilimitadas', included: true },
-        { text: 'Hasta 10 fotos por vehículo', included: true },
+        { text: 'Hasta 5 fotos por vehículo', included: true },
         { text: 'Posición estándar en búsquedas', included: true },
-        { text: '1 valoración IA gratis (PricingAgent)', included: true },
-        { text: 'Vehículos destacados', included: false },
-        { text: 'OKLA Coins mensuales', included: false },
+        { text: '1 valoración PricingAgent gratis', included: true },
+        { text: 'Destacados/mes', included: false },
+        { text: 'OKLA Coins', included: false },
         { text: 'Badge Verificado', included: false },
         { text: 'ChatAgent IA', included: false },
-        { text: 'Dashboard Analytics', included: false },
       ],
       cta: 'Comenzar Gratis',
       highlighted: false,
@@ -40,17 +40,17 @@ export function DealerPlansSection() {
     },
     {
       name: 'VISIBLE',
-      price: formatPrice(pricing.dealerVisible || 29),
+      price: formatPrice(pricing.dealerVisible || 1699),
       period: '/mes',
       icon: Zap,
       description: 'Más visibilidad y herramientas',
+      color: 'blue',
       features: [
-        { text: 'Publicaciones ilimitadas', included: true },
-        { text: 'Hasta 20 fotos por vehículo', included: true },
+        { text: 'Hasta 10 fotos por vehículo', included: true },
         { text: 'Prioridad media en búsquedas', included: true },
-        { text: '3 destacados incluidos/mes', included: true },
-        { text: '$15 en OKLA Coins/mes', included: true },
-        { text: 'Badge Dealer Verificado', included: true },
+        { text: '3 destacados/mes', included: true },
+        { text: '$15 OKLA Coins/mes', included: true },
+        { text: '🔵 Badge Verificado', included: true },
         { text: '5 valoraciones PricingAgent/mes', included: true },
         { text: 'Dashboard básico', included: true },
         { text: 'ChatAgent IA', included: false },
@@ -60,21 +60,44 @@ export function DealerPlansSection() {
       badge: null,
     },
     {
+      name: 'STARTER',
+      price: formatPrice(pricing.dealerStarter || 3499),
+      period: '/mes',
+      icon: Star,
+      description: 'Primer paso con ChatAgent',
+      color: 'teal',
+      features: [
+        { text: 'Hasta 12 fotos por vehículo', included: true },
+        { text: 'Alta prioridad en búsquedas', included: true },
+        { text: '5 destacados/mes', included: true },
+        { text: '$30 OKLA Coins/mes', included: true },
+        { text: '🔵 Badge Verificado+', included: true },
+        { text: 'ChatAgent Web 100 conv/mes', included: true },
+        { text: 'ChatAgent WhatsApp 100 conv/mes', included: true },
+        { text: 'Overage $0.10/conv adicional', included: true },
+      ],
+      cta: 'Elegir Plan',
+      highlighted: false,
+      badge: null,
+    },
+    {
       name: 'PRO',
-      price: formatPrice(pricing.dealerPro || 89),
+      price: formatPrice(pricing.dealerPro || 5799),
       period: '/mes',
       icon: Sparkles,
       description: 'Herramientas avanzadas de venta',
+      color: 'purple',
       features: [
-        { text: 'Publicaciones ilimitadas', included: true },
-        { text: 'Hasta 30 fotos por vehículo', included: true },
+        { text: 'Hasta 15 fotos por vehículo', included: true },
         { text: 'Alta prioridad en búsquedas', included: true },
-        { text: '10 destacados incluidos/mes', included: true },
-        { text: '$45 en OKLA Coins/mes', included: true },
-        { text: 'Badge Verificado Dorado', included: true },
-        { text: 'ChatAgent IA: 500 conv web + WA/mes', included: true },
-        { text: 'Agendamiento automático de citas', included: true },
-        { text: 'PricingAgent ilimitado + Dashboard avanzado', included: true },
+        { text: '10 destacados/mes', included: true },
+        { text: '$45 OKLA Coins/mes', included: true },
+        { text: '🥇 Badge Verificado Dorado', included: true },
+        { text: 'ChatAgent Web 300 conv/mes', included: true },
+        { text: 'ChatAgent WhatsApp 300 conv/mes', included: true },
+        { text: 'Agendamiento automático', included: true },
+        { text: 'PricingAgent ilimitado', included: true },
+        { text: 'Dashboard avanzado', included: true },
       ],
       cta: 'Elegir Plan',
       highlighted: true,
@@ -82,21 +105,46 @@ export function DealerPlansSection() {
     },
     {
       name: 'ÉLITE',
-      price: formatPrice(pricing.dealerElite || 199),
+      price: formatPrice(pricing.dealerElite || 20299),
       period: '/mes',
       icon: Crown,
       description: 'Para grandes concesionarios',
+      color: 'amber',
       features: [
-        { text: 'Publicaciones ilimitadas', included: true },
-        { text: 'Hasta 40 fotos + video tour', included: true },
+        { text: 'Hasta 20 fotos + video tour', included: true },
         { text: 'Top prioridad en búsquedas', included: true },
-        { text: '25 destacados incluidos/mes', included: true },
-        { text: '$120 en OKLA Coins/mes', included: true },
-        { text: 'Badge Verificado Premium', included: true },
-        { text: 'ChatAgent IA ilimitado (web + WA)', included: true },
-        { text: 'Citas auto + recordatorios WhatsApp', included: true },
-        { text: 'PricingAgent ilimitado + informe PDF', included: true },
-        { text: 'Dashboard completo + exportar + API', included: true },
+        { text: '25 destacados/mes', included: true },
+        { text: '$120 OKLA Coins/mes', included: true },
+        { text: '💎 Badge Verificado Premium', included: true },
+        { text: 'ChatAgent Web 5,000 conv/mes', included: true },
+        { text: 'ChatAgent WhatsApp 5,000 conv/mes', included: true },
+        { text: 'Citas + recordatorios WhatsApp', included: true },
+        { text: 'PricingAgent ilimitado + PDF', included: true },
+        { text: 'Dashboard completo + exportar', included: true },
+        { text: 'Gerente de cuenta dedicado', included: true },
+      ],
+      cta: 'Contactar Ventas',
+      highlighted: false,
+      badge: 'RECOMENDADO',
+    },
+    {
+      name: 'ENTERPRISE',
+      price: formatPrice(pricing.dealerEnterprise || 34999),
+      period: '/mes',
+      icon: Building2,
+      description: 'Grupos automotrices y franquicias',
+      color: 'slate',
+      features: [
+        { text: 'Hasta 20 fotos + video tour', included: true },
+        { text: '#1 GARANTIZADO en búsquedas', included: true },
+        { text: '50 destacados/mes', included: true },
+        { text: '$300 OKLA Coins/mes', included: true },
+        { text: '👑 Badge Enterprise', included: true },
+        { text: 'ChatAgent SIN LÍMITE', included: true },
+        { text: 'Agendamiento + CRM + recordatorios WA', included: true },
+        { text: 'Acceso completo a API OKLA', included: true },
+        { text: 'Dashboard + API + reportes custom', included: true },
+        { text: 'Manager dedicado + SLA garantizado', included: true },
       ],
       cta: 'Contactar Ventas',
       highlighted: false,
@@ -106,14 +154,14 @@ export function DealerPlansSection() {
 
   if (isLoading) {
     return (
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map(i => (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3, 4, 5, 6].map(i => (
           <Card key={i} className="border-border animate-pulse">
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <div className="mb-4 h-6 w-24 rounded bg-gray-200" />
               <div className="mb-6 h-10 w-32 rounded bg-gray-200" />
               <div className="space-y-3">
-                {[1, 2, 3, 4].map(j => (
+                {[1, 2, 3, 4, 5].map(j => (
                   <div key={j} className="h-4 w-full rounded bg-gray-200" />
                 ))}
               </div>
@@ -125,23 +173,25 @@ export function DealerPlansSection() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {plans.map((plan, index) => {
         const Icon = plan.icon;
         return (
           <Card
             key={index}
             className={`relative flex flex-col ${
-              plan.highlighted
-                ? 'scale-[1.02] border-2 border-primary shadow-xl'
-                : 'border-border'
+              plan.highlighted ? 'border-primary scale-[1.02] border-2 shadow-xl' : 'border-border'
             }`}
           >
             {plan.badge && (
               <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold text-white ${
-                    plan.badge === 'MÁS POPULAR' ? 'bg-primary' : 'bg-purple-600'
+                    plan.badge === 'MÁS POPULAR'
+                      ? 'bg-primary'
+                      : plan.badge === 'RECOMENDADO'
+                        ? 'bg-amber-500'
+                        : 'bg-slate-700'
                   }`}
                 >
                   {plan.badge}
@@ -171,7 +221,7 @@ export function DealerPlansSection() {
                     }`}
                   >
                     {feature.included ? (
-                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <CheckCircle className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     ) : (
                       <X className="text-muted-foreground/30 mt-0.5 h-4 w-4 shrink-0" />
                     )}
@@ -183,7 +233,7 @@ export function DealerPlansSection() {
                 asChild
                 className={`w-full ${
                   plan.highlighted
-                    ? 'bg-primary text-white hover:bg-primary/90'
+                    ? 'bg-primary hover:bg-primary/90 text-white'
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 }`}
               >

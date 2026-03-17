@@ -177,7 +177,7 @@ export function View360Step({
       const plan = dealerPlan || DealerPlan.LIBRE;
       return DEALER_PLAN_LIMITS[plan]?.view360Available ?? false;
     } else {
-      const plan = sellerPlan || SellerPlan.GRATIS;
+      const plan = sellerPlan || SellerPlan.LIBRE;
       return SELLER_PLAN_LIMITS[plan]?.view360Available ?? false;
     }
   })();

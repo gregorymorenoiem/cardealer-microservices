@@ -540,6 +540,25 @@ export const DEALER_PLANS: PlanInfo[] = [
     ],
   },
   {
+    plan: 'starter',
+    name: 'STARTER',
+    price: 3499,
+    maxListings: -1, // unlimited
+    features: [
+      'Vehículos ilimitados',
+      'Hasta 12 fotos por vehículo',
+      'Alta prioridad en búsquedas',
+      '5 vehículos destacados/mes',
+      '$30 en OKLA Coins/mes',
+      'Badge Dealer Verificado+ OKLA',
+      'ChatAgent Web 100 conv/mes',
+      'ChatAgent WhatsApp 100 conv/mes',
+      '10 valoraciones IA/mes',
+      'Dashboard Analytics básico+',
+      'Soporte email 48h',
+    ],
+  },
+  {
     plan: 'pro',
     name: 'PRO',
     price: 5799,
@@ -563,7 +582,7 @@ export const DEALER_PLANS: PlanInfo[] = [
   {
     plan: 'elite',
     name: 'ÉLITE',
-    price: 14599,
+    price: 20299,
     maxListings: -1, // unlimited
     features: [
       'Vehículos ilimitados',
@@ -572,12 +591,33 @@ export const DEALER_PLANS: PlanInfo[] = [
       '25 vehículos destacados/mes',
       '$120 en OKLA Coins/mes',
       'Badge Dealer Verificado Premium',
-      'ChatAgent Web 2,000 conv/mes',
-      'ChatAgent WhatsApp 2,000 conv/mes',
+      'ChatAgent Web 5,000 conv/mes',
+      'ChatAgent WhatsApp 5,000 conv/mes',
       'Agendamiento + recordatorios WA',
       'Valoración IA ilimitada + informe PDF',
       'Dashboard Analytics completo + exportar',
       'Gerente de cuenta dedicado',
+    ],
+  },
+  {
+    plan: 'enterprise',
+    name: 'ENTERPRISE',
+    price: 34999,
+    maxListings: -1, // unlimited
+    features: [
+      'Vehículos ilimitados',
+      'Hasta 20 fotos + video tour',
+      'Posición #1 garantizada en búsquedas',
+      '50 vehículos destacados/mes',
+      '$300 en OKLA Coins/mes',
+      'Badge Dealer Enterprise 👑',
+      'ChatAgent Web SIN LÍMITE',
+      'ChatAgent WhatsApp SIN LÍMITE',
+      'Agendamiento + CRM + recordatorios WA',
+      'Valoración IA ilimitada + PDF + API',
+      'Dashboard completo + API + reportes custom',
+      'Acceso completo a API OKLA',
+      'Manager dedicado + SLA garantizado',
     ],
   },
 ];
@@ -588,8 +628,10 @@ export const DEALER_PLANS: PlanInfo[] = [
 export function updateDealerPlansWithPricing(pricing: {
   dealerLibre: number;
   dealerVisible: number;
+  dealerStarter?: number;
   dealerPro: number;
   dealerElite: number;
+  dealerEnterprise?: number;
   earlyBirdDiscount: number;
   earlyBirdDeadline: string;
   earlyBirdFreeMonths: number;
@@ -598,10 +640,14 @@ export function updateDealerPlansWithPricing(pricing: {
   DEALER_PLANS[0].price = pricing.dealerLibre;
   // Update VISIBLE
   DEALER_PLANS[1].price = pricing.dealerVisible;
+  // Update STARTER
+  DEALER_PLANS[2].price = pricing.dealerStarter ?? 3499;
   // Update PRO
-  DEALER_PLANS[2].price = pricing.dealerPro;
+  DEALER_PLANS[3].price = pricing.dealerPro;
   // Update ÉLITE
-  DEALER_PLANS[3].price = pricing.dealerElite;
+  DEALER_PLANS[4].price = pricing.dealerElite;
+  // Update ENTERPRISE
+  DEALER_PLANS[5].price = pricing.dealerEnterprise ?? 34999;
 
   // Update early bird config
   _earlyBirdDiscount = pricing.earlyBirdDiscount;

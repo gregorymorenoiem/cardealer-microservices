@@ -40,31 +40,54 @@ function getPlanFeatures(_pricing: { earlyBirdFreeMonths: number }) {
     ],
     visible: [
       'Vehículos ilimitados',
+      '10 fotos por vehículo',
       'Badge de verificación',
       'Visibilidad mejorada en búsquedas',
-      'Estadísticas avanzadas',
-      'Perfil destacado',
       '3 publicaciones destacadas/mes',
+      '$15 OKLA Coins/mes',
       'Soporte prioritario',
     ],
-    pro: [
+    starter: [
       'Todo de VISIBLE +',
-      'ChatAgent IA integrado',
-      'CRM de leads completo',
+      '12 fotos por vehículo',
+      '5 publicaciones destacadas/mes',
+      '$30 OKLA Coins/mes',
+      'ChatAgent IA: 100 conv web + WA/mes',
+      'Overage $0.10/conv adicional',
+      'Badge Verificado+',
+    ],
+    pro: [
+      'Todo de STARTER +',
+      '15 fotos por vehículo',
       '10 publicaciones destacadas/mes',
+      '$45 OKLA Coins/mes',
+      'ChatAgent IA: 300 conv web + WA/mes',
+      'CRM de leads completo',
       'Importación CSV / bulk',
-      'Boosts incluidos',
-      'Integración WhatsApp',
+      'Integración WhatsApp avanzada',
+      'Badge Verificado Dorado',
     ],
     elite: [
       'Todo de PRO +',
-      'Manager dedicado',
-      'Acceso a API',
+      '20 fotos + video tour',
       '25 publicaciones destacadas/mes',
+      '$120 OKLA Coins/mes',
+      'ChatAgent IA: 5,000 conv web + WA/mes',
+      'Manager dedicado',
       'Múltiples ubicaciones',
+      'Dashboard completo + exportar',
+      'Badge Verificado Premium',
+    ],
+    enterprise: [
+      'Todo de ÉLITE +',
+      '50 publicaciones destacadas/mes',
+      '$300 OKLA Coins/mes',
+      'ChatAgent IA: SIN LÍMITE',
+      'Acceso completo a API OKLA',
       'Empleados ilimitados',
-      'Marca blanca',
-      'Soporte 24/7',
+      'Marca blanca disponible',
+      'SLA garantizado + Soporte 24/7',
+      'Badge Enterprise',
     ],
   } as Record<string, string[]>;
 }
@@ -107,8 +130,8 @@ function SubscriptionSkeleton() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map(i => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {[1, 2, 3, 4, 5, 6].map(i => (
           <Card key={i}>
             <CardHeader>
               <Skeleton className="h-6 w-24" />
@@ -298,7 +321,7 @@ export default function DealerSubscriptionPage() {
                   <Button variant="outline" onClick={handleCancel}>
                     Cancelar Plan
                   </Button>
-                  {dealer.plan !== 'elite' && (
+                  {dealer.plan !== 'elite' && dealer.plan !== 'enterprise' && (
                     <Button
                       className="bg-primary hover:bg-primary/90"
                       onClick={() => handleUpgrade('elite')}
@@ -388,7 +411,7 @@ export default function DealerSubscriptionPage() {
       {/* All Plans */}
       <div>
         <h2 className="mb-4 text-xl font-bold">Todos los Planes</h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {dealerPlans.map(plan => {
             const isCurrent = plan.plan === dealer.plan;
             const features = PLAN_FEATURES[plan.plan] || [];
@@ -449,7 +472,7 @@ export default function DealerSubscriptionPage() {
                     <Button variant="outline" className="w-full" disabled>
                       Plan Actual
                     </Button>
-                  ) : plan.plan === 'elite' ? (
+                  ) : plan.plan === 'elite' || plan.plan === 'enterprise' ? (
                     <Button
                       className="bg-primary hover:bg-primary/90 w-full"
                       onClick={() => handleUpgrade(plan.plan)}
@@ -499,8 +522,10 @@ export default function DealerSubscriptionPage() {
                   <th className="p-3 text-left">Característica</th>
                   <th className="p-3 text-center">LIBRE</th>
                   <th className="p-3 text-center">VISIBLE</th>
+                  <th className="p-3 text-center">STARTER</th>
                   <th className="bg-primary/10 p-3 text-center">PRO</th>
                   <th className="p-3 text-center">ÉLITE</th>
+                  <th className="p-3 text-center">ENTERPRISE</th>
                 </tr>
               </thead>
               <tbody>
@@ -509,112 +534,133 @@ export default function DealerSubscriptionPage() {
                     feature: 'Vehículos activos',
                     libre: 'Ilimitado',
                     visible: 'Ilimitado',
+                    starter: 'Ilimitado',
                     pro: 'Ilimitado',
                     elite: 'Ilimitado',
+                    enterprise: 'Ilimitado',
                   },
                   {
                     feature: 'Fotos por vehículo',
                     libre: String(pricing.freeMaxPhotos),
                     visible: String(pricing.visibleMaxPhotos),
+                    starter: '12',
                     pro: String(pricing.proMaxPhotos),
                     elite: String(pricing.eliteMaxPhotos),
+                    enterprise: '20+video',
                   },
-                  { feature: 'Destacados/mes', libre: '0', visible: '3', pro: '10', elite: '25' },
+                  {
+                    feature: 'Destacados/mes',
+                    libre: '0',
+                    visible: '3',
+                    starter: '5',
+                    pro: '10',
+                    elite: '25',
+                    enterprise: '50',
+                  },
                   {
                     feature: 'Estadísticas',
                     libre: 'Básicas',
                     visible: 'Avanzadas',
+                    starter: 'Avanzadas',
                     pro: 'Avanzadas',
                     elite: 'Avanzadas + API',
+                    enterprise: 'Avanzadas + API',
                   },
                   {
                     feature: 'Badge verificado',
                     libre: false,
                     visible: true,
+                    starter: true,
                     pro: true,
                     elite: true,
+                    enterprise: true,
                   },
-                  { feature: 'ChatAgent IA', libre: false, visible: false, pro: true, elite: true },
-                  { feature: 'CRM', libre: false, visible: false, pro: true, elite: true },
                   {
-                    feature: 'Boosts incluidos',
+                    feature: 'ChatAgent IA',
                     libre: false,
                     visible: false,
+                    starter: '100 conv',
+                    pro: '300 conv',
+                    elite: '5,000 conv',
+                    enterprise: 'Sin límite',
+                  },
+                  {
+                    feature: 'CRM',
+                    libre: false,
+                    visible: false,
+                    starter: false,
                     pro: true,
                     elite: true,
+                    enterprise: true,
                   },
-                  { feature: 'WhatsApp', libre: false, visible: false, pro: true, elite: true },
                   {
-                    feature: 'Múltiples ubicaciones',
+                    feature: 'OKLA Coins/mes',
+                    libre: false,
+                    visible: '$15',
+                    starter: '$30',
+                    pro: '$45',
+                    elite: '$120',
+                    enterprise: '$300',
+                  },
+                  {
+                    feature: 'WhatsApp',
                     libre: false,
                     visible: false,
-                    pro: false,
+                    starter: true,
+                    pro: true,
                     elite: true,
+                    enterprise: true,
                   },
                   {
                     feature: 'Acceso a API',
                     libre: false,
                     visible: false,
+                    starter: false,
                     pro: false,
-                    elite: true,
+                    elite: false,
+                    enterprise: true,
                   },
-                  { feature: 'Empleados', libre: '1', visible: '1', pro: '5', elite: 'Ilimitado' },
+                  {
+                    feature: 'Empleados',
+                    libre: '1',
+                    visible: '1',
+                    starter: '3',
+                    pro: '5',
+                    elite: 'Ilimitado',
+                    enterprise: 'Ilimitado',
+                  },
                   {
                     feature: 'Soporte',
                     libre: 'Email',
                     visible: 'Prioritario',
+                    starter: 'Prioritario',
                     pro: 'Prioritario',
                     elite: '24/7 + Manager',
+                    enterprise: '24/7 + SLA',
                   },
-                ].map(row => (
-                  <tr key={row.feature} className="border-border border-b">
-                    <td className="p-3 font-medium">{row.feature}</td>
-                    <td className="p-3 text-center">
-                      {typeof row.libre === 'boolean' ? (
-                        row.libre ? (
-                          <Check className="text-primary mx-auto h-4 w-4" />
-                        ) : (
-                          '—'
-                        )
+                ].map(row => {
+                  const renderCell = (val: string | boolean | undefined) =>
+                    typeof val === 'boolean' ? (
+                      val ? (
+                        <Check className="text-primary mx-auto h-4 w-4" />
                       ) : (
-                        row.libre
-                      )}
-                    </td>
-                    <td className="p-3 text-center">
-                      {typeof row.visible === 'boolean' ? (
-                        row.visible ? (
-                          <Check className="text-primary mx-auto h-4 w-4" />
-                        ) : (
-                          '—'
-                        )
-                      ) : (
-                        row.visible
-                      )}
-                    </td>
-                    <td className="bg-primary/10 p-3 text-center">
-                      {typeof row.pro === 'boolean' ? (
-                        row.pro ? (
-                          <Check className="text-primary mx-auto h-4 w-4" />
-                        ) : (
-                          '—'
-                        )
-                      ) : (
-                        row.pro
-                      )}
-                    </td>
-                    <td className="p-3 text-center">
-                      {typeof row.elite === 'boolean' ? (
-                        row.elite ? (
-                          <Check className="text-primary mx-auto h-4 w-4" />
-                        ) : (
-                          '—'
-                        )
-                      ) : (
-                        row.elite
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                        '—'
+                      )
+                    ) : (
+                      (val ?? '—')
+                    );
+                  return (
+                    <tr key={row.feature} className="border-border border-b">
+                      <td className="p-3 font-medium">{row.feature}</td>
+                      <td className="p-3 text-center">{renderCell(row.libre)}</td>
+                      <td className="p-3 text-center">{renderCell(row.visible)}</td>
+                      <td className="p-3 text-center">{renderCell(row.starter)}</td>
+                      <td className="bg-primary/10 p-3 text-center">{renderCell(row.pro)}</td>
+                      <td className="p-3 text-center">{renderCell(row.elite)}</td>
+                      <td className="p-3 text-center">{renderCell(row.enterprise)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

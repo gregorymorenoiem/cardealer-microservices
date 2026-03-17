@@ -16,11 +16,21 @@ export const PRO_SOFT_LIMIT = 300;
 export const PRO_OVERAGE_COST_USD = 0.08;
 
 // =============================================================================
+// STARTER Plan Overage Constants
+// =============================================================================
+
+/** STARTER plan monthly conversation limit before overage kicks in */
+export const STARTER_SOFT_LIMIT = 100;
+
+/** STARTER plan overage cost per conversation above limit (USD) */
+export const STARTER_OVERAGE_COST_USD = 0.1;
+
+// =============================================================================
 // ELITE Plan Overage Constants
 // =============================================================================
 
 /** ELITE plan soft limit: conversations/month before overage kicks in */
-export const ELITE_SOFT_LIMIT = 2000;
+export const ELITE_SOFT_LIMIT = 5000;
 
 /** ELITE plan overage cost per conversation above limit (USD) */
 export const ELITE_OVERAGE_COST_USD = 0.06;

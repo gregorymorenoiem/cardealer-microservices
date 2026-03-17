@@ -68,7 +68,7 @@ function getPlanPhotoLimits(
     const maxImages = DEALER_PLAN_LIMITS[plan]?.maxImages ?? FALLBACK_LIMITS.dealer.max;
     return { min: FALLBACK_LIMITS.dealer.min, max: maxImages };
   } else {
-    const plan = sellerPlan || SellerPlan.GRATIS;
+    const plan = sellerPlan || SellerPlan.LIBRE;
     const maxImages = SELLER_PLAN_LIMITS[plan]?.maxImages ?? FALLBACK_LIMITS.individual.max;
     return { min: FALLBACK_LIMITS.individual.min, max: maxImages };
   }

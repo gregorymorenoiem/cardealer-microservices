@@ -134,8 +134,8 @@ const DEALER_PLAN_CARDS: PlanCardData[] = [
 const SELLER_PLAN_CARDS: PlanCardData[] = [
   {
     id: 's1',
-    key: SellerPlan.GRATIS,
-    name: 'GRATIS',
+    key: SellerPlan.LIBRE,
+    name: 'LIBRE',
     description: 'Para vendedores ocasionales',
     monthlyPrice: 0,
     targetAudience: 'seller',
@@ -147,10 +147,10 @@ const SELLER_PLAN_CARDS: PlanCardData[] = [
   },
   {
     id: 's2',
-    key: SellerPlan.PREMIUM,
-    name: 'PREMIUM',
+    key: SellerPlan.ESTANDAR,
+    name: 'ESTÁNDAR',
     description: 'Para vendedores frecuentes',
-    monthlyPrice: 499,
+    monthlyPrice: 579,
     targetAudience: 'seller',
     color: 'blue',
     bgColor: 'bg-blue-50',
@@ -161,10 +161,10 @@ const SELLER_PLAN_CARDS: PlanCardData[] = [
   },
   {
     id: 's3',
-    key: SellerPlan.PRO,
-    name: 'PRO',
+    key: SellerPlan.VERIFICADO,
+    name: 'VERIFICADO',
     description: 'Para vendedores profesionales',
-    monthlyPrice: 999,
+    monthlyPrice: 1999,
     targetAudience: 'seller',
     color: 'purple',
     bgColor: 'bg-purple-50',

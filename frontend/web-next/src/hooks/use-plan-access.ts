@@ -81,9 +81,9 @@ const DEALER_PLAN_LABELS: Record<string, string> = {
 };
 
 const SELLER_PLAN_LABELS: Record<string, string> = {
-  gratis: 'Gratis',
-  premium: 'Premium',
-  pro: 'PRO',
+  libre_seller: 'Libre',
+  estandar: 'Estándar',
+  verificado: 'Verificado',
 };
 
 // =============================================================================
@@ -139,8 +139,8 @@ function dealerMinPlanFor(feature: PlanFeatureKey): string {
 // =============================================================================
 
 function sellerCanAccess(plan: string, feature: PlanFeatureKey): boolean {
-  const sp = (plan as SellerPlan) || SellerPlan.GRATIS;
-  const limits = SELLER_PLAN_LIMITS[sp] ?? SELLER_PLAN_LIMITS[SellerPlan.GRATIS];
+  const sp = (plan as SellerPlan) || SellerPlan.LIBRE;
+  const limits = SELLER_PLAN_LIMITS[sp] ?? SELLER_PLAN_LIMITS[SellerPlan.LIBRE];
 
   const map: Record<string, boolean> = {
     analytics: limits.analyticsAccess,
@@ -159,14 +159,14 @@ function sellerCanAccess(plan: string, feature: PlanFeatureKey): boolean {
     emailAutomation: false,
     customBranding: false,
     apiAccess: false,
-    prioritySupport: sp === SellerPlan.PRO,
+    prioritySupport: sp === SellerPlan.VERIFICADO,
   };
 
   return map[feature] ?? false;
 }
 
 function sellerMinPlanFor(feature: PlanFeatureKey): string {
-  const planOrder: SellerPlan[] = [SellerPlan.GRATIS, SellerPlan.PREMIUM, SellerPlan.PRO];
+  const planOrder: SellerPlan[] = [SellerPlan.LIBRE, SellerPlan.ESTANDAR, SellerPlan.VERIFICADO];
 
   for (const plan of planOrder) {
     if (sellerCanAccess(plan, feature)) {
@@ -214,16 +214,16 @@ export function usePlanAccess(): PlanAccessResult {
     if (isSeller) {
       // For sellers, we derive plan from user metadata
       // Default to 'gratis' if not set
-      const plan = (user as unknown as Record<string, unknown>)?.sellerPlan ?? 'gratis';
+      const plan = (user as unknown as Record<string, unknown>)?.sellerPlan ?? 'libre_seller';
       const planKey = plan as SellerPlan;
-      const limits = SELLER_PLAN_LIMITS[planKey] ?? SELLER_PLAN_LIMITS[SellerPlan.GRATIS];
+      const limits = SELLER_PLAN_LIMITS[planKey] ?? SELLER_PLAN_LIMITS[SellerPlan.LIBRE];
 
       return {
         accountType,
         isSeller: true,
         isDealer: false,
         currentPlan: plan as string,
-        planLabel: SELLER_PLAN_LABELS[plan as string] ?? 'Gratis',
+        planLabel: SELLER_PLAN_LABELS[plan as string] ?? 'Libre',
         upgradeUrl: '/cuenta/upgrade',
         canAccess: (f: PlanFeatureKey) => sellerCanAccess(plan as string, f),
         minimumPlanFor: sellerMinPlanFor,

@@ -25,11 +25,13 @@ export interface PlatformPricing {
   premiumListing: number;
   sellerPremiumPrice: number;
   individualListingPrice: number;
-  // Planes Dealer (4 niveles)
+  // Planes Dealer (6 niveles)
   dealerLibre: number;
   dealerVisible: number;
+  dealerStarter: number;
   dealerPro: number;
   dealerElite: number;
+  dealerEnterprise: number;
   // Planes Seller Individual (3 niveles)
   sellerGratis: number;
   sellerPremium: number;
@@ -47,8 +49,10 @@ export interface PlatformPricing {
   // Límites por plan (fotos)
   freeMaxPhotos: number;
   visibleMaxPhotos: number;
+  starterMaxPhotos: number;
   proMaxPhotos: number;
   eliteMaxPhotos: number;
+  enterpriseMaxPhotos: number;
   // Comisiones
   platformCommission: number;
   itbisPercentage: number;
@@ -69,15 +73,17 @@ const DEFAULT_PRICING: PlatformPricing = {
   premiumListing: 2999,
   sellerPremiumPrice: 1699,
   individualListingPrice: 1699,
-  // Planes Dealer (DOP mensuales) - LIBRE/VISIBLE/PRO/ÉLITE
+  // Planes Dealer (DOP mensuales) - LIBRE/VISIBLE/STARTER/PRO/ÉLITE/ENTERPRISE
   dealerLibre: 0,
   dealerVisible: 1699,
-  dealerPro: 5199,
-  dealerElite: 11599,
-  // Planes Seller Individual (DOP mensuales) - GRATIS/PREMIUM/PRO
+  dealerStarter: 3499,
+  dealerPro: 5799,
+  dealerElite: 20299,
+  dealerEnterprise: 34999,
+  // Planes Seller Individual (DOP) - LIBRE(gratis)/ESTÁNDAR(579/listing)/VERIFICADO(1999/mes)
   sellerGratis: 0,
-  sellerPremium: 1699,
-  sellerProPlan: 3499,
+  sellerPremium: 579,
+  sellerProPlan: 1999,
   // Boosts
   boostBasicPrice: 499,
   boostBasicDays: 3,
@@ -89,10 +95,12 @@ const DEFAULT_PRICING: PlatformPricing = {
   basicListingDays: 30,
   individualListingDays: 45,
   // Límites por plan (fotos por vehículo)
-  freeMaxPhotos: 10,
-  visibleMaxPhotos: 25,
-  proMaxPhotos: 40,
-  eliteMaxPhotos: 50,
+  freeMaxPhotos: 5,
+  visibleMaxPhotos: 10,
+  starterMaxPhotos: 12,
+  proMaxPhotos: 15,
+  eliteMaxPhotos: 20,
+  enterpriseMaxPhotos: 20,
   // Comisiones
   platformCommission: 2.5,
   itbisPercentage: 18,

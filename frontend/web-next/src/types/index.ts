@@ -283,9 +283,9 @@ export type VerificationStatus =
   | 'verified'
   | 'rejected';
 
-export type DealerPlan = 'none' | 'libre' | 'visible' | 'pro' | 'elite';
+export type DealerPlan = 'none' | 'libre' | 'visible' | 'starter' | 'pro' | 'elite' | 'enterprise';
 
-export type SellerPlan = 'gratis' | 'premium' | 'pro';
+export type SellerPlan = 'libre_seller' | 'estandar' | 'verificado';
 
 // -----------------------------------------------------------------------------
 // API Types
