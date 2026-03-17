@@ -420,6 +420,16 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/contactservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/contactservice:latest
 
+      - name: "🐳 Build & Push BillingService"
+        if: steps.filter.outputs.billingservice == 'true' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/BillingService/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/billingservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/billingservice:latest
+
       - name: "🐳 Build & Push ReviewService"
         if: steps.filter.outputs.reviewservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
@@ -553,6 +563,7 @@ jobs:
           [ "${{ steps.filter.outputs.mediaservice }}" = "true" ] && CHANGED="$CHANGED mediaservice"
           [ "${{ steps.filter.outputs.adminservice }}" = "true" ] && CHANGED="$CHANGED adminservice"
           [ "${{ steps.filter.outputs.contactservice }}" = "true" ] && CHANGED="$CHANGED contactservice"
+          [ "${{ steps.filter.outputs.billingservice }}" = "true" ] && CHANGED="$CHANGED billingservice"
           [ "${{ steps.filter.outputs.reviewservice }}" = "true" ] && CHANGED="$CHANGED reviewservice"
           [ "${{ steps.filter.outputs.dealermanagementservice }}" = "true" ] && CHANGED="$CHANGED dealermanagementservice"
           [ "${{ steps.filter.outputs.gateway }}" = "true" ] && CHANGED="$CHANGED gateway"
