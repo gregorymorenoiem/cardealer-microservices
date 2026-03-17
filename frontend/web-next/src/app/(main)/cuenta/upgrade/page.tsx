@@ -169,6 +169,13 @@ const DEALER_PLANS: Record<string, PlanInfo> = {
   },
 };
 
+// Alias map: URL ?plan= values → internal SELLER_PLANS keys
+const SELLER_PLAN_ALIASES: Record<string, string> = {
+  premium: 'verificado',
+  standard: 'estandar',
+  estandar_seller: 'estandar',
+};
+
 const SELLER_PLANS: Record<string, PlanInfo> = {
   libre_seller: {
     key: 'libre_seller',
@@ -178,36 +185,43 @@ const SELLER_PLANS: Record<string, PlanInfo> = {
     features: [
       '1 publicación activa',
       '5 fotos por vehículo',
-      '30 días de duración',
-      'Contacto por WhatsApp',
+      'Duración: 30 días',
+      '⬇ Posición al fondo en búsquedas',
+      '⚪ Sin badge de verificación',
+      'KYC: solo email',
     ],
   },
   estandar: {
     key: 'estandar',
     name: 'Estándar',
-    monthlyPrice: 579,
-    annualPrice: 579,
+    monthlyPrice: 9.99,
+    annualPrice: 9.99, // precio por listing (pago único)
     features: [
       '1 publicación por pago',
       '10 fotos por vehículo',
-      '60 días de duración',
-      'Contacto por email + teléfono',
-      'Badge verificado básico',
+      'Duración: 60 días',
+      '⬆ Posición media (bajo dealers)',
+      '🔵 Badge Vendedor OKLA',
+      'KYC: email + teléfono verificados',
+      'Renovación de listing: $4.99',
+      '1 valoración PricingAgent IA por listing',
     ],
   },
   verificado: {
     key: 'verificado',
     name: 'Verificado',
-    monthlyPrice: 1999,
-    annualPrice: 1999,
+    monthlyPrice: 34.99,
+    annualPrice: 34.99,
     features: [
       '3 publicaciones simultáneas',
       '12 fotos por vehículo',
-      '90 días de duración',
-      'Badge Verificado cédula + selfie',
-      '2 destacadas/mes',
-      'Estadísticas detalladas',
-      'Boosts disponibles',
+      'Duración: 90 días',
+      '📈 Alta posición visible (bajo dealers)',
+      '✅ Badge Vendedor Verificado',
+      'KYC completo: cédula + selfie + teléfono',
+      'Renovación de listing incluida',
+      '2 valoraciones PricingAgent IA/mes',
+      'Analytics básico de tus publicaciones',
     ],
   },
 };
@@ -331,8 +345,13 @@ function UpgradeCheckoutInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const targetPlanKey = searchParams.get('plan')?.toLowerCase() ?? 'pro';
+  const rawPlanKey = searchParams.get('plan')?.toLowerCase() ?? 'pro';
   const userType = (searchParams.get('type') as UserType) ?? 'dealer';
+  // Resolve URL aliases → internal plan keys (e.g. ?plan=premium&type=seller → verificado)
+  const targetPlanKey =
+    userType === 'seller'
+      ? (SELLER_PLAN_ALIASES[rawPlanKey] ?? rawPlanKey)
+      : rawPlanKey;
 
   const plans = userType === 'dealer' ? DEALER_PLANS : SELLER_PLANS;
   const planKeys = Object.keys(plans);
@@ -360,6 +379,7 @@ function UpgradeCheckoutInner() {
     return buildSellerComparison(currentPlanKey, targetPlan.key);
   }, [userType, currentPlanKey, targetPlan.key]);
 
+  const priceCurrency = userType === 'seller' ? 'USD' : 'DOP';
   const price = billingPeriod === 'annual' ? targetPlan.annualPrice : targetPlan.monthlyPrice;
   const monthlyCost =
     billingPeriod === 'annual' ? Math.round(targetPlan.annualPrice / 12) : targetPlan.monthlyPrice;
@@ -420,7 +440,7 @@ function UpgradeCheckoutInner() {
             <CardDescription>
               {currentPlan.monthlyPrice === 0
                 ? 'Gratis'
-                : `${formatPrice(currentPlan.monthlyPrice)}/mes`}
+                : `${formatPrice(currentPlan.monthlyPrice, priceCurrency)}${userType === 'seller' && currentPlan.key === 'estandar' ? '/listing' : '/mes'}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -444,8 +464,8 @@ function UpgradeCheckoutInner() {
             <Badge className="bg-primary mx-auto mb-2 w-fit text-white">Nuevo Plan</Badge>
             <CardTitle className="text-xl">{targetPlan.name}</CardTitle>
             <CardDescription>
-              {formatPrice(monthlyCost)}/mes
-              {billingPeriod === 'annual' && (
+              {formatPrice(monthlyCost, priceCurrency)}{targetPlan.key === 'estandar' ? '/listing' : '/mes'}
+              {billingPeriod === 'annual' && savings > 0 && (
                 <span className="ml-1 text-emerald-600">(facturación anual)</span>
               )}
             </CardDescription>
@@ -541,8 +561,8 @@ function UpgradeCheckoutInner() {
               )}
             >
               <p className="font-bold">Mensual</p>
-              <p className="text-2xl font-bold">{formatPrice(targetPlan.monthlyPrice)}</p>
-              <p className="text-muted-foreground text-sm">por mes</p>
+              <p className="text-2xl font-bold">{formatPrice(targetPlan.monthlyPrice, priceCurrency)}</p>
+              <p className="text-muted-foreground text-sm">{targetPlan.key === 'estandar' ? 'por listing' : 'por mes'}</p>
             </button>
             <button
               onClick={() => setBillingPeriod('annual')}
@@ -559,9 +579,9 @@ function UpgradeCheckoutInner() {
                 </Badge>
               )}
               <p className="font-bold">Anual</p>
-              <p className="text-2xl font-bold">{formatPrice(targetPlan.annualPrice)}</p>
+              <p className="text-2xl font-bold">{formatPrice(targetPlan.annualPrice, priceCurrency)}</p>
               <p className="text-muted-foreground text-sm">
-                {formatPrice(Math.round(targetPlan.annualPrice / 12))}/mes
+                {formatPrice(Math.round(targetPlan.annualPrice / 12), priceCurrency)}/mes
               </p>
             </button>
           </div>
@@ -652,7 +672,7 @@ function UpgradeCheckoutInner() {
               <Link href="/privacidad" className="text-primary underline">
                 política de privacidad
               </Link>
-              . Entiendo que se me cobrará <strong>{formatPrice(price)}</strong>{' '}
+              Entiendo que se me cobrará <strong>{formatPrice(price, priceCurrency)}</strong>{' '}
               {billingPeriod === 'annual' ? 'anualmente' : 'mensualmente'} hasta que cancele mi
               suscripción.
             </span>
@@ -663,9 +683,9 @@ function UpgradeCheckoutInner() {
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
             <div>
               <p className="text-lg font-bold">
-                Total: {formatPrice(price)}
+                Total: {formatPrice(price, priceCurrency)}
                 <span className="text-muted-foreground text-sm font-normal">
-                  /{billingPeriod === 'annual' ? 'año' : 'mes'}
+                  /{targetPlan.key === 'estandar' ? 'listing' : billingPeriod === 'annual' ? 'año' : 'mes'}
                 </span>
               </p>
             </div>
