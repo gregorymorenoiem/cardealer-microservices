@@ -2744,6 +2744,30 @@ data:
           }
         },
         {
+          "UpstreamPathTemplate": "/api/checkout/{everything}",
+          "UpstreamHttpMethod": [
+            "OPTIONS",
+            "GET",
+            "POST"
+          ],
+          "DownstreamPathTemplate": "/api/checkout/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "billingservice",
+              "Port": 8080
+            }
+          ],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 10,
+            "TimeoutValue": 30000
+          }
+        },
+        {
           "UpstreamPathTemplate": "/api/payments/providers/{everything}",
           "UpstreamHttpMethod": [
             "GET"
