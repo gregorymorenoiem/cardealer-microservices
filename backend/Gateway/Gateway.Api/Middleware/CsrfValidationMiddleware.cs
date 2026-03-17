@@ -96,6 +96,20 @@ public class CsrfValidationMiddleware
             return;
         }
 
+        // OWASP: Requests using the Authorization: Bearer header pattern are inherently
+        // CSRF-safe. CSRF attacks exploit the browser's automatic cookie sending —
+        // a malicious cross-origin page cannot set the Authorization header
+        // (blocked by CORS preflight). API clients (mobile apps, server-to-server,
+        // E2E tests) always use Bearer tokens and never have a csrf_token cookie.
+        // Reference: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+        //            (section: "Use of Custom Request Headers")
+        var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(context);
+            return;
+        }
+
         // Validate Double Submit Cookie
         var headerToken = context.Request.Headers["X-CSRF-Token"].FirstOrDefault();
         var cookieToken = context.Request.Cookies["csrf_token"];
