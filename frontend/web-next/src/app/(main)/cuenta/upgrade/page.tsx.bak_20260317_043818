@@ -3,10 +3,9 @@
  *
  * Allows users to review and confirm a plan upgrade.
  * Shows current plan vs target plan comparison, billing options,
- * and real payment integration (PayPal, Fygaro, Azul).
+ * and a mock payment form.
  *
  * URL: /cuenta/upgrade?plan=PRO&type=dealer
- *      /cuenta/upgrade?plan=premium&type=seller
  */
 
 'use client';
@@ -18,6 +17,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
@@ -30,21 +31,16 @@ import {
   Check,
   X,
   ArrowRight,
+  CreditCard,
   Shield,
   ShieldCheck,
   Sparkles,
   ChevronLeft,
   PartyPopper,
   Lock,
-  CreditCard,
-  AlertCircle,
-  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DealerPlan, SellerPlan, DEALER_PLAN_LIMITS, SELLER_PLAN_LIMITS } from '@/lib/plan-config';
-import { PayPalPaymentButton } from '@/components/checkout/PayPalPaymentButton';
-import { serverCreatePayPalOrder, serverCapturePayPalOrder } from '@/actions/checkout';
-import { toast } from 'sonner';
 
 // =============================================================================
 // TYPES
@@ -173,13 +169,6 @@ const DEALER_PLANS: Record<string, PlanInfo> = {
   },
 };
 
-// Alias map: URL ?plan= values → internal SELLER_PLANS keys
-const SELLER_PLAN_ALIASES: Record<string, string> = {
-  premium: 'verificado',
-  standard: 'estandar',
-  estandar_seller: 'estandar',
-};
-
 const SELLER_PLANS: Record<string, PlanInfo> = {
   libre_seller: {
     key: 'libre_seller',
@@ -189,43 +178,36 @@ const SELLER_PLANS: Record<string, PlanInfo> = {
     features: [
       '1 publicación activa',
       '5 fotos por vehículo',
-      'Duración: 30 días',
-      '⬇ Posición al fondo en búsquedas',
-      '⚪ Sin badge de verificación',
-      'KYC: solo email',
+      '30 días de duración',
+      'Contacto por WhatsApp',
     ],
   },
   estandar: {
     key: 'estandar',
     name: 'Estándar',
-    monthlyPrice: 9.99,
-    annualPrice: 9.99, // precio por listing (pago único)
+    monthlyPrice: 579,
+    annualPrice: 579,
     features: [
       '1 publicación por pago',
       '10 fotos por vehículo',
-      'Duración: 60 días',
-      '⬆ Posición media (bajo dealers)',
-      '🔵 Badge Vendedor OKLA',
-      'KYC: email + teléfono verificados',
-      'Renovación de listing: $4.99',
-      '1 valoración PricingAgent IA por listing',
+      '60 días de duración',
+      'Contacto por email + teléfono',
+      'Badge verificado básico',
     ],
   },
   verificado: {
     key: 'verificado',
     name: 'Verificado',
-    monthlyPrice: 34.99,
-    annualPrice: 34.99,
+    monthlyPrice: 1999,
+    annualPrice: 1999,
     features: [
       '3 publicaciones simultáneas',
       '12 fotos por vehículo',
-      'Duración: 90 días',
-      '📈 Alta posición visible (bajo dealers)',
-      '✅ Badge Vendedor Verificado',
-      'KYC completo: cédula + selfie + teléfono',
-      'Renovación de listing incluida',
-      '2 valoraciones PricingAgent IA/mes',
-      'Analytics básico de tus publicaciones',
+      '90 días de duración',
+      'Badge Verificado cédula + selfie',
+      '2 destacadas/mes',
+      'Estadísticas detalladas',
+      'Boosts disponibles',
     ],
   },
 };
@@ -342,44 +324,6 @@ function buildSellerComparison(currentKey: string, targetKey: string): Compariso
 }
 
 // =============================================================================
-// PAYMENT METHOD TYPES
-// =============================================================================
-
-type PaymentMethod = 'paypal' | 'fygaro' | 'azul';
-
-const PAYMENT_METHODS: {
-  id: PaymentMethod;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-  recommended?: boolean;
-}[] = [
-  {
-    id: 'paypal',
-    name: 'PayPal',
-    description: 'Paga con tu cuenta PayPal o tarjeta',
-    icon: 'PP',
-    color: 'bg-[#003087]',
-    recommended: true,
-  },
-  {
-    id: 'fygaro',
-    name: 'Fygaro',
-    description: 'Pago recurrente automático',
-    icon: 'FY',
-    color: 'bg-teal-600',
-  },
-  {
-    id: 'azul',
-    name: 'Azul',
-    description: 'Tarjeta de crédito/débito (RD)',
-    icon: 'AZ',
-    color: 'bg-blue-600',
-  },
-];
-
-// =============================================================================
 // INNER COMPONENT (uses searchParams)
 // =============================================================================
 
@@ -387,11 +331,8 @@ function UpgradeCheckoutInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const rawPlanKey = searchParams.get('plan')?.toLowerCase() ?? 'pro';
+  const targetPlanKey = searchParams.get('plan')?.toLowerCase() ?? 'pro';
   const userType = (searchParams.get('type') as UserType) ?? 'dealer';
-  // Resolve URL aliases → internal plan keys (e.g. ?plan=premium&type=seller → verificado)
-  const targetPlanKey =
-    userType === 'seller' ? (SELLER_PLAN_ALIASES[rawPlanKey] ?? rawPlanKey) : rawPlanKey;
 
   const plans = userType === 'dealer' ? DEALER_PLANS : SELLER_PLANS;
   const planKeys = Object.keys(plans);
@@ -405,7 +346,12 @@ function UpgradeCheckoutInner() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('paypal');
+
+  // Card form state (mock — no real processing)
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
 
   const comparison = useMemo(() => {
     if (userType === 'dealer') {
@@ -414,34 +360,18 @@ function UpgradeCheckoutInner() {
     return buildSellerComparison(currentPlanKey, targetPlan.key);
   }, [userType, currentPlanKey, targetPlan.key]);
 
-  const priceCurrency = userType === 'seller' ? 'USD' : 'DOP';
   const price = billingPeriod === 'annual' ? targetPlan.annualPrice : targetPlan.monthlyPrice;
   const monthlyCost =
     billingPeriod === 'annual' ? Math.round(targetPlan.annualPrice / 12) : targetPlan.monthlyPrice;
   const savings =
     billingPeriod === 'annual' ? targetPlan.monthlyPrice * 12 - targetPlan.annualPrice : 0;
 
-  // For PayPal: convert DOP to USD equivalent for payment processing
-  const paypalAmount = priceCurrency === 'DOP' ? (price / 58).toFixed(2) : price.toFixed(2);
-  const paypalCurrency = 'USD';
-
-  const handleFygaroPayment = () => {
+  const handleConfirmUpgrade = () => {
     setIsProcessing(true);
-    // Fygaro redirects to external payment page
-    toast.info('Redirigiendo a Fygaro...');
+    // Simulated processing delay
     setTimeout(() => {
       setIsProcessing(false);
-      toast.error('Fygaro no está configurado todavía. Usa PayPal.');
-    }, 2000);
-  };
-
-  const handleAzulPayment = () => {
-    setIsProcessing(true);
-    // Azul redirects to external payment page
-    toast.info('Redirigiendo a AZUL...');
-    setTimeout(() => {
-      setIsProcessing(false);
-      toast.error('AZUL no está configurado todavía. Usa PayPal.');
+      setShowSuccess(true);
     }, 2000);
   };
 
@@ -490,7 +420,7 @@ function UpgradeCheckoutInner() {
             <CardDescription>
               {currentPlan.monthlyPrice === 0
                 ? 'Gratis'
-                : `${formatPrice(currentPlan.monthlyPrice, priceCurrency)}${userType === 'seller' && currentPlan.key === 'estandar' ? '/listing' : '/mes'}`}
+                : `${formatPrice(currentPlan.monthlyPrice)}/mes`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -514,9 +444,8 @@ function UpgradeCheckoutInner() {
             <Badge className="bg-primary mx-auto mb-2 w-fit text-white">Nuevo Plan</Badge>
             <CardTitle className="text-xl">{targetPlan.name}</CardTitle>
             <CardDescription>
-              {formatPrice(monthlyCost, priceCurrency)}
-              {targetPlan.key === 'estandar' ? '/listing' : '/mes'}
-              {billingPeriod === 'annual' && savings > 0 && (
+              {formatPrice(monthlyCost)}/mes
+              {billingPeriod === 'annual' && (
                 <span className="ml-1 text-emerald-600">(facturación anual)</span>
               )}
             </CardDescription>
@@ -567,6 +496,8 @@ function UpgradeCheckoutInner() {
         </Card>
       )}
 
+      {/* Billing Period Selection */}
+
       {/* Guarantee Banner — shown only for Plan VISIBLE */}
       {targetPlan.key === 'visible' && (
         <Card className="border-2 border-emerald-200 bg-emerald-50">
@@ -575,7 +506,7 @@ function UpgradeCheckoutInner() {
               <ShieldCheck className="h-6 w-6 text-emerald-600" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-emerald-800">Garantía de Resultados OKLA</h3>
+              <h3 className="text-lg font-bold text-emerald-800">🛡️ Garantía de Resultados OKLA</h3>
               <p className="text-sm text-emerald-700">
                 Si no recibes <strong>al menos 10 consultas</strong> de compradores en tus primeros{' '}
                 <strong>30 días</strong> con el plan Visible,{' '}
@@ -594,7 +525,6 @@ function UpgradeCheckoutInner() {
         </Card>
       )}
 
-      {/* Billing Period Selection */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Período de facturación</CardTitle>
@@ -611,12 +541,8 @@ function UpgradeCheckoutInner() {
               )}
             >
               <p className="font-bold">Mensual</p>
-              <p className="text-2xl font-bold">
-                {formatPrice(targetPlan.monthlyPrice, priceCurrency)}
-              </p>
-              <p className="text-muted-foreground text-sm">
-                {targetPlan.key === 'estandar' ? 'por listing' : 'por mes'}
-              </p>
+              <p className="text-2xl font-bold">{formatPrice(targetPlan.monthlyPrice)}</p>
+              <p className="text-muted-foreground text-sm">por mes</p>
             </button>
             <button
               onClick={() => setBillingPeriod('annual')}
@@ -633,88 +559,81 @@ function UpgradeCheckoutInner() {
                 </Badge>
               )}
               <p className="font-bold">Anual</p>
-              <p className="text-2xl font-bold">
-                {formatPrice(targetPlan.annualPrice, priceCurrency)}
-              </p>
+              <p className="text-2xl font-bold">{formatPrice(targetPlan.annualPrice)}</p>
               <p className="text-muted-foreground text-sm">
-                {formatPrice(Math.round(targetPlan.annualPrice / 12), priceCurrency)}/mes
+                {formatPrice(Math.round(targetPlan.annualPrice / 12))}/mes
               </p>
             </button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Payment Method Selection */}
+      {/* Mock Payment Form */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <CreditCard className="h-5 w-5" />
-            Método de pago
+            Información de pago
           </CardTitle>
           <CardDescription>
             <span className="flex items-center gap-1 text-xs text-emerald-600">
               <Lock className="h-3 w-3" />
-              Conexión segura con cifrado SSL de 256 bits
+              Conexión segura con cifrado SSL
             </span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            {PAYMENT_METHODS.map(method => (
-              <button
-                key={method.id}
-                onClick={() => setPaymentMethod(method.id)}
-                disabled={isProcessing}
-                className={cn(
-                  'relative flex flex-col items-center rounded-xl border-2 p-4 transition-all',
-                  paymentMethod === method.id
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-gray-200 hover:border-gray-300',
-                  isProcessing && 'cursor-not-allowed opacity-50'
-                )}
-              >
-                {method.recommended && (
-                  <Badge className="absolute -top-2 right-2 bg-emerald-500 text-[10px]">
-                    Recomendado
-                  </Badge>
-                )}
-                <div
-                  className={cn(
-                    'mb-2 flex h-10 w-10 items-center justify-center rounded-lg text-sm font-bold text-white',
-                    method.color
-                  )}
-                >
-                  {method.icon}
-                </div>
-                <span className="text-sm font-semibold">{method.name}</span>
-                <span className="text-muted-foreground mt-0.5 text-center text-[11px] leading-tight">
-                  {method.description}
-                </span>
-              </button>
-            ))}
+          <div>
+            <Label htmlFor="card-name">Nombre en la tarjeta</Label>
+            <Input
+              id="card-name"
+              placeholder="Juan Pérez"
+              value={cardName}
+              onChange={e => setCardName(e.target.value)}
+            />
           </div>
-
-          <Separator />
-
-          {/* Security Trust Indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-4 rounded-lg bg-gray-50 p-3">
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-              <Shield className="h-4 w-4 text-emerald-500" />
-              <span>Pago 100% seguro</span>
+          <div>
+            <Label htmlFor="card-number">Número de tarjeta</Label>
+            <Input
+              id="card-number"
+              placeholder="4242 4242 4242 4242"
+              value={cardNumber}
+              onChange={e => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 16);
+                setCardNumber(val.replace(/(.{4})/g, '$1 ').trim());
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="card-expiry">Fecha de expiración</Label>
+              <Input
+                id="card-expiry"
+                placeholder="MM/AA"
+                value={cardExpiry}
+                onChange={e => {
+                  let val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  if (val.length >= 3) val = val.slice(0, 2) + '/' + val.slice(2);
+                  setCardExpiry(val);
+                }}
+              />
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-              <Lock className="h-4 w-4 text-emerald-500" />
-              <span>Datos encriptados</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              <span>Protección al comprador</span>
+            <div>
+              <Label htmlFor="card-cvv">CVV</Label>
+              <Input
+                id="card-cvv"
+                placeholder="123"
+                type="password"
+                maxLength={4}
+                value={cardCvv}
+                onChange={e => setCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Terms & Payment Action */}
+      {/* Terms & Confirm */}
       <Card>
         <CardContent className="space-y-4 pt-6">
           <label className="flex cursor-pointer items-start gap-3">
@@ -733,7 +652,7 @@ function UpgradeCheckoutInner() {
               <Link href="/privacidad" className="text-primary underline">
                 política de privacidad
               </Link>
-              . Entiendo que se me cobrará <strong>{formatPrice(price, priceCurrency)}</strong>{' '}
+              . Entiendo que se me cobrará <strong>{formatPrice(price)}</strong>{' '}
               {billingPeriod === 'annual' ? 'anualmente' : 'mensualmente'} hasta que cancele mi
               suscripción.
             </span>
@@ -741,146 +660,36 @@ function UpgradeCheckoutInner() {
 
           <Separator />
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-lg font-bold">
-                  Total: {formatPrice(price, priceCurrency)}
-                  <span className="text-muted-foreground text-sm font-normal">
-                    /
-                    {targetPlan.key === 'estandar'
-                      ? 'listing'
-                      : billingPeriod === 'annual'
-                        ? 'año'
-                        : 'mes'}
-                  </span>
-                </p>
-                {priceCurrency === 'DOP' && (
-                  <p className="text-muted-foreground text-xs">
-                    ≈ ${paypalAmount} USD (tasa de cambio aproximada)
-                  </p>
-                )}
-              </div>
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+            <div>
+              <p className="text-lg font-bold">
+                Total: {formatPrice(price)}
+                <span className="text-muted-foreground text-sm font-normal">
+                  /{billingPeriod === 'annual' ? 'año' : 'mes'}
+                </span>
+              </p>
             </div>
-
-            {/* PayPal Payment */}
-            {paymentMethod === 'paypal' && acceptTerms && (
-              <div className="space-y-3">
-                <PayPalPaymentButton
-                  clientId={process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || ''}
-                  amount={paypalAmount}
-                  currency={paypalCurrency}
-                  onCreateOrder={async () => {
-                    const description = `OKLA Plan ${targetPlan.name} (${billingPeriod === 'annual' ? 'Anual' : 'Mensual'})`;
-                    const result = await serverCreatePayPalOrder(
-                      parseFloat(paypalAmount),
-                      paypalCurrency,
-                      description,
-                      '',
-                      `${window.location.origin}/checkout/exito`,
-                      `${window.location.origin}/cuenta/upgrade?plan=${targetPlanKey}&type=${userType}`
-                    );
-                    if (!result.success || !result.data?.orderId) {
-                      throw new Error(result.error || 'Error al crear orden PayPal');
-                    }
-                    return result.data.orderId;
-                  }}
-                  onApprove={async orderId => {
-                    setIsProcessing(true);
-                    const result = await serverCapturePayPalOrder(orderId, '');
-                    if (result.success && result.data?.status === 'COMPLETED') {
-                      setIsProcessing(false);
-                      setShowSuccess(true);
-                    } else {
-                      setIsProcessing(false);
-                      toast.error(result.error || 'Error al procesar el pago de PayPal');
-                    }
-                  }}
-                  onError={message => {
-                    setIsProcessing(false);
-                    toast.error(message);
-                  }}
-                  onCancel={() => {
-                    toast.info('Pago cancelado');
-                  }}
-                  disabled={isProcessing}
-                />
-              </div>
-            )}
-
-            {/* Fygaro Payment */}
-            {paymentMethod === 'fygaro' && (
-              <Button
-                size="lg"
-                disabled={!acceptTerms || isProcessing}
-                onClick={handleFygaroPayment}
-                className="w-full gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Redirigiendo a Fygaro...
-                  </>
-                ) : (
-                  <>
-                    <Shield className="h-4 w-4" />
-                    Pagar con Fygaro — {formatPrice(price, priceCurrency)}
-                  </>
-                )}
-              </Button>
-            )}
-
-            {/* Azul Payment */}
-            {paymentMethod === 'azul' && (
-              <Button
-                size="lg"
-                disabled={!acceptTerms || isProcessing}
-                onClick={handleAzulPayment}
-                className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Redirigiendo a AZUL...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-4 w-4" />
-                    Pagar con AZUL — {formatPrice(price, priceCurrency)}
-                  </>
-                )}
-              </Button>
-            )}
-
-            {/* Message when terms not accepted and PayPal is selected */}
-            {paymentMethod === 'paypal' && !acceptTerms && (
-              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>Acepta los términos y condiciones para continuar con el pago.</span>
-              </div>
-            )}
+            <Button
+              size="lg"
+              disabled={!acceptTerms || isProcessing}
+              onClick={handleConfirmUpgrade}
+              className="w-full gap-2 sm:w-auto"
+            >
+              {isProcessing ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <Shield className="h-4 w-4" />
+                  Confirmar Upgrade
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* Trust Footer */}
-      <div className="flex flex-col items-center gap-2 text-center">
-        <div className="flex items-center gap-3">
-          <img
-            src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png"
-            alt="PayPal"
-            className="h-5 opacity-50"
-          />
-          <span className="text-xs text-gray-300">|</span>
-          <span className="text-xs font-medium text-gray-400">FYGARO</span>
-          <span className="text-xs text-gray-300">|</span>
-          <span className="text-xs font-medium text-blue-400">AZUL</span>
-        </div>
-        <p className="text-muted-foreground max-w-md text-xs">
-          Tus datos financieros nunca son almacenados en nuestros servidores. Todos los pagos son
-          procesados de forma segura por proveedores certificados PCI DSS.
-        </p>
-      </div>
 
       {/* Success Modal */}
       <Dialog open={showSuccess} onOpenChange={setShowSuccess}>

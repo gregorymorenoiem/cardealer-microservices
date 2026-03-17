@@ -8,19 +8,21 @@ namespace BillingService.Api.Controllers;
 
 /// <summary>
 /// Returns configured/available payment gateways for the checkout page.
-/// Active gateways: PayPal (default), Fygaro, Azul
 /// </summary>
 [ApiController]
 [Route("api/payments/providers")]
 public class PaymentProvidersController : ControllerBase
 {
+    private readonly StripeSettings _stripe;
     private readonly PayPalSettings _paypal;
     private readonly AzulConfiguration _azul;
 
     public PaymentProvidersController(
+        IOptions<StripeSettings> stripe,
         IOptions<PayPalSettings> paypal,
         IOptions<AzulConfiguration> azul)
     {
+        _stripe = stripe.Value;
         _paypal = paypal.Value;
         _azul = azul.Value;
     }
@@ -28,7 +30,6 @@ public class PaymentProvidersController : ControllerBase
     /// <summary>
     /// GET /api/payments/providers/available
     /// Returns all payment gateways and whether they are configured.
-    /// Order: PayPal (default), Fygaro, Azul
     /// </summary>
     [HttpGet("available")]
     [AllowAnonymous]
@@ -38,24 +39,24 @@ public class PaymentProvidersController : ControllerBase
         {
             new
             {
-                gateway = "PayPal",
-                name = "PayPal",
-                type = "PayPal",
-                isConfigured = !string.IsNullOrEmpty(_paypal.ClientId)
-            },
-            new
-            {
-                gateway = "Fygaro",
-                name = "Fygaro",
-                type = "EWallet",
-                isConfigured = true
-            },
-            new
-            {
                 gateway = "Azul",
                 name = "Azul (Banco Popular)",
                 type = "CreditCard",
                 isConfigured = !string.IsNullOrEmpty(_azul.MerchantId)
+            },
+            new
+            {
+                gateway = "Stripe",
+                name = "Stripe",
+                type = "CreditCard",
+                isConfigured = !string.IsNullOrEmpty(_stripe.SecretKey)
+            },
+            new
+            {
+                gateway = "PayPal",
+                name = "PayPal",
+                type = "PayPal",
+                isConfigured = !string.IsNullOrEmpty(_paypal.ClientId)
             }
         };
 

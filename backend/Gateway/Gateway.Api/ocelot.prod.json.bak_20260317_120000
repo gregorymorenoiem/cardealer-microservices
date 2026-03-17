@@ -2,7 +2,9 @@
   "Routes": [
     {
       "UpstreamPathTemplate": "/api/ai/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -14,7 +16,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/ai/process",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/aiprocessing/process",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -34,7 +38,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/ai/process/batch",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/aiprocessing/process/batch",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -54,7 +60,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/ai/spin360/generate",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/aiprocessing/spin360/generate",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -74,7 +82,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/ai/jobs/{id}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/aiprocessing/jobs/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -94,7 +104,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/ai/jobs/{id}/cancel",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/aiprocessing/jobs/{id}/cancel",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -114,7 +126,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/ai/jobs/{id}/retry",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/aiprocessing/jobs/{id}/retry",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -134,7 +148,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/ai/analyze",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/aiprocessing/analyze",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -154,7 +170,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/ai/backgrounds",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/backgrounds",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -174,7 +192,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/ai/stats/queue",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/aiprocessing/stats/queue",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -197,7 +217,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -209,7 +231,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/inventory",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -229,7 +254,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/stats",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/inventory/stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -249,7 +276,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/featured",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/inventory/featured",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -261,7 +290,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/hot",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/inventory/hot",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -281,7 +312,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/overdue",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/inventory/overdue",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -301,7 +334,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/bulk/status",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/inventory/bulk/status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -321,7 +356,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/bulkimport",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/inventory/bulkimport",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -341,7 +379,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/bulkimport/upload",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/inventory/bulkimport/upload",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -361,7 +401,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/bulkimport/{id}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/inventory/bulkimport/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -381,7 +423,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/bulkimport/{id}/cancel",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/inventory/bulkimport/{id}/cancel",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -401,7 +445,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicles/import",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/import",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -421,7 +467,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicles/import/template",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/import/template",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -438,7 +486,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicles/import/errors",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/import/errors",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -458,7 +508,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicles/import/history",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/import/history",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -478,7 +530,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/inventory/{id}",
-      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/inventory/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -498,7 +554,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/errors/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -510,7 +568,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/errors",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/errors",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -530,7 +591,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/errors/{id}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/errors/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -550,7 +613,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/errors/stats",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/errors/stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -570,7 +635,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/errors/services",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/errors/services",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -590,7 +657,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/errors/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/errors/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -610,7 +683,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/auth/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -622,7 +697,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/auth/2fa/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/TwoFactor/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -642,7 +723,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/auth/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/auth/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -668,7 +755,13 @@
         }
       ],
       "UpstreamPathTemplate": "/api/notifications/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       }
@@ -683,7 +776,10 @@
         }
       ],
       "UpstreamPathTemplate": "/api/notifications",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       }
@@ -698,7 +794,12 @@
         }
       ],
       "UpstreamPathTemplate": "/api/templates/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       }
@@ -713,7 +814,10 @@
         }
       ],
       "UpstreamPathTemplate": "/api/templates",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       }
@@ -728,11 +832,15 @@
         }
       ],
       "UpstreamPathTemplate": "/api/notifications/health",
-      "UpstreamHttpMethod": ["GET"]
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
     },
     {
       "UpstreamPathTemplate": "/api/products/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -744,7 +852,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/products",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -764,7 +876,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/products/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -785,7 +903,9 @@
     {
       "_comment": "SEO AUDIT FIX: Public sitemap endpoint for dynamic sitemap.xml generation",
       "UpstreamPathTemplate": "/api/vehicles/sitemap",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/sitemap",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -807,7 +927,10 @@
     {
       "_comment": "Public: Vehicle search/listing with 30s Gateway cache",
       "UpstreamPathTemplate": "/api/vehicles",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -828,7 +951,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicles",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -849,7 +974,10 @@
     {
       "_comment": "Public: GetBySlug (AllowAnonymous) \u2013 must be before catch-all",
       "UpstreamPathTemplate": "/api/vehicles/slug/{slug}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/slug/{slug}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -867,7 +995,10 @@
     {
       "_comment": "Public: GetByVIN (AllowAnonymous)",
       "UpstreamPathTemplate": "/api/vehicles/vin/{vin}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/vin/{vin}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -885,7 +1016,10 @@
     {
       "_comment": "Public: GetById (AllowAnonymous) with 30s Gateway cache",
       "UpstreamPathTemplate": "/api/vehicles/{id}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -907,7 +1041,10 @@
     {
       "_comment": "Public: Similar vehicles (AllowAnonymous) with 60s Gateway cache",
       "UpstreamPathTemplate": "/api/vehicles/{id}/similar",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/{id}/similar",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -929,7 +1066,10 @@
     {
       "_comment": "Public: Featured vehicles (AllowAnonymous) with 60s Gateway cache",
       "UpstreamPathTemplate": "/api/vehicles/featured",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/featured",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -951,7 +1091,10 @@
     {
       "_comment": "Public: Track vehicle views (anonymous allowed)",
       "UpstreamPathTemplate": "/api/vehicles/{id}/views",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/{id}/views",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -969,7 +1112,13 @@
     {
       "_comment": "Authenticated: catch-all for create, update, delete, publish, etc.",
       "UpstreamPathTemplate": "/api/vehicles/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/vehicles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -990,7 +1139,11 @@
     {
       "_comment": "Vehicle Data APIs: CARFAX/VinAudit, Edmunds, MarketCheck (catch-all)",
       "UpstreamPathTemplate": "/api/vehicle-data/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/vehicle-data/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1008,7 +1161,11 @@
     {
       "_comment": "ListingAgent: SEO optimization (authenticated)",
       "UpstreamPathTemplate": "/api/listing-agent/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/listing-agent/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1029,7 +1186,9 @@
     {
       "_comment": "ListingAgent: Health check (public)",
       "UpstreamPathTemplate": "/api/listing-agent/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/listing-agent/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1047,7 +1206,10 @@
     {
       "_comment": "Favorites: check if vehicle is favorited (authenticated)",
       "UpstreamPathTemplate": "/api/favorites/check/{vehicleId}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/favorites/check/{vehicleId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1068,7 +1230,10 @@
     {
       "_comment": "Favorites: count of user favorites (authenticated)",
       "UpstreamPathTemplate": "/api/favorites/count",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/favorites/count",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1089,7 +1254,12 @@
     {
       "_comment": "Favorites: add/remove/update a vehicle favorite (authenticated)",
       "UpstreamPathTemplate": "/api/favorites/{vehicleId}",
-      "UpstreamHttpMethod": ["OPTIONS", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/favorites/{vehicleId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1110,7 +1280,10 @@
     {
       "_comment": "Favorites: list all favorites (authenticated)",
       "UpstreamPathTemplate": "/api/favorites",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/favorites",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1131,7 +1304,10 @@
     {
       "_comment": "History: sync local history (authenticated)",
       "UpstreamPathTemplate": "/api/history/views/sync",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/history/views/sync",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1152,7 +1328,11 @@
     {
       "_comment": "History: record view or remove specific vehicle from history",
       "UpstreamPathTemplate": "/api/history/views/{vehicleId}",
-      "UpstreamHttpMethod": ["OPTIONS", "POST", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/history/views/{vehicleId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1173,7 +1353,11 @@
     {
       "_comment": "History: get or clear viewing history (authenticated)",
       "UpstreamPathTemplate": "/api/history/views",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/history/views",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1194,7 +1378,10 @@
     {
       "_comment": "Public: Catalog listing (makes, models, etc.) with 5min Gateway cache",
       "UpstreamPathTemplate": "/api/catalog",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/catalog",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1215,7 +1402,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/catalog/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/catalog/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1235,7 +1426,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/categories",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/categories",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1252,7 +1446,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/categories",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/categories",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1272,7 +1468,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/categories/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/categories/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1292,7 +1494,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/homepagesections",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/homepagesections",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1309,7 +1514,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/homepagesections",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/homepagesections",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1329,7 +1536,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/homepagesections/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/homepagesections/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1346,7 +1556,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/homepagesections/{everything}",
-      "UpstreamHttpMethod": ["POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/homepagesections/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1366,7 +1580,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/media/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1378,7 +1594,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/media/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/media/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1398,7 +1620,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/upload/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/media/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1418,7 +1646,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/billing/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1429,52 +1659,12 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/api/payments/providers/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
-      "DownstreamPathTemplate": "/api/payments/providers/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "billingservice",
-          "Port": 8080
-        }
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "/api/payments/paypal/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
-      "DownstreamPathTemplate": "/api/payments/paypal/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "billingservice",
-          "Port": 8080
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      },
-      "QoSOptions": {
-        "ExceptionsAllowedBeforeBreaking": 3,
-        "DurationOfBreak": 10,
-        "TimeoutValue": 30000
-      }
-    },
-    {
-      "UpstreamPathTemplate": "/api/webhooks/paypal",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
-      "DownstreamPathTemplate": "/api/webhooks/paypal",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "billingservice",
-          "Port": 8080
-        }
-      ]
-    },
-    {
       "UpstreamPathTemplate": "/api/billing/reports/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/billing/reports/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1491,7 +1681,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/billing/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/billing/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1511,7 +1707,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/user-billing/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/user-billing/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1531,7 +1733,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealer-billing/plans",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/dealer-billing/plans",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1544,7 +1748,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealer-billing/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/dealer-billing/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1564,7 +1774,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/payment-methods/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/payment-methods/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1584,7 +1800,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/payment-methods",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/payment-methods",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1604,7 +1824,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/users/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1616,7 +1838,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/users",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/users",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1636,7 +1862,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/users/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/users/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1656,7 +1888,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/rights-info",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/privacy/rights-info",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1673,7 +1907,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/my-data",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/privacy/my-data",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1693,7 +1929,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/my-data/full",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/privacy/my-data/full",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1713,7 +1951,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/export/request",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/privacy/export/request",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1733,7 +1973,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/export/status",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/privacy/export/status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1753,7 +1995,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/export/download/{token}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/privacy/export/download/{token}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1773,7 +2017,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/delete-account/request",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/privacy/delete-account/request",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1793,7 +2039,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/delete-account/confirm",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/privacy/delete-account/confirm",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1813,7 +2061,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/delete-account/cancel",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/privacy/delete-account/cancel",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1833,7 +2083,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/delete-account/status",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/privacy/delete-account/status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1853,7 +2105,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/preferences",
-      "UpstreamHttpMethod": ["GET", "PUT"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/privacy/preferences",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1873,7 +2128,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/preferences/unsubscribe-all",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/privacy/preferences/unsubscribe-all",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1893,7 +2150,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/privacy/requests",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/privacy/requests",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1913,7 +2172,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1925,7 +2186,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers/{dealerId}/locations",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/dealers/{dealerId}/locations",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1945,7 +2210,12 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers/{dealerId}/locations/{locationId}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/dealers/{dealerId}/locations/{locationId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1965,7 +2235,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers/{dealerId}/locations/{locationId}/set-primary",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/dealers/{dealerId}/locations/{locationId}/set-primary",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -1985,7 +2257,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers/slug/{slug}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/dealers/slug/{slug}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2002,7 +2276,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers/sitemap",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/dealers/sitemap",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2019,7 +2295,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers/{dealerId}/badge-status",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/dealers/{dealerId}/badge-status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2036,7 +2315,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/dealers/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2056,7 +2341,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/dealers",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2076,7 +2363,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/dealers",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/dealers",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2096,7 +2386,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/subscriptions/plans",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/subscriptions/plans",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2108,7 +2401,12 @@
     },
     {
       "UpstreamPathTemplate": "/api/subscriptions/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/subscriptions/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2128,7 +2426,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/sellers/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2140,7 +2440,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/sellers/convert",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/sellers/convert",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2160,7 +2463,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/sellers/user/{userId}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/sellers/user/{userId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2180,7 +2486,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/sellers/{sellerId}/stats",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/sellers/{sellerId}/stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2200,7 +2509,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/sellers/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/sellers/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2220,7 +2535,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/sellers",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/sellers",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2240,7 +2559,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/roles/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2252,7 +2573,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/roles/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/roles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2272,7 +2599,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/roles",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/roles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2287,7 +2617,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/admin/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2329,7 +2661,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/crm/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2341,7 +2675,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/crm/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/crm/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2361,7 +2701,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/reports/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2373,7 +2715,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/reports/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/reports/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2393,7 +2741,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/contactrequests/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2405,7 +2755,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/contactrequests/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/contactrequests/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2425,7 +2781,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/contactrequests",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/contactrequests",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2440,7 +2800,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehiclecomparisons/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2452,7 +2814,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehiclecomparisons/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/comparisons/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2472,7 +2840,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicleintelligence/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2484,7 +2854,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicleintelligence/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/vehicleintelligence/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2504,7 +2880,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/reviews/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2516,7 +2894,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/reviews/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/reviews/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2536,7 +2920,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/reviews",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/reviews",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2551,7 +2939,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/appointments/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2563,7 +2953,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/appointments/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/appointments/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2583,7 +2979,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/timeslots/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2595,7 +2993,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/timeslots/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/timeslots/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2615,7 +3019,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/timeslots",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/timeslots",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2635,7 +3043,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/appointments",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/appointments",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2655,7 +3067,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/recommendations/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2667,7 +3081,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/recommendations/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/recommendations/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2687,7 +3107,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/chatbot/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2699,7 +3121,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/start",
-      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/chat/start",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2723,7 +3148,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/message",
-      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/chat/message",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2747,7 +3175,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/end",
-      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/chat/end",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2764,7 +3195,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/transfer",
-      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/chat/transfer",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2781,7 +3215,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/session",
-      "UpstreamHttpMethod": ["GET", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/chat/session",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2793,7 +3230,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/session/{sessionToken}/messages",
-      "UpstreamHttpMethod": ["GET", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/chat/session/{sessionToken}/messages",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2805,7 +3245,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/sessions/active/count",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/chat/sessions/active/count",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2820,7 +3262,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/chat/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2832,7 +3276,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/whatsapp/webhook",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/whatsapp/webhook",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2849,7 +3296,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/chat/handoff/{everything}",
-      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/chat/handoff/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2869,7 +3319,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/chatbot/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/chatbot/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2889,7 +3345,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle-intelligence/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2901,7 +3359,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle-intelligence/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/vehicle-intelligence/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2921,7 +3385,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/azul-payment/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2933,7 +3399,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/azul-payment/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/azul/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2953,7 +3425,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/savedsearches/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2965,7 +3439,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/savedsearches",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/savedsearches",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -2985,7 +3463,12 @@
     },
     {
       "UpstreamPathTemplate": "/api/savedsearches/{id}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/savedsearches/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3005,7 +3488,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/savedsearches/{id}/name",
-      "UpstreamHttpMethod": ["PUT"],
+      "UpstreamHttpMethod": [
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/savedsearches/{id}/name",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3025,7 +3510,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/savedsearches/{id}/criteria",
-      "UpstreamHttpMethod": ["PUT"],
+      "UpstreamHttpMethod": [
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/savedsearches/{id}/criteria",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3045,7 +3532,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/savedsearches/{id}/notifications",
-      "UpstreamHttpMethod": ["PUT"],
+      "UpstreamHttpMethod": [
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/savedsearches/{id}/notifications",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3065,7 +3554,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/savedsearches/{id}/activate",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/savedsearches/{id}/activate",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3085,7 +3576,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/savedsearches/{id}/deactivate",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/savedsearches/{id}/deactivate",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3105,7 +3598,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/pricealerts/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3118,7 +3613,10 @@
     {
       "_comment": "PriceAlerts: stats endpoint (authenticated)",
       "UpstreamPathTemplate": "/api/pricealerts/stats",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/pricealerts/stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3139,7 +3637,10 @@
     {
       "_comment": "PriceAlerts: get alert for specific vehicle (authenticated)",
       "UpstreamPathTemplate": "/api/pricealerts/vehicle/{vehicleId}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/pricealerts/vehicle/{vehicleId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3160,7 +3661,9 @@
     {
       "_comment": "PriceAlerts: check-price internal endpoint (no auth - called by VehiclesSaleService)",
       "UpstreamPathTemplate": "/api/pricealerts/check-price",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/pricealerts/check-price",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3172,7 +3675,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/pricealerts",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/pricealerts",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3192,7 +3699,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/pricealerts/{id}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/pricealerts/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3212,7 +3723,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/pricealerts/{id}/target-price",
-      "UpstreamHttpMethod": ["PUT"],
+      "UpstreamHttpMethod": [
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/pricealerts/{id}/target-price",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3232,7 +3745,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/pricealerts/{id}/activate",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/pricealerts/{id}/activate",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3252,7 +3767,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/pricealerts/{id}/deactivate",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/pricealerts/{id}/deactivate",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3272,7 +3789,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/pricealerts/{id}/reset",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/pricealerts/{id}/reset",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3292,7 +3811,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3304,7 +3825,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/pending",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/pending",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3322,7 +3846,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/statistics",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/statistics",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3340,7 +3867,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/expiring",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/expiring",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3358,7 +3888,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/settings",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/settings",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3376,7 +3909,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/user/{userId}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/user/{userId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3396,7 +3932,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/document/{documentNumber}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/document/{documentNumber}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3414,7 +3953,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/{profileId}/submit",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/{profileId}/submit",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3434,7 +3976,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/{profileId}/approve",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/{profileId}/approve",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3452,7 +3997,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/{profileId}/reject",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/{profileId}/reject",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3470,7 +4018,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/draft",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/draft",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3490,7 +4041,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/draft/{userId}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/draft/{userId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3510,7 +4065,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/profiles/{profileId}/documents",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kyc/profiles/{profileId}/documents",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3530,7 +4089,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/documents/{documentId}/verify",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kyc/documents/{documentId}/verify",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3548,7 +4110,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/documents/{documentId}/url",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/kyc/documents/{documentId}/url",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3568,7 +4133,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/identity-verification/verify",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kyc/identity-verification/verify",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3588,7 +4156,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3608,7 +4182,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/kycprofiles",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kycprofiles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3628,7 +4206,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/documents",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kyc/documents",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3648,7 +4230,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/documents/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/kyc/documents/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3668,7 +4256,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/identity-verification",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kyc/identity-verification",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3688,7 +4279,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/kyc/identity-verification/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/kyc/identity-verification/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3708,7 +4303,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/configurations/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3720,7 +4317,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/public/pricing",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/public/pricing",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3732,7 +4331,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/public/pricing/providers",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/public/pricing/providers",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3747,7 +4348,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/configurations",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/configurations",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3765,7 +4369,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/configurations/bulk",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/configurations/bulk",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3783,7 +4389,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/configurations/category/general",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/configurations/category/general",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3800,7 +4408,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/configurations/category/{category}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/configurations/category/{category}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3818,7 +4428,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/configurations/{everything}",
-      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/configurations/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3836,7 +4450,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/featureflags",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/featureflags",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3854,7 +4471,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/featureflags/{everything}",
-      "UpstreamHttpMethod": ["GET", "PUT", "DELETE"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/featureflags/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3872,7 +4493,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/secrets",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/secrets",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3890,7 +4513,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/secrets",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/secrets",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3908,7 +4533,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/secrets/bulk",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/secrets/bulk",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3926,7 +4553,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/secrets/{everything}",
-      "UpstreamHttpMethod": ["GET", "DELETE"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/secrets/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3944,7 +4574,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3956,7 +4588,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/status",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/maintenance/status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3971,7 +4605,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/current",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/maintenance/current",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -3986,7 +4622,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/upcoming",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/maintenance/upcoming",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4001,7 +4639,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/maintenance",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4016,7 +4657,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/{id}/start",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/maintenance/{id}/start",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4031,7 +4674,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/{id}/complete",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/maintenance/{id}/complete",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4046,7 +4691,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/{id}/cancel",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/maintenance/{id}/cancel",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4061,7 +4708,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/{id}/schedule",
-      "UpstreamHttpMethod": ["PUT"],
+      "UpstreamHttpMethod": [
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/maintenance/{id}/schedule",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4076,7 +4725,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/{id}/notes",
-      "UpstreamHttpMethod": ["PUT"],
+      "UpstreamHttpMethod": [
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/maintenance/{id}/notes",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4091,7 +4742,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/maintenance/{id}",
-      "UpstreamHttpMethod": ["GET", "DELETE"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/maintenance/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4106,7 +4760,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/leads",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/leads",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4118,7 +4774,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/leads/seller/{sellerId}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/leads/seller/{sellerId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4133,7 +4791,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/leads/seller/{sellerId}/stats",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/leads/seller/{sellerId}/stats",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4148,7 +4808,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/leads/dealer/{dealerId}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/leads/dealer/{dealerId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4163,7 +4825,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/leads/{id}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/leads/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4178,7 +4842,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/leads/{id}/reply",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/leads/{id}/reply",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4193,7 +4859,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/leads/{id}/messages",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/leads/{id}/messages",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4208,7 +4876,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/leads/{id}/status",
-      "UpstreamHttpMethod": ["PATCH"],
+      "UpstreamHttpMethod": [
+        "PATCH"
+      ],
       "DownstreamPathTemplate": "/api/leads/{id}/status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4224,7 +4894,9 @@
     {
       "_comment": "AdvertisingService (consolidated to AdminService): Create Campaign",
       "UpstreamPathTemplate": "/api/advertising/campaigns",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/advertising/campaigns",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4239,7 +4911,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/campaigns/{id}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/campaigns/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4254,7 +4928,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/campaigns/owner/{ownerId}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/campaigns/owner/{ownerId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4269,7 +4945,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/campaigns/{id}/pause",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/advertising/campaigns/{id}/pause",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4284,7 +4962,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/campaigns/{id}/resume",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/advertising/campaigns/{id}/resume",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4299,7 +4979,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/campaigns/{id}/cancel",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/advertising/campaigns/{id}/cancel",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4314,7 +4996,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/tracking/impression",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/advertising/tracking/impression",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4326,7 +5010,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/tracking/click",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/advertising/tracking/click",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4338,7 +5024,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/rotation/{section}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/rotation/{section}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4350,7 +5038,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/rotation/config/{section}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/rotation/config/{section}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4365,7 +5055,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/rotation/config",
-      "UpstreamHttpMethod": ["PUT"],
+      "UpstreamHttpMethod": [
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/advertising/rotation/config",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4380,7 +5072,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/rotation/refresh",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/advertising/rotation/refresh",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4395,7 +5089,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/homepage/categories",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/homepage/categories",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4407,7 +5103,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/homepage/categories",
-      "UpstreamHttpMethod": ["PUT"],
+      "UpstreamHttpMethod": [
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/advertising/homepage/categories",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4422,7 +5120,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/homepage/brands",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/homepage/brands",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4434,7 +5134,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/homepage/brands",
-      "UpstreamHttpMethod": ["PUT"],
+      "UpstreamHttpMethod": [
+        "PUT"
+      ],
       "DownstreamPathTemplate": "/api/advertising/homepage/brands",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4449,7 +5151,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/reports/campaign/{campaignId}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/reports/campaign/{campaignId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4464,7 +5168,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/reports/platform",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/reports/platform",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4479,7 +5185,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/reports/owner/{ownerId}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/reports/owner/{ownerId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4494,7 +5202,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/reports/pricing/{placementType}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/reports/pricing/{placementType}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4506,7 +5216,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/catalog",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/catalog",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4518,7 +5230,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/catalog/{slug}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/catalog/{slug}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4530,7 +5244,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/catalog/{slug}/estimate",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/catalog/{slug}/estimate",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4542,7 +5258,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/advertising/catalog/category/{category}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/advertising/catalog/category/{category}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4554,7 +5272,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/okla-coins/packages",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/okla-coins/packages",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4566,7 +5286,13 @@
     },
     {
       "UpstreamPathTemplate": "/api/okla-coins/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/okla-coins/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4581,7 +5307,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/staff/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4620,7 +5348,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/staff",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/staff",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4662,7 +5393,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/permissions",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/permissions",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4704,7 +5438,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/audit/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4743,7 +5479,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/audit",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/audit",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4758,7 +5496,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/search-agent/search",
-      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/search-agent/search",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4775,7 +5516,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/search-agent/status",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/search-agent/status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4787,7 +5530,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/search-agent/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4799,7 +5544,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/search-agent/config",
-      "UpstreamHttpMethod": ["GET", "PUT", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "PUT",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/search-agent/config",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4814,7 +5563,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/reco-agent/recommend",
-      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/reco-agent/recommend",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4834,7 +5586,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/reco-agent/feedback",
-      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/reco-agent/feedback",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4849,7 +5604,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/reco-agent/status",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/reco-agent/status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4861,7 +5618,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/reco-agent/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4873,7 +5632,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/reco-agent/config",
-      "UpstreamHttpMethod": ["GET", "PUT", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "PUT",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/reco-agent/config",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4888,7 +5651,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/support/message",
-      "UpstreamHttpMethod": ["POST", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "POST",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/support/message",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4912,7 +5678,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/support/session/{sessionId}",
-      "UpstreamHttpMethod": ["GET", "OPTIONS"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "OPTIONS"
+      ],
       "DownstreamPathTemplate": "/api/support/session/{sessionId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4924,7 +5693,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/support/status",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/support/status",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4936,7 +5707,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/support/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4948,7 +5721,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/health",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/health",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4960,7 +5735,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/upload",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/upload",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4980,7 +5757,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/status",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/{jobId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -4997,7 +5776,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/result",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/{jobId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5014,7 +5795,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/retry",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/retry",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5034,7 +5817,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/jobs/{jobId}/cancel",
-      "UpstreamHttpMethod": ["POST"],
+      "UpstreamHttpMethod": [
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/video360/jobs/{jobId}/cancel",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5049,7 +5834,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/vehicle360/viewer/{vehicleId}",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/video360/vehicle/{vehicleId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5066,7 +5853,9 @@
     },
     {
       "UpstreamPathTemplate": "/api/content/banners",
-      "UpstreamHttpMethod": ["GET"],
+      "UpstreamHttpMethod": [
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/content/banners",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5078,7 +5867,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/content/banners/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/content/banners/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5090,7 +5882,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/contentreports/vehicle/anonymous",
-      "UpstreamHttpMethod": ["OPTIONS", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/contentreports/vehicle/anonymous",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5107,7 +5902,10 @@
     },
     {
       "UpstreamPathTemplate": "/api/contentreports/vehicle/{vehicleId}/count",
-      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET"
+      ],
       "DownstreamPathTemplate": "/api/contentreports/vehicle/{vehicleId}/count",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5119,7 +5917,11 @@
     },
     {
       "UpstreamPathTemplate": "/api/contentreports",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "POST"
+      ],
       "DownstreamPathTemplate": "/api/contentreports",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5134,7 +5936,12 @@
     },
     {
       "UpstreamPathTemplate": "/api/contentreports/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "PATCH", "DELETE"],
+      "UpstreamHttpMethod": [
+        "OPTIONS",
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/contentreports/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

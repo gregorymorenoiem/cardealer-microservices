@@ -1,3 +1,66 @@
-Lleva a cabo rápidamente el prompt 6. Como si no tuvieras registro y realiza una auditoría de Unit tests — Cálculo del tipo de cambio BCRD y precio en RD$: Auditar que existen unit tests que verifican: conversión correcta USD → RD$ usando el tipo de cambio del BCRD, manejo del caso donde la API del BCRD está caída (usar último valor cacheado con timestamp visible), que el precio en RD$ se muestra con separador de miles correcto ('RD$ 1,250,000'), y que un precio en USD de $10,000 con tipo de cambio de 58.5 produce exactamente RD$ 585,000 sin errores de punto flotante y ejecuta correcciones y ejecuta inmediatamente sus recomendaciones. Y continúa con la monitorización de .prompts/prompt_6.md.
-Ejecutar el comando "/compact" al comienzo de cada auditoria
-<!-- monitor: 2026-03-16 22:05:59 -->
+Ahora quiero que me unifiques la seccion de upgrade tu plan en "https://okla.com.do/cuenta/upgrade?plan=premium&type=seller", con la seccion de "https://okla.com.do/cuenta/upgrade" y mira de que te debes basar para sacar los plane de vendedores indivisuales (seller), "CARACTERÍSTICA
+LIBRE
+ESTÁNDAR $9.99/listing
+VERIFICADO $34.99/mes
+Publicaciones activas
+1
+1 por pago
+3 simultáneas
+Duración del listing
+30 días
+60 días
+90 días
+Fotos/vehículo
+Hasta 5
+Hasta 10
+Hasta 12
+Posición búsqueda
+⬇ Fondo absoluto
+⬆ Media (bajo dealers)
+Alta (bajo dealers VISIBLE)
+Badge de confianza
+⚪ Sin verificar
+🔵 Vendedor OKLA
+✅ Vendedor Verificado
+Verificación KYC
+Solo email
+Email + teléfono
+Cédula + selfie + tel.
+Renovación listing
+$4.99
+$6.99
+Incluida
+PricingAgent IA
+—
+1/listing
+2/mes
+Analytics
+—
+—
+Básico (sus listings)
+Costo OKLA
+~$0.02/listing
+~$0.12/listing
+~$3.50/mes
+MARGEN BRUTO
+N/A
+~99% — $9.87
+~90% — $31.49
+
+"
+
+OKLA Local ACCOUNT Admin
+Username: admin@okla.local
+Password: Admin123!@#
+
+OKLA Buyer Account
+Username: buyer002@okla-test.com
+Password: BuyerTest2026!
+
+OKLA Dealer
+Username: nmateo@okla.com.do
+Pass: Dealer2026!@#
+
+OKLA Seller
+Username: gmoreno@okla.com.do
+Pass: $Gregory1
