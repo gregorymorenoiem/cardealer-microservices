@@ -3684,6 +3684,21 @@ data:
           }
         },
         {
+          "UpstreamPathTemplate": "/api/configurations/{everything}",
+          "UpstreamHttpMethod": [
+            "GET",
+            "OPTIONS"
+          ],
+          "DownstreamPathTemplate": "/api/configurations/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "adminservice",
+              "Port": 8080
+            }
+          ]
+        },
+        {
           "UpstreamPathTemplate": "/api/admin/health",
           "UpstreamHttpMethod": [
             "GET"
