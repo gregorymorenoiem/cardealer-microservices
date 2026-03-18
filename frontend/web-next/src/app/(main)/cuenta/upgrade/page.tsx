@@ -15,6 +15,7 @@ import { useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/format';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { usePlatformPricing } from '@/hooks/use-platform-pricing';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -386,6 +387,7 @@ const PAYMENT_METHODS: {
 function UpgradeCheckoutInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { pricing } = usePlatformPricing();
 
   const rawPlanKey = searchParams.get('plan')?.toLowerCase() ?? 'pro';
   const userType = (searchParams.get('type') as UserType) ?? 'dealer';
@@ -393,7 +395,24 @@ function UpgradeCheckoutInner() {
   const targetPlanKey =
     userType === 'seller' ? (SELLER_PLAN_ALIASES[rawPlanKey] ?? rawPlanKey) : rawPlanKey;
 
-  const plans = userType === 'dealer' ? DEALER_PLANS : SELLER_PLANS;
+  // Build dealer plans with LIVE pricing from admin configuration
+  const dealerPlansLive = useMemo<Record<string, PlanInfo>>(() => ({
+    libre: { ...DEALER_PLANS.libre, monthlyPrice: 0, annualPrice: 0 },
+    visible: { ...DEALER_PLANS.visible, monthlyPrice: pricing.dealerVisible, annualPrice: Math.round(pricing.dealerVisible * 10) },
+    starter: { ...DEALER_PLANS.starter, monthlyPrice: pricing.dealerStarter, annualPrice: Math.round(pricing.dealerStarter * 10) },
+    pro: { ...DEALER_PLANS.pro, monthlyPrice: pricing.dealerPro, annualPrice: Math.round(pricing.dealerPro * 10) },
+    elite: { ...DEALER_PLANS.elite, monthlyPrice: pricing.dealerElite, annualPrice: Math.round(pricing.dealerElite * 10) },
+    enterprise: { ...DEALER_PLANS.enterprise, monthlyPrice: pricing.dealerEnterprise, annualPrice: Math.round(pricing.dealerEnterprise * 10) },
+  }), [pricing]);
+
+  // Build seller plans with LIVE pricing from admin configuration (prices stored in DOP, displayed as USD)
+  const sellerPlansLive = useMemo<Record<string, PlanInfo>>(() => ({
+    libre_seller: { ...SELLER_PLANS.libre_seller, monthlyPrice: 0, annualPrice: 0 },
+    estandar: { ...SELLER_PLANS.estandar, monthlyPrice: pricing.sellerEstandar / 58, annualPrice: pricing.sellerEstandar / 58 },
+    verificado: { ...SELLER_PLANS.verificado, monthlyPrice: pricing.sellerVerificado / 58, annualPrice: pricing.sellerVerificado / 58 },
+  }), [pricing]);
+
+  const plans = userType === 'dealer' ? dealerPlansLive : sellerPlansLive;
   const planKeys = Object.keys(plans);
 
   // Current plan = lowest tier (mock: user is on free plan)

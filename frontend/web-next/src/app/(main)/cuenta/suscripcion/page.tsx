@@ -8,6 +8,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,17 +26,17 @@ import { formatPrice } from '@/lib/format';
 // HELPERS
 // =============================================================================
 
-// Plan features description
+// Plan features description — keys MUST match SellerPlan values (libre_seller / estandar / verificado)
 function getPlanFeatures() {
   return {
-    gratis: [
+    libre_seller: [
       '1 publicación activa',
       'Hasta 10 fotos por vehículo',
       'Duración: 30 días',
       'Contacto por WhatsApp',
       'Panel de vendedor básico',
     ],
-    premium: [
+    estandar: [
       'Hasta 5 publicaciones activas',
       'Hasta 30 fotos por vehículo',
       'Publicaciones permanentes',
@@ -46,7 +47,7 @@ function getPlanFeatures() {
       'Boosts disponibles',
       'Compartir en redes con preview',
     ],
-    pro: [
+    verificado: [
       'Hasta 15 publicaciones activas',
       'Hasta 50 fotos por vehículo',
       'Publicaciones permanentes',
@@ -68,6 +69,7 @@ function getPlanFeatures() {
 
 export default function SellerSubscriptionPage() {
   useAuth();
+  const router = useRouter();
   const { currentPlan, maxListings, maxImages, featuredPerMonth, isLoading } = usePlanAccess();
   const { pricing } = usePlatformPricing();
   const [changingPlan, setChangingPlan] = useState<string | null>(null);
@@ -84,15 +86,17 @@ export default function SellerSubscriptionPage() {
     if (newPlan === currentPlan) return;
     setChangingPlan(newPlan);
     try {
-      // In a real implementation, this would call the subscription API
-      toast.success(
-        newPlan === 'gratis'
-          ? 'Plan cambiado a Gratis. Los cambios aplican al final del período.'
-          : `¡Bienvenido al plan ${newPlan === 'premium' ? 'Premium' : 'PRO'}! Serás redirigido al checkout.`
-      );
+      if (newPlan === 'libre_seller') {
+        // Downgrade — inform user the change applies at end of period
+        toast.success('Plan cambiado a Libre. Los cambios aplican al final del período de facturación.');
+        setChangingPlan(null);
+        return;
+      }
+      // For paid plans redirect to the upgrade checkout
+      const planParam = newPlan === 'estandar' ? 'estandar' : 'verificado';
+      router.push(`/cuenta/upgrade?plan=${planParam}&type=seller`);
     } catch {
       toast.error('Error al cambiar el plan. Intenta de nuevo.');
-    } finally {
       setChangingPlan(null);
     }
   };
@@ -155,49 +159,49 @@ export default function SellerSubscriptionPage() {
 
       {/* ── Plan Cards ─────────────────────────────────────── */}
       <div className="grid gap-6 md:grid-cols-3">
-        {/* GRATIS */}
+        {/* LIBRE */}
         <PlanCard
-          name="Gratis"
-          planKey="gratis"
+          name="Libre"
+          planKey="libre_seller"
           price={0}
           period=""
           description="Para vendedores ocasionales"
-          features={plans.gratis}
+          features={plans.libre_seller}
           icon={Zap}
-          isCurrent={currentPlan === 'gratis'}
-          isChanging={changingPlan === 'gratis'}
-          onSelect={() => handleChangePlan('gratis')}
+          isCurrent={currentPlan === 'libre_seller'}
+          isChanging={changingPlan === 'libre_seller'}
+          onSelect={() => handleChangePlan('libre_seller')}
           currentPlan={currentPlan}
         />
 
-        {/* PREMIUM */}
+        {/* ESTÁNDAR */}
         <PlanCard
-          name="Premium"
-          planKey="premium"
-          price={pricing.sellerPremium}
-          period="/mes"
+          name="Estándar"
+          planKey="estandar"
+          price={pricing.sellerEstandar}
+          period="/publicación"
           description="Vende más rápido"
-          features={plans.premium}
+          features={plans.estandar}
           icon={Sparkles}
-          isCurrent={currentPlan === 'premium'}
+          isCurrent={currentPlan === 'estandar'}
           isPopular
-          isChanging={changingPlan === 'premium'}
-          onSelect={() => handleChangePlan('premium')}
+          isChanging={changingPlan === 'estandar'}
+          onSelect={() => handleChangePlan('estandar')}
           currentPlan={currentPlan}
         />
 
-        {/* PRO */}
+        {/* VERIFICADO */}
         <PlanCard
-          name="PRO"
-          planKey="pro"
-          price={pricing.sellerProPlan}
+          name="Verificado"
+          planKey="verificado"
+          price={pricing.sellerVerificado}
           period="/mes"
           description="Máxima visibilidad y herramientas"
-          features={plans.pro}
+          features={plans.verificado}
           icon={Crown}
-          isCurrent={currentPlan === 'pro'}
-          isChanging={changingPlan === 'pro'}
-          onSelect={() => handleChangePlan('pro')}
+          isCurrent={currentPlan === 'verificado'}
+          isChanging={changingPlan === 'verificado'}
+          onSelect={() => handleChangePlan('verificado')}
           currentPlan={currentPlan}
         />
       </div>
@@ -395,11 +399,11 @@ function PlanCard({
 
 function getPlanOrder(plan: string): number {
   switch (plan) {
-    case 'gratis':
+    case 'libre_seller':
       return 0;
-    case 'premium':
+    case 'estandar':
       return 1;
-    case 'pro':
+    case 'verificado':
       return 2;
     default:
       return -1;
@@ -412,22 +416,22 @@ function getPlanOrder(plan: string): number {
 
 function ComparisonTable({ currentPlan }: { currentPlan: string }) {
   const features = [
-    { label: 'Publicaciones activas', gratis: '1', premium: '5', pro: '15' },
-    { label: 'Fotos por vehículo', gratis: '10', premium: '30', pro: '50' },
-    { label: 'Duración publicación', gratis: '30 días', premium: 'Permanente', pro: 'Permanente' },
-    { label: 'Contacto WhatsApp', gratis: true, premium: true, pro: true },
-    { label: 'Prioridad en búsquedas', gratis: false, premium: true, pro: true },
-    { label: 'Badge verificado', gratis: false, premium: true, pro: true },
-    { label: 'Destacadas/mes', gratis: '0', premium: '2', pro: '5' },
-    { label: 'Estadísticas detalladas', gratis: false, premium: true, pro: true },
-    { label: 'Boosts disponibles', gratis: false, premium: true, pro: true },
-    { label: 'Compartir en redes', gratis: false, premium: true, pro: true },
-    { label: 'Alertas de baja de precio', gratis: false, premium: false, pro: true },
-    { label: 'Soporte prioritario', gratis: false, premium: false, pro: true },
+    { label: 'Publicaciones activas', libre_seller: '1', estandar: '5', verificado: '15' },
+    { label: 'Fotos por vehículo', libre_seller: '10', estandar: '30', verificado: '50' },
+    { label: 'Duración publicación', libre_seller: '30 días', estandar: 'Permanente', verificado: 'Permanente' },
+    { label: 'Contacto WhatsApp', libre_seller: true, estandar: true, verificado: true },
+    { label: 'Prioridad en búsquedas', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Badge verificado', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Destacadas/mes', libre_seller: '0', estandar: '2', verificado: '5' },
+    { label: 'Estadísticas detalladas', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Boosts disponibles', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Compartir en redes', libre_seller: false, estandar: true, verificado: true },
+    { label: 'Alertas de baja de precio', libre_seller: false, estandar: false, verificado: true },
+    { label: 'Soporte prioritario', libre_seller: false, estandar: false, verificado: true },
   ];
 
-  const planColumns = ['gratis', 'premium', 'pro'] as const;
-  const planHeaders = ['Gratis', 'Premium', 'PRO'];
+  const planColumns = ['libre_seller', 'estandar', 'verificado'] as const;
+  const planHeaders = ['Libre', 'Estándar', 'Verificado'];
 
   return (
     <table className="w-full">

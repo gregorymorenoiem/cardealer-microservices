@@ -32,8 +32,11 @@ export interface PlatformPricing {
   dealerPro: number;
   dealerElite: number;
   dealerEnterprise: number;
-  // Planes Seller Individual (3 niveles)
+  // Planes Seller Individual (3 niveles): LIBRE / ESTÁNDAR / VERIFICADO
   sellerGratis: number;
+  sellerEstandar: number;   // $9.99/listing (RD$579)
+  sellerVerificado: number; // $34.99/mes (RD$1999)
+  // Legacy aliases (kept for backward compat)
   sellerPremium: number;
   sellerProPlan: number;
   // Boosts
@@ -80,8 +83,11 @@ const DEFAULT_PRICING: PlatformPricing = {
   dealerPro: 5799,
   dealerElite: 20299,
   dealerEnterprise: 34999,
-  // Planes Seller Individual (DOP) - LIBRE(gratis)/ESTÁNDAR(579/listing)/VERIFICADO(1999/mes)
+  // Planes Seller Individual (DOP) — LIBRE / ESTÁNDAR($9.99/listing) / VERIFICADO($34.99/mes)
   sellerGratis: 0,
+  sellerEstandar: 579,   // RD$9.99 ≈ DOP 579
+  sellerVerificado: 1999, // RD$34.99/mes ≈ DOP 1999
+  // Legacy aliases
   sellerPremium: 579,
   sellerProPlan: 1999,
   // Boosts
