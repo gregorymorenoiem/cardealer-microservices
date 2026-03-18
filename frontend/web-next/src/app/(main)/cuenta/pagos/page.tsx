@@ -855,31 +855,6 @@ function AddPaymentMethodDialog({
           )}
         </div>
 
-        {/* DCC explanation */}
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-          <p className="mb-1.5 font-semibold">💱 Selección de moneda en el pago</p>
-          <p className="mb-2 leading-relaxed">
-            PayPal cobra en <strong>USD</strong>. Al aprobar el pago, PayPal te preguntará cómo
-            quieres la conversión a DOP:
-          </p>
-          <div className="space-y-1.5">
-            <div className="flex gap-2">
-              <span className="mt-0.5 shrink-0">•</span>
-              <span>
-                <strong>PayPal convierte:</strong> ves el monto exacto en DOP al instante (≈ 3–4 %
-                de margen sobre el tipo de cambio base).
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <span className="mt-0.5 shrink-0">•</span>
-              <span>
-                <strong>Tu banco convierte:</strong> posible mejor tasa; el monto DOP aparece en tu
-                estado de cuenta en 24–48 h.
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* PayPal Smart Buttons */}
         <div className="bg-muted/50 rounded-lg border p-4">
           {clientId ? (
