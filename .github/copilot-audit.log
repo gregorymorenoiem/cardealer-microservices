@@ -1632,3 +1632,15 @@ test
 [2026-03-17 13:57:10] [GATE-2] dotnet build TreatWarningsAsErrors — OK | Build succeeded. 0 Warnings. 0 Errors.
 [2026-03-17 13:57:10] [GATE-4] dotnet test --blame-hang 2min — OK | Unit: PASS, Integration/E2E: excluidos (requieren Docker)
 [2026-03-17 13:57:10] [BACKUP] Gateway.Api/Program.cs — backup created before middleware pipeline reorder
+[2026-03-17 17:58:28] [GIT] commit d2758c2c pushed — feat(billing): gateway enable/disable from dealer portal + PayPal SDK cleanup
+[2026-03-18 06:41:09] [GATE] ✅ Gate completo. Procediendo con commit/push.
+[2026-03-18 06:42:04] [MODIFICACIÓN] frontend/web-next/src/app/(main)/cuenta/pagos/page.tsx — Skip gateway selector, auto-open PayPal SDK, remove Monto de verificación UI, add Sin cobro notice
+[2026-03-18 06:42:04] [MODIFICACIÓN] frontend/web-next/src/components/checkout/PayPalPaymentButton.tsx — Add intent prop (capture|authorize)
+[2026-03-18 06:42:04] [MODIFICACIÓN] backend/BillingService — IPayPalService, PayPalService, PayPalController, PaymentMethodsController updated for no-charge AUTHORIZE flow
+[2026-03-18 06:42:04] [GIT] git push origin main — feat(pagos): simplify payment flow — 83c2daf6
+[2026-03-18 06:47:28] [BACKUP] AdminService/PublicConfigurationsController.cs — Backup antes de agregar /api/public/pricing
+[2026-03-18 06:49:50] [BACKUP] use-platform-pricing.ts + pricing/route.ts — Backup antes de agregar sellerEstandar/sellerVerificado
+[2026-03-18 06:56:02] [BACKUP] admin/planes/plan-manager-client.tsx — Backup antes de conectar save/load a /api/plans
+[2026-03-18 07:10:26] [GATE-3a] pnpm lint — OK | 0 errors, 24 pre-existing warnings
+[2026-03-18 07:10:26] [GATE-3b] pnpm typecheck — OK | 0 errores TS
+[2026-03-18 07:10:26] [GATE-3d] CI=true pnpm test --run — OK | 576 tests pasaron, 0 fallidos
