@@ -4,15 +4,14 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
- * /dealer root → redirects to /cuenta
- * El dashboard de dealer ahora vive en /cuenta (role-aware).
- * Las sub-páginas del portal (/dealer/inventario, /dealer/leads, etc.) siguen intactas.
+ * /dealer root → redirects to /dealer/dashboard
+ * The canonical dealer dashboard lives at /dealer/dashboard.
  */
 export default function DealerRootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/cuenta');
+    router.replace('/dealer/dashboard');
   }, [router]);
 
   return null;

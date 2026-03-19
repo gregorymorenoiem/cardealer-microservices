@@ -50,7 +50,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 // =============================================================================
 
 const mainLinks = [
-  { href: '/dealer', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dealer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dealer/inventario', label: 'Inventario', icon: Car },
   { href: '/dealer/inventario/importar', label: 'Importar Masivo', icon: Upload },
   { href: '/dealer/leads', label: 'Leads', icon: Users },
@@ -106,13 +106,13 @@ function DealerLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const isActivePath = (href: string) => {
-    if (href === '/dealer') return pathname === '/dealer';
+    if (href === '/dealer' || href === '/dealer/dashboard') return pathname === '/dealer/dashboard';
     return pathname.startsWith(href);
   };
 
   // Mobile bottom nav items (most important sections)
   const mobileNavItems = [
-    { href: '/dealer', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/dealer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/dealer/inventario', label: 'Inventario', icon: Car },
     { href: '/publicar', label: 'Publicar', icon: PlusCircle, highlight: true },
     { href: '/dealer/leads', label: 'Leads', icon: Users },
