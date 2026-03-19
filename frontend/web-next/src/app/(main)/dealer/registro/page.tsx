@@ -44,7 +44,6 @@ import {
   sanitizeEmail,
   sanitizePhone,
   sanitizeRNC,
-  sanitizeUrl,
 } from '@/lib/security/sanitize';
 
 const steps = [
@@ -156,6 +155,11 @@ export default function DealerProfileSetupPage() {
       }
       if (!formData.rnc.trim()) {
         errors.rnc = 'El RNC es obligatorio';
+      } else {
+        const rncDigits = formData.rnc.replace(/\D/g, '');
+        if (rncDigits.length !== 9 && rncDigits.length !== 11) {
+          errors.rnc = 'El RNC debe tener 9 dígitos (empresa) u 11 dígitos (cédula)';
+        }
       }
       if (!formData.email.trim()) {
         errors.email = 'El correo electrónico es obligatorio';
@@ -203,24 +207,23 @@ export default function DealerProfileSetupPage() {
       }
 
       // 1. Create dealer profile in DealerManagementService
+      // Field names MUST match CreateDealerRequest DTO in UserService:
+      //   ownerUserId (required), businessName (required), state (required)
+      const taxId = sanitizeRNC(formData.rnc);
       const dealerResponse = await apiClient.post('/api/dealers', {
-        userId: user.id,
-        businessName: sanitizeText(formData.businessName.trim(), { maxLength: 200 }),
-        rnc: sanitizeRNC(formData.rnc),
-        type: formData.dealerType,
+        ownerUserId: user.id,
+        businessName: sanitizeText(formData.businessName.trim(), { maxLength: 150 }),
+        taxId: taxId || undefined,
+        dealerType: formData.dealerType === 'chain' ? 1 : 0,
         email: sanitizeEmail(formData.email),
         phone: sanitizePhone(formData.phone),
-        facebookUrl: formData.facebookUrl ? sanitizeUrl(formData.facebookUrl) : undefined,
-        instagramUrl: formData.instagramUrl ? sanitizeUrl(formData.instagramUrl) : undefined,
-        whatsAppNumber: formData.whatsappNumber
-          ? sanitizePhone(formData.whatsappNumber)
-          : undefined,
+        whatsApp: formData.whatsappNumber ? sanitizePhone(formData.whatsappNumber) : undefined,
         description: formData.description
           ? sanitizeText(formData.description, { maxLength: 2000 })
           : undefined,
         address: sanitizeText(formData.address.trim(), { maxLength: 500 }),
         city: sanitizeText(formData.city.trim(), { maxLength: 100 }),
-        province: formData.province,
+        state: formData.province,
       });
 
       const newDealerId = dealerResponse.data?.id;
@@ -239,7 +242,7 @@ export default function DealerProfileSetupPage() {
       }
 
       // 4. Redirect to dealer dashboard
-      router.push('/dealer');
+      router.push('/dealer/dashboard');
       router.refresh();
     } catch (err: unknown) {
       const apiErr = err as {

@@ -1659,3 +1659,10 @@ test
 [2026-03-19 06:11:56] [CREACIÓN] frontend/web-next/src/app/(main)/dealer/dashboard/page.tsx — Nuevo dashboard dealer: elimina 404 en /dealer/dashboard
 [2026-03-19 06:11:56] [MODIFICACIÓN] frontend/web-next/src/app/(main)/dealer/page.tsx — Redirect corregido: /cuenta → /dealer/dashboard (elimina loop)
 [2026-03-19 06:11:56] [MODIFICACIÓN] frontend/web-next/src/app/(main)/dealer/layout.tsx — Nav link y isActivePath actualizados a /dealer/dashboard
+[2026-03-19 06:14:11] [GATE] Iniciando gate pre-push completo...
+[2026-03-19 06:17:28] [GATE] ✅ Gate completo PASSED. Procediendo con git push...
+[2026-03-19 06:17:29] [GIT] git push origin main — SUCCESS | commit: fix(dealer): create /dealer/dashboard route
+[2026-03-19 06:57:07] [BACKUP] dealer/registro/page.tsx — backed up before fixing api field names
+[2026-03-19 06:57:07] [MODIFICACIÓN] dealer/registro/page.tsx — Fix 400: ownerUserId/state/whatsApp/taxId/dealerType field names + RNC format validation
+[2026-03-19 06:57:07] [CREACIÓN] dealer/notificaciones/page.tsx — Redirect a /cuenta/notificaciones (fix 404 desde dealer layout header)
+[2026-03-19 06:57:07] [CREACIÓN] cuenta/mis-vehiculos/[id]/editar/page.tsx — Redirect a /vender/editar/[id] (fix 404 desde smart-publish-wizard)
