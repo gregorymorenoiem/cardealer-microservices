@@ -227,15 +227,27 @@ export default function DealerRegistrationPage() {
         accountType: 'dealer',
       });
 
-      // Step 2: Save dealer profile data to localStorage
-      // (will be created AFTER email verification when user logs in)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('pending-dealer-registration', JSON.stringify(dealerPayload));
-      }
+      // Step 2: Auto-login so we can create the dealer profile immediately
+      try {
+        await login({
+          email: sanitizedEmail,
+          password: formData.password,
+        });
 
-      // Step 3: Redirect to email verification page
-      // User MUST verify email before dealer profile can be created (requires authentication)
-      router.push(`/verificar-email?email=${encodeURIComponent(sanitizedEmail)}&dealer=true`);
+        // Step 3: Create the dealer profile (user is now authenticated)
+        await createDealer(dealerPayload);
+
+        // Success — redirect to publish first vehicle (onboarding flow)
+        router.push('/publicar?onboarding=true');
+      } catch {
+        // Auto-login failed (most likely email verification required).
+        // Save the dealer data so it can be created after the user verifies and logs in.
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('pending-dealer-registration', JSON.stringify(dealerPayload));
+        }
+        // Redirect to email verification page
+        router.push(`/verificar-email?email=${encodeURIComponent(sanitizedEmail)}&dealer=true`);
+      }
     } catch (err) {
       const apiError = err as { message?: string };
       setError(apiError.message || 'Error al crear la cuenta. Intenta de nuevo.');
