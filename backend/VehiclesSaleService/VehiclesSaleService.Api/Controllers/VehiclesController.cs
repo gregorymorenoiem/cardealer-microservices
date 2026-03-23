@@ -1333,13 +1333,31 @@ public class VehiclesController : ControllerBase
 
         // ═══════════════════════════════════════════════════════════════
         // FRAUD PREVENTION: VIN validation at publish time
+        // Check digit errors → moderation warning (not hard block)
+        // Format/character errors → hard block
+        // Rationale: manual VIN entry in DR market has high transcription
+        // error rate. Moderators verify the physical VIN on inspection.
         // ═══════════════════════════════════════════════════════════════
         if (!string.IsNullOrWhiteSpace(vehicle.VIN))
         {
             var vinResult = VehiclesSaleService.Application.Services.VinValidationService.Validate(vehicle.VIN);
             if (!vinResult.IsValid)
             {
-                validationErrors.Add($"VIN inválido: {vinResult.Error}");
+                if (vinResult.IsChecksumFailure)
+                {
+                    // Checksum-only failures: flag in moderation notes for manual review
+                    // but do NOT block publish — common transcription error in DR market
+                    _logger.LogWarning(
+                        "Vehicle {VehicleId} has VIN with invalid check digit: {VIN}. Flagged for moderator review.",
+                        id, vehicle.VIN);
+                    vehicle.ModerationNotes = (vehicle.ModerationNotes ?? string.Empty)
+                        + $"\n[VIN CHECK] ⚠️ Dígito de verificación inválido (posición 9). Moderador debe verificar el VIN físico del vehículo.";
+                }
+                else
+                {
+                    // Format/character errors are hard blocks (clearly invalid VIN)
+                    validationErrors.Add($"VIN inválido: {vinResult.Error}");
+                }
             }
         }
         // VIN recommended warning (not blocking for now, but logged)
@@ -2328,6 +2346,9 @@ public class VehiclesController : ControllerBase
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Added {Count} images to vehicle {VehicleId}", addedImages.Count, id);
+
+        // Invalidate vehicle cache so subsequent GET requests reflect the new images immediately
+        await InvalidateVehicleCacheAsync(id);
 
         return Ok(addedImages);
     }

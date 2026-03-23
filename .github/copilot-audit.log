@@ -1675,3 +1675,4 @@ test
 [2026-03-23 14:52:52] [MODIFICACION] frontend/web-next/src/components/vehicles/photos/image-compressor.ts — set useWebWorker:false to fix CSP cdn.jsdelivr.net script violation on photo upload
 [2026-03-23 14:52:52] [MODIFICACION] backend/VehiclesSaleService/VehiclesSaleService.Application/Services/ImageUrlValidationService.cs — remove .digitaloceanspaces.com from InternalBucketPatterns (was blocking all DO Spaces URLs causing publish 400)
 [2026-03-23 14:52:52] [GIT] git push origin main 4dec0b4f — fix: photo CSP + publish 400
+[2026-03-23 16:06:13] [GATE-4] dotnet test --blame-hang 2min — OK | VehiclesSaleService: 0 failed, 220 passed. Other failures: pre-existing Integration/E2E (entry point exited without IHost — requires Docker+Postgres+RabbitMQ)
