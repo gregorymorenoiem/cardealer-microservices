@@ -35,7 +35,12 @@ export interface CompressionResult {
 const DEFAULT_OPTIONS: CompressionOptions = {
   maxSizeMB: 1.5,
   maxWidthOrHeight: 2048,
-  useWebWorker: true,
+  // CSP FIX: useWebWorker:true causes browser-image-compression to dynamically
+  // inject a <script> tag loading https://cdn.jsdelivr.net/npm/browser-image-compression@.../
+  // which violates our Content-Security-Policy script-src directive.
+  // Running on main thread avoids any CDN script loading; compression is still
+  // non-blocking for the upload UX since the queue manager calls it in an async function.
+  useWebWorker: false,
   preserveExif: true,
 };
 

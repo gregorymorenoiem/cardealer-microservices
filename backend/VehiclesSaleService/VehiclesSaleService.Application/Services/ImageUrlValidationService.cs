@@ -14,12 +14,15 @@ public class ImageUrlValidationService
     private static readonly HashSet<int> BrokenStatusCodes = new() { 403, 404, 410, 500 };
 
     /// <summary>
-    /// Known internal S3/DO Spaces endpoint patterns that should NOT appear in public image URLs.
-    /// If detected, the image URL was not properly rewritten to the CDN domain.
+    /// Known internal/private S3 endpoint patterns that should NOT appear in public image URLs.
+    /// NOTE: .digitaloceanspaces.com is intentionally excluded — both the direct storage URL
+    /// (bucket.region.digitaloceanspaces.com) and the CDN URL (bucket.region.cdn.digitaloceanspaces.com)
+    /// are publicly accessible when the object has public-read ACL. Blocking the domain prevents
+    /// legitimate OKLA uploads from passing publish validation when CdnBaseUrl is not configured.
+    /// Accessibility is verified by the HEAD request below instead of URL pattern matching.
     /// </summary>
     private static readonly string[] InternalBucketPatterns = new[]
     {
-        ".digitaloceanspaces.com",
         ".s3.amazonaws.com",
         "s3.us-east-1.amazonaws.com",
         ".s3-accelerate.amazonaws.com"
