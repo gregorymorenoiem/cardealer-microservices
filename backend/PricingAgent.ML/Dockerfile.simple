@@ -1,0 +1,29 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar dependencias básicas
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Instalar solo FastAPI y uvicorn (sin ML pesado)
+RUN pip install --no-cache-dir fastapi==0.103.1 uvicorn[standard]==0.23.2
+
+# Copiar servicio simple
+COPY simple_pricing_service.py .
+
+# Crear directorios
+RUN mkdir -p /app/models /app/data /app/logs
+
+# Variables de entorno
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Puerto
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/api/pricing/health || exit 1
+
+# Comando de inicio
+CMD ["python", "simple_pricing_service.py"]

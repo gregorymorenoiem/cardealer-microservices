@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  # Simple ML Pricing Service (FastAPI sin ML pesado)
+  pricing-ml-simple:
+    build:
+      context: ./backend/PricingAgent.ML/
+      dockerfile: Dockerfile.simple
+    container_name: okla-pricing-ml-simple
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=INFO
+    ports:
+      - "8080:8080"
+    networks:
+      - cardealer-network
+
+networks:
+  cardealer-network:
+    external: true
