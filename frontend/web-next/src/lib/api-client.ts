@@ -96,6 +96,11 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Shared refresh-token promise to deduplicate concurrent refresh attempts.
+// When multiple requests fail with 401 simultaneously, only one refresh
+// call is made — all others await the same promise.
+let refreshPromise: Promise<AxiosResponse> | null = null;
+
 // Response interceptor - Handle errors and token refresh
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
@@ -119,21 +124,27 @@ apiClient.interceptors.response.use(
       requestUrl.includes('/api/auth/register') ||
       requestUrl.includes('/api/auth/forgot-password') ||
       requestUrl.includes('/api/auth/reset-password') ||
-      requestUrl.includes('/api/auth/verify-email');
+      requestUrl.includes('/api/auth/verify-email') ||
+      requestUrl.includes('/api/auth/refresh-token');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
-        // Security (CWE-922): Refresh token is sent automatically via HttpOnly cookie.
-        // The backend reads it from cookie, no need to send in body.
-        const response = await axios.post(
-          `${API_URL}/api/auth/refresh-token`,
-          {}, // Empty body — refresh token comes from HttpOnly cookie
-          { withCredentials: true }
-        );
+        // Deduplicate: reuse in-flight refresh request if one is already pending
+        if (!refreshPromise) {
+          refreshPromise = axios.post(
+            `${API_URL}/api/auth/refresh-token`,
+            {},
+            { withCredentials: true }
+          );
+          // Clear the shared promise after it settles (success or failure)
+          refreshPromise.finally(() => {
+            refreshPromise = null;
+          });
+        }
 
-        const { accessToken: _accessToken } = response.data?.data || response.data || {};
+        await refreshPromise;
 
         // Legacy cleanup: if there was a localStorage token, remove it
         if (typeof window !== 'undefined') {

@@ -51,6 +51,7 @@ export function VehicleCard({
   className,
 }: VehicleCardProps) {
   const [imageError, setImageError] = React.useState(false);
+  const [fallbackError, setFallbackError] = React.useState(false);
   // CWV FIX: Removed dead `isHovered` state — it was set but never read,
   // causing unnecessary re-renders on every mouse enter/leave across all cards.
   const queryClient = useQueryClient();
@@ -73,7 +74,19 @@ export function VehicleCard({
     [vehicle.id, vehicle.make]
   );
   // Use fallback when the original image fails or is not provided
-  const effectiveImageUrl = imageError || !vehicle.imageUrl ? fallbackImage : vehicle.imageUrl;
+  const effectiveImageUrl = imageError
+    ? fallbackError
+      ? '/images/car-placeholder.svg'
+      : fallbackImage
+    : vehicle.imageUrl || fallbackImage;
+
+  const handleImageError = React.useCallback(() => {
+    if (!imageError) {
+      setImageError(true);
+    } else {
+      setFallbackError(true);
+    }
+  }, [imageError]);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -127,8 +140,14 @@ export function VehicleCard({
             priority={priority}
             placeholder="blur"
             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
-            onError={() => setImageError(true)}
+            onError={handleImageError}
           />
+          {fallbackError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800">
+              <span className="text-2xl">📷</span>
+              <span className="text-muted-foreground mt-1 text-[10px]">Imagen no disponible</span>
+            </div>
+          )}
           {showDealRating && vehicle.dealRating && (
             <div className="absolute top-2 left-2">
               <DealRatingBadge rating={vehicle.dealRating as DealRating} size="sm" />
@@ -212,8 +231,14 @@ export function VehicleCard({
             priority={priority}
             placeholder="blur"
             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
-            onError={() => setImageError(true)}
+            onError={handleImageError}
           />
+          {fallbackError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800">
+              <span className="text-2xl">📷</span>
+              <span className="text-muted-foreground mt-1 text-[10px]">Imagen no disponible</span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -255,8 +280,14 @@ export function VehicleCard({
           priority={priority}
           placeholder="blur"
           blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PC9zdmc+"
-          onError={() => setImageError(true)}
+          onError={handleImageError}
         />
+        {fallbackError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800">
+            <span className="text-2xl">📷</span>
+            <span className="text-muted-foreground mt-1 text-[10px]">Imagen no disponible</span>
+          </div>
+        )}
 
         {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />

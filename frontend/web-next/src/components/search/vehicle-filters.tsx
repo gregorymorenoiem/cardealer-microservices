@@ -348,7 +348,7 @@ export function VehicleFilters({
               aria-label="Seleccionar marca"
               value={filters.make ?? ''}
               onChange={e => onChange({ make: e.target.value || undefined, model: undefined })}
-              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
+              className="border-input bg-background focus:ring-primary h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:outline-none"
             >
               <option value="">Todas las marcas</option>
               {makes.map(m => (
@@ -362,7 +362,7 @@ export function VehicleFilters({
                 aria-label="Seleccionar modelo"
                 value={filters.model ?? ''}
                 onChange={e => onChange({ model: e.target.value || undefined })}
-                className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
+                className="border-input bg-background focus:ring-primary h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:outline-none"
               >
                 <option value="">Todos los modelos</option>
                 {availableModels.map(m => (
@@ -429,7 +429,7 @@ export function VehicleFilters({
                       onChange({ priceMin: chip.min, priceMax: chip.max });
                       setPriceRange([chip.min ?? 0, chip.max ?? 10_000_000]);
                     }}
-                    className="border-border text-muted-foreground rounded-full border px-2.5 py-0.5 text-xs transition-colors hover:border-primary hover:text-primary"
+                    className="border-border text-muted-foreground hover:border-primary hover:text-primary rounded-full border px-2.5 py-0.5 text-xs transition-colors"
                   >
                     {chip.label}
                   </button>
@@ -454,7 +454,7 @@ export function VehicleFilters({
                 onChange={e =>
                   onChange({ yearMin: e.target.value ? Number(e.target.value) : undefined })
                 }
-                className="border-input bg-background h-9 rounded-md border px-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
+                className="border-input bg-background focus:ring-primary h-9 rounded-md border px-2 text-sm focus:ring-1 focus:outline-none"
               >
                 <option value="">Desde</option>
                 {years.map(y => (
@@ -469,7 +469,7 @@ export function VehicleFilters({
                 onChange={e =>
                   onChange({ yearMax: e.target.value ? Number(e.target.value) : undefined })
                 }
-                className="border-input bg-background h-9 rounded-md border px-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
+                className="border-input bg-background focus:ring-primary h-9 rounded-md border px-2 text-sm focus:ring-1 focus:outline-none"
               >
                 <option value="">Hasta</option>
                 {years.map(y => (
@@ -531,7 +531,7 @@ export function VehicleFilters({
             <select
               value={filters.province ?? ''}
               onChange={e => onChange({ province: e.target.value || undefined })}
-              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
+              className="border-input bg-background focus:ring-primary h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:outline-none"
             >
               <option value="">Todas las provincias</option>
               {dominicanProvinces.map(p => {
@@ -554,7 +554,7 @@ export function VehicleFilters({
             <span className="flex items-center gap-2">
               Filtros avanzados
               {advancedActiveCount > 0 && (
-                <Badge className="flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-[10px] text-white">
+                <Badge className="bg-primary flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px] text-white">
                   {advancedActiveCount}
                 </Badge>
               )}
@@ -682,7 +682,7 @@ export function VehicleFilters({
                       'h-7 w-7 rounded-full border-2 transition-all',
                       c.value === 'blanco' ? 'border-gray-300' : 'border-transparent',
                       filters.color === c.value &&
-                        'border-primary ring-2 ring-primary ring-offset-1'
+                        'border-primary ring-primary ring-2 ring-offset-1'
                     )}
                     style={{ backgroundColor: c.hex }}
                     aria-label={c.label}
@@ -691,7 +691,7 @@ export function VehicleFilters({
                 ))}
               </div>
               {filters.color && (
-                <p className="mt-1 text-xs text-primary capitalize">{filters.color}</p>
+                <p className="text-primary mt-1 text-xs capitalize">{filters.color}</p>
               )}
             </div>
 
@@ -735,7 +735,7 @@ export function VehicleFilters({
                   onCheckedChange={c => onChange({ isCertified: c ? true : undefined })}
                 />
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                  <CheckCircle2 className="text-primary h-3.5 w-3.5" />
                   Con garantía del vendedor
                 </span>
               </label>
@@ -849,7 +849,7 @@ export function VehicleFilters({
                       'h-7 w-7 rounded-full border-2 transition-all',
                       c.value === 'crema' ? 'border-gray-300' : 'border-transparent',
                       filters.interiorColor === c.value &&
-                        'border-primary ring-2 ring-primary ring-offset-1'
+                        'border-primary ring-primary ring-2 ring-offset-1'
                     )}
                     style={{ backgroundColor: c.hex }}
                     aria-label={c.label}
@@ -858,7 +858,7 @@ export function VehicleFilters({
                 ))}
               </div>
               {filters.interiorColor && (
-                <p className="mt-1 text-xs text-primary capitalize">{filters.interiorColor}</p>
+                <p className="text-primary mt-1 text-xs capitalize">{filters.interiorColor}</p>
               )}
             </div>
 

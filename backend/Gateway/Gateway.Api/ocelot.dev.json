@@ -1118,8 +1118,27 @@
       }
     },
     {
+      "_comment": "Public: Catalog read endpoints (makes, models, trims) — no auth required",
       "UpstreamPathTemplate": "/api/catalog/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/catalog/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "vehiclessaleservice",
+          "Port": 80
+        }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "Protected: Catalog write endpoints (VIN decode, etc.) — auth required",
+      "UpstreamPathTemplate": "/api/catalog/{everything}",
+      "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/catalog/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

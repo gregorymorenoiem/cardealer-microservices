@@ -112,6 +112,21 @@ public static class RateLimitingExtensions
             }
         };
 
+        // Refresh-token endpoint — more generous than general auth because
+        // browsers send automatic refresh requests on every 401 response.
+        // Multiple concurrent requests can legitimately trigger refreshes.
+        options.Policies["auth-refresh"] = new EndpointRateLimitPolicy
+        {
+            Pattern = "POST:/api/auth/refresh-token",
+            Limit = 20,
+            WindowSeconds = 60,
+            TierLimits = new Dictionary<string, int>
+            {
+                ["anonymous"] = 15,
+                ["authenticated"] = 30
+            }
+        };
+
         // Login endpoint - strict limit to prevent brute-force / credential stuffing (OWASP)
         options.Policies["auth-login"] = new EndpointRateLimitPolicy
         {
