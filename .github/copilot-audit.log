@@ -1818,3 +1818,5 @@ test
 [2026-03-24 09:48:11] [GIT] Commit 6bb1dbed pushed a main — fixes ocelot.prod.json, ocelot.dev.json, SupportAgent/Program.cs
 [2026-03-24 09:48:11] [DELEGADO_OPENCLAW] CI/CD + verificacion produccion post-deploy
 [2026-03-24 10:06:21] [MODIFICACIÓN] Reconfigurado agente OpenClaw dev-senior como QA-Senior auditor. Archivos: SOUL.md, IDENTITY.md, USER.md, TOOLS.md, HEARTBEAT.md. Cron jobs: qa-audit-okla (10m, browser QA), bridge-monitor (60s, prompt_1.md). Old cron deleted (3f523b12).
+[2026-03-24 10:35:08] [GIT] Commit bdd662c8 pushed a main — fix PlainToTsQuery, ocelot cache 5s, hover cards, ARIA filters, VehiclesController error handling
+[2026-03-24 10:35:08] [DELEGADO_OPENCLAW] CI/CD deployment + verificacion produccion post-deploy commit bdd662c8
