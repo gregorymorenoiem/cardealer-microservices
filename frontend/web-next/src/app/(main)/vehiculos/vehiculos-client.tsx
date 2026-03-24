@@ -442,14 +442,21 @@ export default function VehiculosClient() {
   React.useEffect(() => {
     if (!isLoading && vehicles.length > 0) {
       if ((filters.page ?? 1) === 1) {
+        // Page 1 → always replace (covers: initial load, filter change, clear filters)
         setAllVehicles(vehicles);
+      } else if (allVehicles.length === 0) {
+        // Defensive: page > 1 but accumulated list is empty means we landed mid-sequence
+        // (stale URL like ?page=7 or race condition). Reset to page 1 to recover gracefully.
+        setFilter('page', 1);
       } else {
+        // Page > 1 and we have prior results → append deduped
         setAllVehicles(prev => {
           const ids = new Set(prev.map((v: VehicleCardData) => v.id));
           return [...prev, ...vehicles.filter((v: VehicleCardData) => !ids.has(v.id))];
         });
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicles, isLoading, filters.page]);
 
   // Intersection observer: trigger next page when sentinel enters viewport

@@ -328,12 +328,17 @@ export const useSearchStore = create<SearchState & SearchActions>()(
       name: 'okla-search-state',
       storage: createJSONStorage(() => localStorage),
       // Only persist these keys (exclude transient UI state)
-      partialize: state => ({
-        filters: state.filters,
-        recentSearches: state.recentSearches,
-        searchDrafts: state.searchDrafts,
-        viewMode: state.viewMode,
-      }),
+      partialize: state => {
+        // Strip `page` from persisted filters — page is scroll state, not a preference.
+        // Persisting page caused stale ?page=7 issues across browser sessions.
+        const { page: _page, ...filtersWithoutPage } = state.filters;
+        return {
+          filters: filtersWithoutPage,
+          recentSearches: state.recentSearches,
+          searchDrafts: state.searchDrafts,
+          viewMode: state.viewMode,
+        };
+      },
       version: 1,
     }
   )

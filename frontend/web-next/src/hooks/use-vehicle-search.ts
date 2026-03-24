@@ -188,9 +188,9 @@ function parseSearchParams(searchParams: URLSearchParams): VehicleSearchFilters 
   const interiorColor = searchParams.get('interior_color');
   if (interiorColor) filters.interiorColor = interiorColor;
 
-  // Pagination
-  const page = searchParams.get('page');
-  if (page) filters.page = parseInt(page, 10);
+  // NOTE: `page` is intentionally NOT read from URL params.
+  // This is an infinite-scroll view — page state is always reset to 1 on load.
+  // Reading page from URL caused the bug where ?page=7 showed only 5/149 results.
 
   const limit = searchParams.get('limit');
   if (limit) filters.limit = parseInt(limit, 10);
@@ -230,7 +230,10 @@ function filtersToSearchParams(filters: VehicleSearchFilters): URLSearchParams {
   if (filters.seats) params.set('seats', filters.seats.toString());
   if (filters.cylinders) params.set('cylinders', filters.cylinders.toString());
   if (filters.interiorColor) params.set('interior_color', filters.interiorColor);
-  if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
+  // NOTE: `page` is intentionally NOT serialized to the URL.
+  // This page is an infinite-scroll view — the page counter is internal state.
+  // Writing page=7 to the URL causes: (a) users sharing/bookmarking broken URLs
+  // that only show a partial page of results, (b) 149 total shown but only 5 visible.
   if (filters.limit && filters.limit !== 24) params.set('limit', filters.limit.toString());
   if (filters.sortBy && filters.sortBy !== 'relevance') params.set('sort', filters.sortBy);
 
