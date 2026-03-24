@@ -128,17 +128,38 @@ public class VehiclesController : ControllerBase
         // Normalize page to at least 1 for response
         var normalizedPage = Math.Max(1, request.Page);
 
-        var vehicles = await _vehicleRepository.SearchAsync(parameters);
-        var totalCount = await _vehicleRepository.GetCountAsync(parameters);
-
-        return Ok(new VehicleSearchResult
+        try
         {
-            Vehicles = vehicles,
-            TotalCount = totalCount,
-            Page = normalizedPage,
-            PageSize = request.PageSize,
-            TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize)
-        });
+            var vehicles = await _vehicleRepository.SearchAsync(parameters);
+            var totalCount = await _vehicleRepository.GetCountAsync(parameters);
+
+            return Ok(new VehicleSearchResult
+            {
+                Vehicles = vehicles,
+                TotalCount = totalCount,
+                Page = normalizedPage,
+                PageSize = request.PageSize,
+                TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize)
+            });
+        }
+        catch (Npgsql.PostgresException ex) when (ex.SqlState == "42601")
+        {
+            // Full-text search syntax error — retry without SearchTerm
+            _logger.LogWarning(ex, "Full-text search failed for term '{SearchTerm}', retrying without text search", request.Search);
+            parameters.SearchTerm = null;
+
+            var vehicles = await _vehicleRepository.SearchAsync(parameters);
+            var totalCount = await _vehicleRepository.GetCountAsync(parameters);
+
+            return Ok(new VehicleSearchResult
+            {
+                Vehicles = vehicles,
+                TotalCount = totalCount,
+                Page = normalizedPage,
+                PageSize = request.PageSize,
+                TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize)
+            });
+        }
     }
 
     /// <summary>

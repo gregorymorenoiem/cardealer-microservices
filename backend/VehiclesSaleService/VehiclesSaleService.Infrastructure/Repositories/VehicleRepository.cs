@@ -224,31 +224,16 @@ public class VehicleRepository : IVehicleRepository
             .Include(v => v.Category)
             .Where(v => !v.IsDeleted && v.Status == VehicleStatus.Active);
 
-        // Full-text search using PostgreSQL tsvector (if column exists)
+        // Full-text search using PostgreSQL PlainToTsQuery (safe for any text input)
         if (!string.IsNullOrWhiteSpace(p.SearchTerm))
         {
-            var term = p.SearchTerm.ToLower();
+            var term = p.SearchTerm.Trim();
 
-            // Intento de búsqueda full-text con tsvector
-            // Si la columna search_vector existe, usa ts_rank para ordenar por relevancia
-            // Si no existe, fallback a búsqueda simple con LIKE
-            try
-            {
-                // PostgreSQL full-text search con ranking
-                query = query.Where(v =>
-                    EF.Functions.ToTsVector("english", v.Title + " " + v.Make + " " + v.Model + " " + (v.Description ?? ""))
-                    .Matches(EF.Functions.ToTsQuery("english", term)));
-            }
-            catch
-            {
-                // Fallback a búsqueda simple si tsvector no está disponible
-                query = query.Where(v =>
-                    v.Title.ToLower().Contains(term) ||
-                    v.Description!.ToLower().Contains(term) ||
-                    v.Make.ToLower().Contains(term) ||
-                    v.Model.ToLower().Contains(term) ||
-                    (v.Trim != null && v.Trim.ToLower().Contains(term)));
-            }
+            // PlainToTsQuery safely splits text into words and ANDs them.
+            // Uses 'simple' config: no stemming, works for Spanish + English brand names.
+            query = query.Where(v =>
+                EF.Functions.ToTsVector("simple", v.Title + " " + v.Make + " " + v.Model + " " + (v.Description ?? ""))
+                .Matches(EF.Functions.PlainToTsQuery("simple", term)));
         }
 
         if (p.CategoryId.HasValue)

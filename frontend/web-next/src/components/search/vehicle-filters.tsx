@@ -318,6 +318,8 @@ export function VehicleFilters({
                   <button
                     key={opt.label}
                     type="button"
+                    role="radio"
+                    aria-checked={isActive}
                     onClick={() => onChange({ condition: opt.v })}
                     className={cn(
                       'flex-1 rounded-lg border py-1.5 text-xs font-medium transition-all',
@@ -343,6 +345,7 @@ export function VehicleFilters({
           </AccordionTrigger>
           <AccordionContent className="space-y-2 pb-4">
             <select
+              aria-label="Seleccionar marca"
               value={filters.make ?? ''}
               onChange={e => onChange({ make: e.target.value || undefined, model: undefined })}
               className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
@@ -356,6 +359,7 @@ export function VehicleFilters({
             </select>
             {filters.make && (
               <select
+                aria-label="Seleccionar modelo"
                 value={filters.model ?? ''}
                 onChange={e => onChange({ model: e.target.value || undefined })}
                 className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
@@ -381,6 +385,7 @@ export function VehicleFilters({
           <AccordionContent className="pb-4">
             <div className="space-y-3">
               <Slider
+                aria-label="Rango de precio"
                 value={priceRange}
                 onValueChange={v => setPriceRange(v as [number, number])}
                 min={0}
@@ -444,6 +449,7 @@ export function VehicleFilters({
           <AccordionContent className="pb-4">
             <div className="grid grid-cols-2 gap-2">
               <select
+                aria-label="Año desde"
                 value={filters.yearMin ?? ''}
                 onChange={e =>
                   onChange({ yearMin: e.target.value ? Number(e.target.value) : undefined })
@@ -458,6 +464,7 @@ export function VehicleFilters({
                 ))}
               </select>
               <select
+                aria-label="Año hasta"
                 value={filters.yearMax ?? ''}
                 onChange={e =>
                   onChange({ yearMax: e.target.value ? Number(e.target.value) : undefined })

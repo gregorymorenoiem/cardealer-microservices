@@ -805,7 +805,7 @@
       }
     },
     {
-      "_comment": "Public: Vehicle search/listing with 5s Gateway cache (reduced from 30s to avoid stale filter results)",
+      "_comment": "Public: Vehicle search/listing with 30s Gateway cache",
       "UpstreamPathTemplate": "/api/vehicles",
       "UpstreamHttpMethod": ["OPTIONS", "GET"],
       "DownstreamPathTemplate": "/api/vehicles",
@@ -817,7 +817,7 @@
         }
       ],
       "FileCacheOptions": {
-        "TtlSeconds": 5,
+        "TtlSeconds": 30,
         "Region": "vehiclesSearch"
       },
       "QoSOptions": {
@@ -2829,24 +2829,6 @@
           "Port": 8080
         }
       ]
-    },
-    {
-      "UpstreamPathTemplate": "/api/chat/metrics/prompt-cache",
-      "UpstreamHttpMethod": ["GET"],
-      "DownstreamPathTemplate": "/api/chat/metrics/prompt-cache",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "chatbotservice",
-          "Port": 8080
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      },
-      "RouteClaimsRequirement": {
-        "role": "Admin, SuperAdmin"
-      }
     },
     {
       "UpstreamPathTemplate": "/api/chat/whatsapp/webhook",

@@ -110,7 +110,7 @@ export function VehicleCard({
       <Link
         href={vehicleUrl}
         className={cn(
-          'group border-border bg-card flex flex-col gap-3 rounded-xl border p-3 shadow-sm transition-all hover:shadow-md sm:flex-row sm:gap-4 sm:p-4',
+          'group border-border bg-card hover:border-primary/30 flex flex-col gap-3 rounded-xl border p-3 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:flex-row sm:gap-4 sm:p-4',
           className
         )}
       >
@@ -195,7 +195,7 @@ export function VehicleCard({
       <Link
         href={vehicleUrl}
         className={cn(
-          'group border-border bg-card block overflow-hidden rounded-lg border shadow-sm transition-all hover:shadow-md',
+          'group border-border bg-card hover:border-primary/30 block overflow-hidden rounded-lg border shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg',
           className
         )}
       >
