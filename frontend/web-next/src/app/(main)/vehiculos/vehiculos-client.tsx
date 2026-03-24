@@ -463,7 +463,7 @@ export default function VehiculosClient() {
         return [...prev, ...vehicles.filter((v: VehicleCardData) => !ids.has(v.id))];
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicles, isLoading, isPlaceholderData]);
 
   // Intersection observer: trigger next page when sentinel enters viewport
@@ -472,7 +472,20 @@ export default function VehiculosClient() {
     if (!sentinel) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !isLoading && !isFetching && currentPage < totalPages) {
+        // Guard: allVehicles.length > 0 prevents the observer from incrementing
+        // the page during the debounce window after a filter change clears the list.
+        // Without this guard: when allVehicles is cleared, the sentinel appears at
+        // the top of the page; with isFetching=false (old cached query still active)
+        // and totalPages=7 (stale all-vehicles data), the observer fires setFilter('page',2).
+        // The debounce then fetches Honda+Civic page 2 (empty), causing totalCount=3
+        // but allVehicles=[] — the permanent "no results" bug.
+        if (
+          entry.isIntersecting &&
+          !isLoading &&
+          !isFetching &&
+          currentPage < totalPages &&
+          allVehicles.length > 0
+        ) {
           setFilter('page', currentPage + 1);
         }
       },
@@ -480,7 +493,11 @@ export default function VehiculosClient() {
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [isLoading, isFetching, currentPage, totalPages, setFilter]);
+  // allVehicles.length is required in deps so the closure captures the correct
+  // value; the observer re-creates when the list transitions 0→N (page 1 loaded)
+  // so subsequent page loads work correctly.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, isFetching, currentPage, totalPages, setFilter, allVehicles.length]);
   // ─────────────────────────────────────────────────────────────────────────
 
   // Build active filter chips for display
