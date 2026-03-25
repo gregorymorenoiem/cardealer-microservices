@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from '@/lib/api-client';
-import type { VehicleSearchParams, PaginatedResponse } from '@/types';
+import type { VehicleSearchParams, PaginatedResponse, VehicleBodyType } from '@/types';
 
 // ============================================================
 // API TYPES
@@ -241,14 +241,31 @@ export async function getVehiclePriceHistory(vehicleId: string): Promise<PriceHi
  */
 // Map backend SavedSearchDto (searchCriteria string) → frontend SavedSearch (searchParams object)
 function mapBackendSavedSearch(item: Record<string, unknown>): SavedSearch {
+  // Backend returns `criteria` as an object (SavedSearchCriteria), map to VehicleSearchParams
   let searchParams: VehicleSearchParams = {};
   try {
-    const raw = (item.searchCriteria as string) || '{}';
-    searchParams = JSON.parse(raw) as VehicleSearchParams;
+    const criteria = item.criteria as Record<string, unknown> | string | null;
+    if (typeof criteria === 'string') {
+      searchParams = JSON.parse(criteria) as VehicleSearchParams;
+    } else if (criteria && typeof criteria === 'object') {
+      searchParams = {
+        make: criteria.make as string | undefined,
+        model: criteria.model as string | undefined,
+        bodyType: criteria.bodyType as VehicleBodyType | undefined,
+        yearMin: criteria.minYear as number | undefined,
+        yearMax: criteria.maxYear as number | undefined,
+        priceMin: criteria.minPrice as number | undefined,
+        priceMax: criteria.maxPrice as number | undefined,
+        fuelType: criteria.fuelType as string | undefined,
+        transmission: criteria.transmission as string | undefined,
+        province: criteria.location as string | undefined,
+        mileageMax: criteria.maxMileage as number | undefined,
+      };
+    }
   } catch {
     // keep empty searchParams
   }
-  const freqRaw = ((item.frequency as string) || 'daily').toLowerCase();
+  const freqRaw = ((item.notificationFrequency as string) || (item.frequency as string) || 'daily').toLowerCase();
   const validFreqs: NotifyFrequency[] = ['instant', 'daily', 'weekly', 'never'];
   const notifyFrequency: NotifyFrequency = validFreqs.includes(freqRaw as NotifyFrequency)
     ? (freqRaw as NotifyFrequency)
@@ -259,14 +276,12 @@ function mapBackendSavedSearch(item: Record<string, unknown>): SavedSearch {
     userId: (item.userId as string) || '',
     name: (item.name as string) || '',
     searchParams,
-    notifyNewListings: (item.sendEmailNotifications as boolean) ?? true,
+    notifyNewListings: (item.notifyOnNewResults as boolean) ?? (item.sendEmailNotifications as boolean) ?? true,
     notifyFrequency,
     matchCount: (item.matchCount as number) ?? 0,
     newMatchCount: (item.newMatchCount as number) ?? 0,
-    lastMatchedAt: item.lastMatchedAt as string | undefined,
-    lastNotifiedAt:
-      (item.lastNotificationSent as string | undefined) ??
-      (item.lastNotifiedAt as string | undefined),
+    lastMatchedAt: (item.lastMatchAt as string | undefined) ?? (item.lastMatchedAt as string | undefined),
+    lastNotifiedAt: (item.lastNotifiedAt as string | undefined),
     isActive: (item.isActive as boolean) ?? true,
     createdAt: item.createdAt as string,
     updatedAt: item.updatedAt as string,
@@ -337,13 +352,26 @@ export async function getSavedSearchById(id: string): Promise<SavedSearch> {
  *   notifyFrequency       → frequency (numeric: 0=Instant,1=Daily,2=Weekly)
  */
 export async function createSavedSearch(data: CreateSavedSearchRequest): Promise<SavedSearch> {
-  const freqMap: Record<string, number> = { instant: 0, daily: 1, weekly: 2, never: 1 };
-  const freq = data.notifyFrequency ?? 'daily';
+  const params = data.searchParams || {};
   const payload = {
     name: data.name,
-    searchCriteria: JSON.stringify(data.searchParams || {}),
-    sendEmailNotifications: data.notifyNewListings ?? true,
-    frequency: freqMap[freq] ?? 1,
+    criteria: {
+      make: params.make || null,
+      model: params.model || null,
+      bodyType: params.bodyType || null,
+      minYear: params.yearMin || null,
+      maxYear: params.yearMax || null,
+      minPrice: params.priceMin || null,
+      maxPrice: params.priceMax || null,
+      fuelType: params.fuelType || null,
+      transmission: params.transmission || null,
+      location: params.province || null,
+      maxMileage: params.mileageMax || null,
+    },
+    notifyOnNewResults: data.notifyNewListings ?? true,
+    notifyByEmail: data.notifyNewListings ?? true,
+    notifyByPush: true,
+    notificationFrequency: data.notifyFrequency === 'never' ? 'daily' : (data.notifyFrequency ?? 'daily'),
   };
   const response = await apiClient.post<Record<string, unknown>>('/api/savedsearches', payload);
   return mapBackendSavedSearch(response.data);
@@ -358,11 +386,25 @@ export async function updateSavedSearch(
 ): Promise<SavedSearch> {
   const payload: Record<string, unknown> = {};
   if (data.name !== undefined) payload.name = data.name;
-  if (data.searchParams !== undefined) payload.searchCriteria = JSON.stringify(data.searchParams);
-  if (data.notifyNewListings !== undefined) payload.sendEmailNotifications = data.notifyNewListings;
+  if (data.searchParams !== undefined) {
+    const params = data.searchParams;
+    payload.criteria = {
+      make: params.make || null,
+      model: params.model || null,
+      bodyType: params.bodyType || null,
+      minYear: params.yearMin || null,
+      maxYear: params.yearMax || null,
+      minPrice: params.priceMin || null,
+      maxPrice: params.priceMax || null,
+      fuelType: params.fuelType || null,
+      transmission: params.transmission || null,
+      location: params.province || null,
+      maxMileage: params.mileageMax || null,
+    };
+  }
+  if (data.notifyNewListings !== undefined) payload.notifyOnNewResults = data.notifyNewListings;
   if (data.notifyFrequency !== undefined) {
-    const freqMap: Record<string, number> = { instant: 0, daily: 1, weekly: 2, never: 1 };
-    payload.frequency = freqMap[data.notifyFrequency] ?? 1;
+    payload.notificationFrequency = data.notifyFrequency === 'never' ? 'daily' : data.notifyFrequency;
   }
   if (data.isActive !== undefined) payload.isActive = data.isActive;
   const response = await apiClient.put<Record<string, unknown>>(
@@ -388,12 +430,12 @@ export async function toggleSavedSearch(
   id: string,
   currentState: { notifyNewListings: boolean; notifyFrequency: NotifyFrequency }
 ): Promise<SavedSearch> {
-  const freqMap: Record<string, number> = { instant: 0, daily: 1, weekly: 2, never: 1 };
   const response = await apiClient.put<Record<string, unknown>>(
     `/api/savedsearches/${id}/notifications`,
     {
-      sendEmailNotifications: !currentState.notifyNewListings,
-      frequency: freqMap[currentState.notifyFrequency] ?? 1,
+      notifyOnNewResults: !currentState.notifyNewListings,
+      notifyByEmail: !currentState.notifyNewListings,
+      notificationFrequency: currentState.notifyFrequency === 'never' ? 'daily' : currentState.notifyFrequency,
     }
   );
   return mapBackendSavedSearch(response.data);

@@ -164,7 +164,7 @@ function timeAgo(date: string) {
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `hace ${hours}h`;
   const days = Math.floor(hours / 24);
-  return `hace ${days} días`;
+  return `hace ${days} ${days === 1 ? 'día' : 'días'}`;
 }
 
 interface FavoriteCardProps {
