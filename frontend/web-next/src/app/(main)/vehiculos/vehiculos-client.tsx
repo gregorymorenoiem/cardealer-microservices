@@ -75,6 +75,7 @@ import { cn } from '@/lib/utils';
 import { csrfFetch } from '@/lib/security/csrf';
 import { VehicleFilters } from '@/components/search/vehicle-filters';
 import { SaveSearchModal } from '@/components/search/save-search-modal';
+import SearchAgentWidget from '@/components/search/SearchAgentWidget';
 import { toast } from 'sonner';
 import { aiSearch, aiFiltersToSearchParams } from '@/services/search-agent';
 import { useVehicleSearch } from '@/hooks/use-vehicle-search';
@@ -396,6 +397,22 @@ export default function VehiculosClient() {
       });
     },
     [_setFilters]
+  );
+
+  // Handle AI search results — apply filters from SearchAgent
+  const handleSearchAgentFilters = React.useCallback(
+    (aiFilters: Record<string, string | number | undefined>) => {
+      setFilters({
+        ...aiFilters,
+        page: 1, // Reset to first page
+      } as Parameters<typeof _setFilters>[0]);
+
+      // Feedback
+      toast.success('Filtros aplicados desde búsqueda IA', {
+        description: 'Mostrando vehículos que coinciden',
+      });
+    },
+    [setFilters]
   );
 
   // Catalog data
@@ -1251,6 +1268,9 @@ export default function VehiculosClient() {
         open={showAuthPromptForFavorite}
         onClose={() => setShowAuthPromptForFavorite(false)}
       />
+
+      {/* SearchAgent Widget — AI-powered vehicle search */}
+      <SearchAgentWidget onFiltersApplied={handleSearchAgentFilters} />
     </div>
   );
 }

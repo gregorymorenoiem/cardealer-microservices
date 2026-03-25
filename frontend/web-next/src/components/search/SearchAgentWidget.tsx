@@ -419,3 +419,5 @@ export function SearchAgentWidget({ onFiltersApplied }: SearchAgentWidgetProps) 
     </>
   );
 }
+
+export default SearchAgentWidget;
