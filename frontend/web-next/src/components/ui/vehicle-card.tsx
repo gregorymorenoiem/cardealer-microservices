@@ -111,6 +111,24 @@ export function VehicleCard({
 
   const vehicleUrl = `/vehiculos/${vehicle.slug}`;
 
+  // Defensive fuel type translation: ensures Spanish label even if upstream missed it
+  const fuelLabels: Record<string, string> = {
+    gasoline: 'Gasolina',
+    gasolina: 'Gasolina',
+    diesel: 'Diésel',
+    diésel: 'Diésel',
+    electric: 'Eléctrico',
+    eléctrico: 'Eléctrico',
+    hybrid: 'Híbrido',
+    híbrido: 'Híbrido',
+    pluginhybrid: 'Híbrido',
+    naturalgas: 'GLP',
+    glp: 'GLP',
+  };
+  const fuelDisplay = vehicle.fuelType
+    ? (fuelLabels[vehicle.fuelType.toLowerCase().replace(/\s+/g, '')] ?? vehicle.fuelType)
+    : undefined;
+
   const fuelIcons: Record<string, React.ReactNode> = {
     Gasolina: <Fuel className="h-3.5 w-3.5" />,
     Diésel: <Fuel className="h-3.5 w-3.5" />,
@@ -404,10 +422,10 @@ export function VehicleCard({
             <Calendar className="h-3.5 w-3.5" />
             {vehicle.year}
           </span>
-          {vehicle.fuelType && (
+          {fuelDisplay && (
             <span className="flex items-center gap-1">
-              {fuelIcons[vehicle.fuelType] || <Fuel className="h-3.5 w-3.5" />}
-              {vehicle.fuelType}
+              {fuelIcons[fuelDisplay] || <Fuel className="h-3.5 w-3.5" />}
+              {fuelDisplay}
             </span>
           )}
         </div>

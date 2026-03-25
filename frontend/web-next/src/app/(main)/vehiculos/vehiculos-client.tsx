@@ -650,9 +650,16 @@ export default function VehiculosClient() {
     // then continues cycling every 6 items thereafter.
     const items: React.ReactNode[] = [];
 
-    // Combine topSponsored + inlineSponsored into a single rotating pool
-    // so the first sponsored row appears after the first 6 organic vehicles (2 rows)
-    const sponsoredPool = [...topSponsored, ...inlineSponsored];
+    // Combine topSponsored + inlineSponsored into a single pool, deduplicating by ID
+    // so the same sponsored vehicle doesn't appear in multiple rows.
+    const seen = new Set<string>();
+    const sponsoredPool: SponsoredVehicle[] = [];
+    for (const v of [...topSponsored, ...inlineSponsored]) {
+      if (!seen.has(v.id)) {
+        seen.add(v.id);
+        sponsoredPool.push(v);
+      }
+    }
     let sponsoredOffset = 0;
 
     vehicles.forEach((vehicle: VehicleCardData, i: number) => {
@@ -667,14 +674,14 @@ export default function VehiculosClient() {
       );
       // Every 6 organic items (≈ 2 rows in 3-col grid): insert sponsored row
       if ((i + 1) % 6 === 0) {
-        // Cycle through sponsored pool so rows don't repeat if pool < total rows
-        if (sponsoredOffset >= sponsoredPool.length && sponsoredPool.length > 0) {
-          sponsoredOffset = 0; // reset to start of pool
-        }
-        const finalRow = sponsoredPool.slice(sponsoredOffset, sponsoredOffset + 3);
-        if (finalRow.length > 0) {
-          items.push(<SponsoredRowGrid key={`sp-row-${i}`} vehicles={finalRow} />);
-          sponsoredOffset += 3;
+        // Don't cycle — once the pool is exhausted, stop showing sponsored rows
+        // to avoid repeating the same vehicles.
+        if (sponsoredOffset < sponsoredPool.length) {
+          const finalRow = sponsoredPool.slice(sponsoredOffset, sponsoredOffset + 3);
+          if (finalRow.length > 0) {
+            items.push(<SponsoredRowGrid key={`sp-row-${i}`} vehicles={finalRow} />);
+            sponsoredOffset += 3;
+          }
         }
         // Also show configurable admin banner if available
         items.push(<AdSlotLeaderboard key={`ad-${i}`} />);

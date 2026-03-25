@@ -468,7 +468,9 @@ export const transformToCardData = (dto: VehicleDto | Record<string, any>): Vehi
   const seller = raw.seller as Record<string, unknown> | undefined;
   // Condition: map to boolean isNew
   const conditionStr = String(raw.condition ?? '').toLowerCase();
-  const isNew = conditionStr === 'new' || conditionStr === '0';
+  const mileage = (raw.mileage as number) || 0;
+  // Override: vehicles with >1000 km cannot be "Nuevo" (likely data classification error)
+  const isNew = (conditionStr === 'new' || conditionStr === '0') && mileage <= 1000;
   const isCertified =
     conditionStr === 'certified' || conditionStr === 'certifiedpreowned' || conditionStr === '1';
 

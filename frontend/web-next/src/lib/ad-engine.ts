@@ -704,12 +704,17 @@ export function generateSponsoredVehiclesForSlot(
     },
   ];
 
-  // Shuffle array using slot position as seed to get variety across different slots
-  // and different page loads (Date-based component changes per minute)
+  // Use a deterministic hash of the slot position name to produce different
+  // orderings for different slots, avoiding overlap when multiple slots are
+  // rendered on the same page at the same time.
   const shuffled = [...DEMO_SPONSORED];
-  const seedBase = slotPosition.length + (Date.now() % 60000);
+  let hash = 0;
+  for (let c = 0; c < slotPosition.length; c++) {
+    hash = ((hash << 5) - hash + slotPosition.charCodeAt(c)) | 0;
+  }
+  const seed = Math.abs(hash);
   for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.abs((seedBase * (i + 1) * 31) % (i + 1));
+    const j = Math.abs(((seed * (i + 1) * 2654435761) >>> 0) % (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
