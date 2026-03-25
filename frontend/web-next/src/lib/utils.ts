@@ -75,7 +75,7 @@ export function formatMileage(km: number): string {
 }
 
 /**
- * FIX FRONTEND-016: Normalize known Dominican Republic city names
+ * FIX P0-008: Normalize known Dominican Republic city names
  * that may be stored without proper spacing (e.g., "Santo DomingoNorte" → "Santo Domingo Norte")
  */
 const CITY_NORMALIZATIONS: Record<string, string> = {
@@ -86,11 +86,18 @@ const CITY_NORMALIZATIONS: Record<string, string> = {
   SantoDomingoEste: 'Santo Domingo Este',
   SantoDomingoOeste: 'Santo Domingo Oeste',
   SantoDomingo: 'Santo Domingo',
+  'SantoDomingo Norte': 'Santo Domingo Norte',
+  'SantoDomingo Este': 'Santo Domingo Este',
+  'SantoDomingo Oeste': 'Santo Domingo Oeste',
 };
 
 export function normalizeLocationName(name: string): string {
   if (!name) return name;
-  return CITY_NORMALIZATIONS[name] || name;
+  // Direct lookup first
+  const mapped = CITY_NORMALIZATIONS[name];
+  if (mapped) return mapped;
+  // Regex: insert space before capital letters in "DomingoNorte", "DomingoEste", etc.
+  return name.replace(/Domingo(Norte|Este|Oeste|de\s)/g, 'Domingo $1');
 }
 
 /**

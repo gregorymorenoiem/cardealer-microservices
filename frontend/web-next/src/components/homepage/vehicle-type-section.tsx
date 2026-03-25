@@ -228,7 +228,7 @@ function VehicleCard({
   const primaryImage = imageError || !s3Image ? fallbackImage : s3Image;
 
   const location =
-    [normalizeLocationName(vehicle.city), vehicle.state].filter(Boolean).join(', ') || 'R.D.';
+    [normalizeLocationName(vehicle.city), normalizeLocationName(vehicle.state)].filter(Boolean).join(', ') || 'R.D.';
 
   return (
     <Link href={buildVehicleSlug(vehicle)} className="group block h-full">
@@ -372,13 +372,22 @@ export default function VehicleTypeSection({
     retry: 1,
   });
 
-  // FIX FRONTEND-009: Deduplicate vehicles by ID to prevent same vehicle appearing twice
+  // FIX P0-005+P0-007: Exclude E2E test vehicles and deduplicate by make+model+year
   const vehicles = useMemo(() => {
     const items = data?.vehicles?.slice(0, effectiveMaxItems) ?? [];
-    const seen = new Set<string>();
+    const seenIds = new Set<string>();
+    const seenVehicles = new Set<string>();
     return items.filter((v: VehicleItem) => {
-      if (seen.has(v.id)) return false;
-      seen.add(v.id);
+      // P0-005: Exclude E2E test vehicles that may leak from backend
+      const title = (v.title || '').toUpperCase();
+      if (title.includes('E2E') || title.includes('DO NOT BUY')) return false;
+      // Deduplicate by ID
+      if (seenIds.has(v.id)) return false;
+      seenIds.add(v.id);
+      // P0-007: Deduplicate by make+model+year to prevent duplicate listings
+      const vehicleKey = `${v.make}-${v.model}-${v.year}`.toLowerCase();
+      if (seenVehicles.has(vehicleKey)) return false;
+      seenVehicles.add(vehicleKey);
       return true;
     });
   }, [data?.vehicles, effectiveMaxItems]);

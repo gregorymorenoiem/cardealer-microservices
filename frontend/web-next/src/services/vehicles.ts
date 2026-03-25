@@ -344,7 +344,7 @@ export const transformVehicle = (dto: VehicleDto | Record<string, any>): Vehicle
 
   // Location: handle both {city, province} and {city, state} shapes
   const city = normalizeLocationName((raw.city as string) || '');
-  const province = (raw.province as string) || (raw.state as string) || '';
+  const province = normalizeLocationName((raw.province as string) || (raw.state as string) || '');
   const country = (raw.country as string) || 'DO';
 
   // Features: handle both array and JSON string
@@ -458,7 +458,7 @@ export const transformToCardData = (dto: VehicleDto | Record<string, any>): Vehi
   const imageUrl = (firstImage?.url as string) || '/placeholder-car.jpg';
   // Location: backend entity uses state, DTO uses province
   const city = normalizeLocationName((raw.city as string) || '');
-  const province = (raw.province as string) || (raw.state as string) || '';
+  const province = normalizeLocationName((raw.province as string) || (raw.state as string) || '');
   const location = [city, province].filter(Boolean).join(', ');
   // Seller info
   const seller = raw.seller as Record<string, unknown> | undefined;

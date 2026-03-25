@@ -220,7 +220,19 @@ export default function FeaturedVehicles({
   // Map fallback vehicles to RotatedVehicle shape for FeaturedVehicleCard reuse
   const fallbackVehicles: RotatedVehicle[] = useMemo(() => {
     if (!fallbackData) return [];
-    return fallbackData.slice(0, effectiveMaxItems).map((v, i) => {
+    const seenVehicles = new Set<string>();
+    return fallbackData
+      .filter(v => {
+        // P0-005: Exclude E2E test vehicles
+        const t = (v.title || '').toUpperCase();
+        if (t.includes('E2E') || t.includes('DO NOT BUY')) return false;
+        // P0-007: Deduplicate by make+model+year
+        const key = `${v.make}-${v.model}-${v.year}`.toLowerCase();
+        if (seenVehicles.has(key)) return false;
+        seenVehicles.add(key);
+        return true;
+      })
+      .slice(0, effectiveMaxItems).map((v, i) => {
       const primaryImg = v.images
         ?.filter(img => img.url && !img.url.startsWith('blob:'))
         .sort((a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder))[0]?.url;
@@ -235,7 +247,7 @@ export default function FeaturedVehicles({
         price: v.price,
         currency: v.currency || 'DOP',
         location:
-          [normalizeLocationName(v.city ?? ''), v.state].filter(Boolean).join(', ') || 'R.D.',
+          [normalizeLocationName(v.city ?? ''), normalizeLocationName(v.state ?? '')].filter(Boolean).join(', ') || 'R.D.',
       };
     });
   }, [fallbackData, effectiveMaxItems]);
