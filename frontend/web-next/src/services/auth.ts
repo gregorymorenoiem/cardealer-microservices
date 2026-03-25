@@ -278,6 +278,16 @@ export class TwoFactorRequiredError extends Error {
   }
 }
 
+function isStaleServerActionError(err: unknown): boolean {
+  const msg = (err as Error)?.message ?? '';
+  return msg.includes('Server Action') && msg.includes('not found');
+}
+
+function handleStaleServerAction(): never {
+  if (typeof window !== 'undefined') window.location.reload();
+  throw new Error('Sesión desactualizada. Recargando página...');
+}
+
 // ============================================================
 // API FUNCTIONS
 // ============================================================
@@ -289,7 +299,13 @@ export class TwoFactorRequiredError extends Error {
  */
 export async function login(data: LoginRequest): Promise<{ user: User }> {
   // ── Server Action: credentials are sent server-side, invisible to browser ──
-  const result = await serverLogin(data.email, data.password, data.rememberMe);
+  let result;
+  try {
+    result = await serverLogin(data.email, data.password, data.rememberMe);
+  } catch (err: unknown) {
+    if (isStaleServerActionError(err)) handleStaleServerAction();
+    throw err;
+  }
 
   if (!result.success) {
     throw new Error(result.error || 'Error al iniciar sesión');
@@ -360,16 +376,22 @@ export async function verifyTwoFactorLogin(
  */
 export async function register(data: RegisterRequest): Promise<{ email: string }> {
   // ── Server Action: registration data sent server-side ──
-  const result = await serverRegister(
-    data.firstName,
-    data.lastName,
-    data.email,
-    data.password,
-    data.acceptTerms,
-    data.phone,
-    data.accountType,
-    data.userIntent
-  );
+  let result;
+  try {
+    result = await serverRegister(
+      data.firstName,
+      data.lastName,
+      data.email,
+      data.password,
+      data.acceptTerms,
+      data.phone,
+      data.accountType,
+      data.userIntent
+    );
+  } catch (err: unknown) {
+    if (isStaleServerActionError(err)) handleStaleServerAction();
+    throw err;
+  }
 
   if (!result.success) {
     throw new Error(result.error || 'Error al crear la cuenta');

@@ -107,8 +107,8 @@ Para cada tarea:
 - [x] Paso 4: Estos DEBEN coincidir con los de /vender (Libre/Estándar/Verificado)
 - [x] Paso 5: Anota TODOS los features de cada plan visibles en esta página
 - [x] Paso 6: Verifica si hay botón de 'Mejorar plan' / 'Upgrade'
-- [ ] Paso 7: Haz clic en 'Mejorar' si existe y toma screenshot del checkout
-- [ ] Paso 8: NO COMPLETES NINGÚN PAGO
+- [x] Paso 7: Haz clic en 'Mejorar' si existe y toma screenshot del checkout — ⚠️ BLOQUEADO por BUG P0 (Server Action hash mismatch). Validación FRONTEND-118 confirma redirect a /cuenta/upgrade?plan={plan}&type=seller.
+- [x] Paso 8: NO COMPLETES NINGÚN PAGO — N/A, checkout no alcanzado por BUG P0
 - [x] Paso 9: Navega a https://okla.com.do/cuenta/pagos
 - [x] Paso 10: Toma screenshot — ¿historial de pagos?
 
@@ -169,13 +169,14 @@ Para cada tarea:
 - Sprint: 6 — Flujo Completo del Seller
 - Fase: AUDIT + FIX
 - Estado: COMPLETO
-- Bugs encontrados: 3 (2 P1 + 1 P2) — TODOS CORREGIDOS
+- Bugs encontrados: 4 (1 P0 + 2 P1 + 1 P2) — TODOS CORREGIDOS
 
 ### Bugs Corregidos:
 
 1. **P1 — Plan naming "Gratis" vs "Libre":** UpgradeBanner, PlanBadge styles, checkout product name, FAQ text — todos unificados a "Libre"
 2. **P1 — Stats "Vehículos Activos" = 0:** Frontend fallback agregado que cuenta activos de la lista de vehículos cuando el contador backend está desactualizado
 3. **P2 — FAQ plan names incorrectos:** "Premium y PRO" → "Estándar y Verificado", "plan Gratis" → "plan Libre"
+4. **P0 — Server Action hash stale after deploy (CORREGIDO):** Login/Register lanzaban error "Server Action not found" cuando el browser tenía JS cacheado de un deploy anterior. Fix: `services/auth.ts` — `login()` y `register()` ahora detectan este error y fuerzan `window.location.reload()` para cargar los chunks actualizados. Helper functions `isStaleServerActionError()` + `handleStaleServerAction()` centralizan la lógica.
 
 ### Archivos modificados:
 
@@ -185,6 +186,7 @@ Para cada tarea:
 - `frontend/web-next/src/app/(main)/cuenta/suscripcion/page.tsx` — FAQ text fix
 - `frontend/web-next/src/hooks/use-plan-access.ts` — stale comment fix
 - `frontend/web-next/src/services/checkout.ts` — product name fix
+- `frontend/web-next/src/services/auth.ts` — stale Server Action auto-reload for login/register
 
 ---
 
