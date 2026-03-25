@@ -256,7 +256,7 @@ export default function SellerSubscriptionPage() {
           />
           <FaqItem
             q="¿El badge de verificado se mantiene si cambio de plan?"
-            a="El badge de verificado solo está disponible en planes Premium y PRO. Si bajas al plan Gratis, el badge se desactiva."
+            a="El badge de verificado solo está disponible en los planes Estándar y Verificado. Si bajas al plan Libre, el badge se desactiva."
           />
           <FaqItem
             q="¿Cómo funcionan las publicaciones destacadas?"

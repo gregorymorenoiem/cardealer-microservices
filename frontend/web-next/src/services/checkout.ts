@@ -215,7 +215,7 @@ const staticProducts: Record<string, Product> = {
   },
   'seller-gratis': {
     id: 'seller-gratis',
-    name: 'Plan Vendedor Gratis',
+    name: 'Plan Vendedor Libre',
     description: 'Plan gratuito para vendedores individuales',
     price: 0,
     currency: 'DOP',

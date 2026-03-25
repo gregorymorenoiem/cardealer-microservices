@@ -164,7 +164,11 @@ async function internalFetch<T>(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     const message =
-      errorBody.message || errorBody.error || errorBody.detail || errorBody.title || `Error ${response.status}`;
+      errorBody.message ||
+      errorBody.error ||
+      errorBody.detail ||
+      errorBody.title ||
+      `Error ${response.status}`;
     throw new Error(message);
   }
 

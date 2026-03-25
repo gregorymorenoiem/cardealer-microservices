@@ -265,7 +265,11 @@ function mapBackendSavedSearch(item: Record<string, unknown>): SavedSearch {
   } catch {
     // keep empty searchParams
   }
-  const freqRaw = ((item.notificationFrequency as string) || (item.frequency as string) || 'daily').toLowerCase();
+  const freqRaw = (
+    (item.notificationFrequency as string) ||
+    (item.frequency as string) ||
+    'daily'
+  ).toLowerCase();
   const validFreqs: NotifyFrequency[] = ['instant', 'daily', 'weekly', 'never'];
   const notifyFrequency: NotifyFrequency = validFreqs.includes(freqRaw as NotifyFrequency)
     ? (freqRaw as NotifyFrequency)
@@ -276,12 +280,14 @@ function mapBackendSavedSearch(item: Record<string, unknown>): SavedSearch {
     userId: (item.userId as string) || '',
     name: (item.name as string) || '',
     searchParams,
-    notifyNewListings: (item.notifyOnNewResults as boolean) ?? (item.sendEmailNotifications as boolean) ?? true,
+    notifyNewListings:
+      (item.notifyOnNewResults as boolean) ?? (item.sendEmailNotifications as boolean) ?? true,
     notifyFrequency,
     matchCount: (item.matchCount as number) ?? 0,
     newMatchCount: (item.newMatchCount as number) ?? 0,
-    lastMatchedAt: (item.lastMatchAt as string | undefined) ?? (item.lastMatchedAt as string | undefined),
-    lastNotifiedAt: (item.lastNotifiedAt as string | undefined),
+    lastMatchedAt:
+      (item.lastMatchAt as string | undefined) ?? (item.lastMatchedAt as string | undefined),
+    lastNotifiedAt: item.lastNotifiedAt as string | undefined,
     isActive: (item.isActive as boolean) ?? true,
     createdAt: item.createdAt as string,
     updatedAt: item.updatedAt as string,
@@ -371,7 +377,8 @@ export async function createSavedSearch(data: CreateSavedSearchRequest): Promise
     notifyOnNewResults: data.notifyNewListings ?? true,
     notifyByEmail: data.notifyNewListings ?? true,
     notifyByPush: true,
-    notificationFrequency: data.notifyFrequency === 'never' ? 'daily' : (data.notifyFrequency ?? 'daily'),
+    notificationFrequency:
+      data.notifyFrequency === 'never' ? 'daily' : (data.notifyFrequency ?? 'daily'),
   };
   const response = await apiClient.post<Record<string, unknown>>('/api/savedsearches', payload);
   return mapBackendSavedSearch(response.data);
@@ -404,7 +411,8 @@ export async function updateSavedSearch(
   }
   if (data.notifyNewListings !== undefined) payload.notifyOnNewResults = data.notifyNewListings;
   if (data.notifyFrequency !== undefined) {
-    payload.notificationFrequency = data.notifyFrequency === 'never' ? 'daily' : data.notifyFrequency;
+    payload.notificationFrequency =
+      data.notifyFrequency === 'never' ? 'daily' : data.notifyFrequency;
   }
   if (data.isActive !== undefined) payload.isActive = data.isActive;
   const response = await apiClient.put<Record<string, unknown>>(
@@ -435,7 +443,8 @@ export async function toggleSavedSearch(
     {
       notifyOnNewResults: !currentState.notifyNewListings,
       notifyByEmail: !currentState.notifyNewListings,
-      notificationFrequency: currentState.notifyFrequency === 'never' ? 'daily' : currentState.notifyFrequency,
+      notificationFrequency:
+        currentState.notifyFrequency === 'never' ? 'daily' : currentState.notifyFrequency,
     }
   );
   return mapBackendSavedSearch(response.data);
@@ -480,7 +489,7 @@ export async function markMatchesAsSeen(id: string): Promise<void> {
  * Navigation to /vehiculos with the saved search params is handled
  * directly in the UI (busquedas/page.tsx handleRunSearch).
  */
- 
+
 export async function runSavedSearch(_id: string): Promise<void> {
   return Promise.resolve();
 }

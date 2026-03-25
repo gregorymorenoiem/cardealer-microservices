@@ -652,6 +652,9 @@ function SellerDashboard() {
     staleTime: 60_000, // 1 minute — avoids re-fetch on every dashboard visit
   });
   const recentVehicles = vehiclesData?.vehicles ?? [];
+  // Fallback: if backend stats counter is stale, count active vehicles from the fetched list
+  const activeFromList = recentVehicles.filter(v => v.status === 'active').length;
+  const activeListingCount = (sellerStats?.activeListings ?? 0) || activeFromList;
 
   const isLoading = profileLoading || statsLoading;
 
@@ -694,7 +697,7 @@ function SellerDashboard() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <MetricCard
             title="Vehículos Activos"
-            value={sellerStats?.activeListings ?? 0}
+            value={activeListingCount}
             icon={Car}
             color="blue"
           />

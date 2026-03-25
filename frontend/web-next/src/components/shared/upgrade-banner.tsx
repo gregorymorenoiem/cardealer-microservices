@@ -101,7 +101,7 @@ export function UpgradeBanner({
       ? '/cuenta/upgrade?plan=visible&type=dealer'
       : '/cuenta/upgrade?plan=premium&type=seller';
   const href = upgradeUrl ?? defaultUrl;
-  const planLabel = currentPlan ?? (userType === 'dealer' ? 'Libre' : 'Gratis');
+  const planLabel = currentPlan ?? (userType === 'dealer' ? 'Libre' : 'Libre');
 
   if (variant === 'floating') {
     return (

@@ -81,7 +81,9 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
-            runAsUser: 1000
+            # Must match Dockerfile: `adduser --uid 1001 nextjs`
+            # UID 1000 caused EACCES on /app/.next/cache → broken ISR + server actions
+            runAsUser: 1001
             readOnlyRootFilesystem: false
             capabilities:
               drop:
@@ -110,8 +112,12 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: nextjs-cache
+              mountPath: /app/.next/cache
       volumes:
         - name: tmp
+          emptyDir: {}
+        - name: nextjs-cache
           emptyDir: {}
 
 ---

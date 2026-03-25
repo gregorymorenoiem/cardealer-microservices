@@ -213,7 +213,7 @@ export function usePlanAccess(): PlanAccessResult {
 
     if (isSeller) {
       // For sellers, we derive plan from user metadata
-      // Default to 'gratis' if not set
+      // Default to 'libre_seller' if not set
       const plan = (user as unknown as Record<string, unknown>)?.sellerPlan ?? 'libre_seller';
       const planKey = plan as SellerPlan;
       const limits = SELLER_PLAN_LIMITS[planKey] ?? SELLER_PLAN_LIMITS[SellerPlan.LIBRE];

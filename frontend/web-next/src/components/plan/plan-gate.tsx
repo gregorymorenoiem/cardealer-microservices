@@ -255,8 +255,9 @@ const PLAN_STYLES: Record<string, { bg: string; text: string; icon: typeof Zap }
   pro: { bg: 'bg-purple-100', text: 'text-purple-700', icon: Star },
   elite: { bg: 'bg-amber-100', text: 'text-amber-700', icon: Crown },
   // Seller plans
-  gratis: { bg: 'bg-gray-100', text: 'text-gray-700', icon: Zap },
-  premium: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Sparkles },
+  libre_seller: { bg: 'bg-gray-100', text: 'text-gray-700', icon: Zap },
+  estandar: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Sparkles },
+  verificado: { bg: 'bg-purple-100', text: 'text-purple-700', icon: Star },
 };
 
 const ALL_PLAN_LABELS: Record<string, string> = {
@@ -264,8 +265,9 @@ const ALL_PLAN_LABELS: Record<string, string> = {
   visible: 'Visible',
   pro: 'PRO',
   elite: 'Élite',
-  gratis: 'Gratis',
-  premium: 'Premium',
+  libre_seller: 'Libre',
+  estandar: 'Estándar',
+  verificado: 'Verificado',
   none: 'Sin Plan',
 };
 
