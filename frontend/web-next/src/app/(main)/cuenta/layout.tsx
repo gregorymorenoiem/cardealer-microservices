@@ -42,12 +42,16 @@ function AccountLayoutContent({ children }: AccountLayoutProps) {
   const { currentPlan } = usePlanAccess();
 
   // Redirect accounts to their own portal:
-  // - Dealers → /dealer/dashboard (they have their own portal)
+  // - Dealers at /cuenta root → /dealer/dashboard (they have their own portal)
+  //   BUT allow access to sub-pages like /cuenta/upgrade, /cuenta/pagos, /cuenta/perfil
   // - Admins at /cuenta root → /admin (profile/security sub-pages still accessible
   //   via the admin panel header dropdown links like /cuenta/perfil)
   React.useEffect(() => {
     if (!user) return;
-    if (user.accountType === 'dealer' || user.accountType === 'dealer_employee') {
+    if (
+      (user.accountType === 'dealer' || user.accountType === 'dealer_employee') &&
+      pathname === '/cuenta'
+    ) {
       router.replace('/dealer/dashboard');
     }
     if (

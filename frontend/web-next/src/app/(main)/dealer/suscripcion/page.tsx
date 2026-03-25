@@ -211,8 +211,17 @@ export default function DealerSubscriptionPage() {
         <Card className="w-full max-w-md p-6 text-center">
           <CardContent>
             <AlertCircle className="mx-auto mb-4 h-12 w-12 text-amber-500" />
-            <h2 className="mb-2 text-xl font-semibold">No se encontró el dealer</h2>
-            <p className="text-muted-foreground">Por favor, inicia sesión como dealer.</p>
+            <h2 className="mb-2 text-xl font-semibold">Completa tu registro de dealer</h2>
+            <p className="text-muted-foreground mb-4">
+              Para acceder a tu suscripción, primero necesitas completar el registro de tu
+              concesionario.
+            </p>
+            <a
+              href="/dealer/registro"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium"
+            >
+              Completar Registro
+            </a>
           </CardContent>
         </Card>
       </div>

@@ -4,10 +4,11 @@
     2,
     3,
     4,
-    5
+    5,
+    6
   ],
-  "sprint_actual": 6,
+  "sprint_actual": 7,
   "inicio": "2026-03-25T00:57:02.850230",
-  "phase": "audit",
-  "fix_attempt": 0
+  "phase": "reaudit",
+  "fix_attempt": 1
 }
