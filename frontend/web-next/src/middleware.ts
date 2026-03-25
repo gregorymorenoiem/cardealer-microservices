@@ -54,6 +54,8 @@ const publicRoutes = [
   '/cookies',
   '/seguridad',
   '/politica-reembolso',
+  '/reclamaciones',
+  '/okla-score',
   '/reportar',
   '/empleos',
   '/prensa',
