@@ -1870,3 +1870,15 @@ test
 [2026-03-25 11:52:53] [AUDIT-SPRINT] Sprint 2 completado (ciclo completo)
 [2026-03-25 11:52:53] [AUDIT-SPRINT] Sprint 3 [audit] despachado: Páginas Públicas: Vender, Dealers, Legal (Guest)
 [2026-03-25 11:59:53] [AUDIT-SPRINT] Sprint 3 [fix] despachado: Páginas Públicas: Vender, Dealers, Legal (Guest)
+[2026-03-25 12:10:54] [AUDIT-SPRINT] Sprint 3 [reaudit] despachado: Páginas Públicas: Vender, Dealers, Legal (Guest)
+[2026-03-25 12:15:54] [AUDIT-SPRINT] Sprint 3 [fix] despachado: Páginas Públicas: Vender, Dealers, Legal (Guest)
+[2026-03-25 12:19:54] [AUDIT-SPRINT] Sprint 3 [reaudit] despachado: Páginas Públicas: Vender, Dealers, Legal (Guest)
+[2026-03-25 12:36:24] [AUDIT-SPRINT] Sprint 3 [fix] despachado: Páginas Públicas: Vender, Dealers, Legal (Guest)
+[2026-03-25 12:54:54] [AUDIT-SPRINT] Sprint 3 [reaudit] despachado: Páginas Públicas: Vender, Dealers, Legal (Guest)
+[2026-03-25 13:05:54] [AUDIT-SPRINT] Sprint 3 completado (ciclo completo)
+[2026-03-25 13:05:54] [AUDIT-SPRINT] Sprint 4 [audit] despachado: Login & Registro (Todos los Usuarios)
+[2026-03-25 13:17:25] [AUDIT-SPRINT] Sprint 4 [fix] despachado: Login & Registro (Todos los Usuarios)
+[2026-03-25 13:41:03] [MODIFICACIÓN] LoginCommandHandler.cs — BUG-S4-001 mensajes inglés→español
+[2026-03-25 13:41:03] [MODIFICACIÓN] cookie-consent.tsx — BUG-S4-002 botón cookies left→right
+[2026-03-25 13:41:03] [MODIFICACIÓN] LoginCommandHandlerTests.cs — Tests actualizados español
+[2026-03-25 13:41:03] [GATE] ✅ Sprint 4 FIX (Intento 1/3) — Gate Pre-Commit PASSED

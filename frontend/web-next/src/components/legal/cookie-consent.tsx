@@ -287,7 +287,7 @@ export function CookieSettingsButton() {
   return (
     <button
       onClick={handleReopen}
-      className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground fixed bottom-4 left-4 z-[9997] flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-lg transition-colors"
+      className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground fixed right-4 bottom-4 z-[9997] flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-lg transition-colors"
       aria-label="Configurar cookies"
     >
       <Cookie className="h-3.5 w-3.5" />

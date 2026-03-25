@@ -262,7 +262,7 @@ public class LoginCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedException>()
-            .WithMessage("Invalid credentials.");
+            .WithMessage("Credenciales inválidas.");
     }
 
     [Fact]
@@ -284,7 +284,7 @@ public class LoginCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedException>()
-            .WithMessage("Invalid credentials.");
+            .WithMessage("Credenciales inválidas.");
     }
 
     [Fact]
@@ -308,7 +308,7 @@ public class LoginCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedException>()
-            .WithMessage("Invalid credentials.");
+            .WithMessage("Credenciales inválidas.");
     }
 
     #endregion
@@ -334,7 +334,7 @@ public class LoginCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedException>()
-            .WithMessage("*verify your email*");
+            .WithMessage("*verifica tu email*");
     }
 
     #endregion
@@ -364,7 +364,7 @@ public class LoginCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedException>()
-            .WithMessage("*temporarily locked*");
+            .WithMessage("*temporalmente bloqueada*");
     }
 
     #endregion
@@ -388,7 +388,7 @@ public class LoginCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<BadRequestException>()
-            .WithMessage("*CAPTCHA*required*");
+            .WithMessage("*CAPTCHA*desafío*");
     }
 
     [Fact]
@@ -409,7 +409,7 @@ public class LoginCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<BadRequestException>()
-            .WithMessage("*CAPTCHA*failed*");
+            .WithMessage("*CAPTCHA*falló*");
     }
 
     [Fact]

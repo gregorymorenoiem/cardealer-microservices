@@ -94,7 +94,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         {
             if (string.IsNullOrEmpty(request.CaptchaToken))
             {
-                throw new BadRequestException("CAPTCHA verification required. Please complete the CAPTCHA challenge.");
+                throw new BadRequestException("Se requiere verificación CAPTCHA. Por favor, completa el desafío.");
             }
 
             var captchaValid = await _captchaService.VerifyAsync(
@@ -106,7 +106,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
             {
                 _logger.LogWarning("CAPTCHA verification failed for {Email}. Score: {Score}",
                     request.Email, _captchaService.LastScore);
-                throw new BadRequestException("CAPTCHA verification failed. Please try again.");
+                throw new BadRequestException("La verificación CAPTCHA falló. Inténtalo de nuevo.");
             }
         }
 
@@ -115,27 +115,27 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         if (user == null)
         {
             await TrackFailedLoginAttemptAsync(request.Email, null, cancellationToken);
-            throw new UnauthorizedException("Invalid credentials.");
+            throw new UnauthorizedException("Credenciales inválidas.");
         }
 
         // Verificar que PasswordHash no sea nulo
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
             await TrackFailedLoginAttemptAsync(request.Email, user.Email, cancellationToken);
-            throw new UnauthorizedException("Invalid credentials.");
+            throw new UnauthorizedException("Credenciales inválidas.");
         }
 
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
             await TrackFailedLoginAttemptAsync(request.Email, user.Email, cancellationToken);
-            throw new UnauthorizedException("Invalid credentials.");
+            throw new UnauthorizedException("Credenciales inválidas.");
         }
 
         if (!user.EmailConfirmed)
-            throw new UnauthorizedException("Please verify your email before logging in.");
+            throw new UnauthorizedException("Por favor, verifica tu email antes de iniciar sesión.");
 
         if (user.IsLockedOut())
-            throw new UnauthorizedException("Account is temporarily locked. Please try again later.");
+            throw new UnauthorizedException("La cuenta está temporalmente bloqueada. Inténtalo más tarde.");
 
         // Clear failed attempts on successful password verification
         await _cache.RemoveAsync(failedAttemptsKey, cancellationToken);

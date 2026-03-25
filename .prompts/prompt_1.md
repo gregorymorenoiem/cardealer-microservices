@@ -38,21 +38,25 @@ Corrige todos los bugs encontrados:
 
 ## TAREAS
 
-- [ ] Fix bugs de S4-T01: Auditar página de Login
-- [ ] Fix bugs de S4-T02: Auditar Login como BUYER
-- [ ] Fix bugs de S4-T03: Auditar Login como SELLER
-- [ ] Fix bugs de S4-T04: Auditar Login como DEALER
-- [ ] Fix bugs de S4-T05: Auditar página de Registro
+- [x] Fix bugs de S4-T01: Auditar página de Login
+  - BUG-S4-001: Mensajes de error en inglés traducidos a español en LoginCommandHandler.cs
+- [x] Fix bugs de S4-T02: Auditar Login como BUYER — Sin bugs específicos
+- [x] Fix bugs de S4-T03: Auditar Login como SELLER — Sin bugs específicos
+- [x] Fix bugs de S4-T04: Auditar Login como DEALER
+  - BUG-S4-002: Botón cookies movido de left-4 a right-4 en cookie-consent.tsx
+- [x] Fix bugs de S4-T05: Auditar página de Registro — Sin bugs de registro
 
-- [ ] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
+- [x] Ejecutar Gate Pre-Commit (dotnet build + pnpm lint/typecheck/test/build + dotnet test)
 
 ## Resultado
 
 - Sprint: 4 — Login & Registro (Todos los Usuarios)
-- Fase: FIX
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Fase: FIX (Intento 1/3)
+- Estado: COMPLETADO
+- Bugs corregidos: 2 (BUG-S4-001 mensajes inglés→español, BUG-S4-002 cookie overlap)
 
 ---
 
 _Cuando termines, agrega la palabra READ al final de este archivo._
+
+READ
