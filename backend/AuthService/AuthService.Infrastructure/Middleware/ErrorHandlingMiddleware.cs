@@ -83,7 +83,7 @@ public class ErrorHandlingMiddleware
         var response = new
         {
             success = false,
-            error = (exception is AppException || isDevelopment) ? exception.Message : "An error occurred",
+            error = (exception is AuthServiceException || isDevelopment) ? exception.Message : "An error occurred",
             errorCode = errorCode,
             traceId = context.TraceIdentifier,
             details = isDevelopment ? exception.ToString() : null
@@ -96,7 +96,7 @@ public class ErrorHandlingMiddleware
     {
         return exception switch
         {
-            AppException appEx => appEx.GetType().Name.Replace("Exception", ""),
+            AuthServiceException authEx => authEx.ErrorCode,
             _ => "INTERNAL_ERROR"
         };
     }

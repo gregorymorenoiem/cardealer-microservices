@@ -1882,3 +1882,4 @@ test
 [2026-03-25 13:41:03] [MODIFICACIÓN] cookie-consent.tsx — BUG-S4-002 botón cookies left→right
 [2026-03-25 13:41:03] [MODIFICACIÓN] LoginCommandHandlerTests.cs — Tests actualizados español
 [2026-03-25 13:41:03] [GATE] ✅ Sprint 4 FIX (Intento 1/3) — Gate Pre-Commit PASSED
+[2026-03-25 13:41:25] [AUDIT-SPRINT] Sprint 4 [reaudit] despachado: Login & Registro (Todos los Usuarios)
