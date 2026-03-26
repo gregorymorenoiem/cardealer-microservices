@@ -903,8 +903,31 @@
       }
     },
     {
+      "_comment": "Public: Vehicle search/listing (anonymous allowed for marketplace browsing & SSR/SEO)",
       "UpstreamPathTemplate": "/api/vehicles",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST"],
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/vehicles",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "vehiclessaleservice",
+          "Port": 80
+        }
+      ],
+      "FileCacheOptions": {
+        "TtlSeconds": 30,
+        "Region": "vehiclesSearch"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "Authenticated: Create vehicle listing (requires Bearer token)",
+      "UpstreamPathTemplate": "/api/vehicles",
+      "UpstreamHttpMethod": ["POST"],
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -945,8 +968,27 @@
       }
     },
     {
+      "_comment": "Public: Vehicle detail/slug (anonymous GET for browsing & SEO)",
       "UpstreamPathTemplate": "/api/vehicles/{everything}",
-      "UpstreamHttpMethod": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+      "UpstreamHttpMethod": ["OPTIONS", "GET"],
+      "DownstreamPathTemplate": "/api/vehicles/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "vehiclessaleservice",
+          "Port": 80
+        }
+      ],
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 10,
+        "TimeoutValue": 30000
+      }
+    },
+    {
+      "_comment": "Authenticated: Vehicle mutations (create, update, delete)",
+      "UpstreamPathTemplate": "/api/vehicles/{everything}",
+      "UpstreamHttpMethod": ["POST", "PUT", "DELETE"],
       "DownstreamPathTemplate": "/api/vehicles/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -5038,6 +5080,81 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/cost/aggressive-mode",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/cost/aggressive-mode",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 80
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/cost",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/cost",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 80
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/distribution",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/distribution",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 80
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 80
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/config",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/config",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 80
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/maintenance/health",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
@@ -5185,8 +5302,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "host.docker.internal",
-          "Port": 15112
+          "Host": "auditservice",
+          "Port": 80
         }
       ]
     },
@@ -5197,8 +5314,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "host.docker.internal",
-          "Port": 15112
+          "Host": "auditservice",
+          "Port": 80
         }
       ],
       "AuthenticationOptions": {
@@ -5212,8 +5329,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "host.docker.internal",
-          "Port": 15112
+          "Host": "auditservice",
+          "Port": 80
         }
       ],
       "AuthenticationOptions": {
@@ -5227,8 +5344,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "host.docker.internal",
-          "Port": 15112
+          "Host": "auditservice",
+          "Port": 80
         }
       ],
       "AuthenticationOptions": {
@@ -5242,8 +5359,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "host.docker.internal",
-          "Port": 15112
+          "Host": "auditservice",
+          "Port": 80
         }
       ],
       "AuthenticationOptions": {
@@ -5257,8 +5374,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "host.docker.internal",
-          "Port": 15112
+          "Host": "auditservice",
+          "Port": 80
         }
       ],
       "AuthenticationOptions": {
