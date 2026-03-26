@@ -13,7 +13,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, formatFuelType } from '@/lib/format';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -451,7 +451,7 @@ function PortalVehicleCard({ vehicle }: { vehicle: PortalVehicle }) {
             <span>•</span>
             <span>{vehicle.transmission}</span>
             <span>•</span>
-            <span>{vehicle.fuelType}</span>
+            <span>{formatFuelType(vehicle.fuelType)}</span>
           </div>
         </CardContent>
       </Card>

@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { formatFuelType } from '@/lib/format';
 import { useVehicleDtosForComparison } from '@/hooks/use-vehicles';
 import { useLocalComparison } from '@/hooks/use-comparisons';
 import type { VehicleDto } from '@/services/vehicles';
@@ -83,7 +84,7 @@ const specRows: SpecRow[] = [
   {
     key: 'fuelType',
     label: 'Combustible',
-    format: v => v.fuelType || '—',
+    format: v => formatFuelType(v.fuelType),
   },
   {
     key: 'engineSize',

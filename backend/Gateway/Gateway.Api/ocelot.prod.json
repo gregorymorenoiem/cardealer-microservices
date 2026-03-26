@@ -3998,6 +3998,135 @@
       }
     },
     {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/cost/aggressive-mode",
+      "UpstreamHttpMethod": ["POST"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/cost/aggressive-mode",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/cost",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/cost",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/distribution",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/distribution",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/health",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/llm-gateway/config",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/llm-gateway/config",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/billing/revenue-by-plan",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/billing/revenue-by-plan",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "role": "Admin, SuperAdmin"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/dashboard/top-chatagent-dealers",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/dashboard/top-chatagent-dealers",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "role": "Admin, SuperAdmin"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/api/admin/dealers/cancelled",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/admin/dealers/cancelled",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "adminservice",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "role": "Admin, SuperAdmin"
+      }
+    },
+    {
       "UpstreamPathTemplate": "/api/maintenance/health",
       "UpstreamHttpMethod": ["GET"],
       "DownstreamPathTemplate": "/health",
