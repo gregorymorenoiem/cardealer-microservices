@@ -1910,3 +1910,70 @@ test
 [2026-03-25 18:15:00] [AUDIT-SPRINT] Sprint 7 [reaudit] despachado: Flujo Completo del Dealer
 [2026-03-25 18:29:47] [GIT] PUSH — fix(dealer): S7 fix /cuenta redirect, suscripcion UX, dealer directory (77359bb0). CI/CD ✅ PASSED. Deploy en progreso.
 [2026-03-25 18:44:31] [AUDIT-SPRINT] Sprint 7 [fix] despachado: Flujo Completo del Dealer
+[2026-03-25 21:35:39] [AUDIT-SPRINT] Sprint 7 [reaudit] despachado: Flujo Completo del Dealer
+[2026-03-25 21:42:39] [AUDIT-SPRINT] Sprint 7 [fix] despachado: Flujo Completo del Dealer
+[2026-03-25 21:58:36] [AUDIT-SPRINT] Sprint 7 [reaudit] despachado: Flujo Completo del Dealer
+[2026-03-25 22:06:36] [AUDIT-SPRINT] Sprint 7 completado (ciclo completo)
+[2026-03-25 22:06:36] [AUDIT-SPRINT] Sprint 8 [audit] despachado: Panel de Admin Completo
+[2026-03-25 22:30:46] [MODIFICACIÓN] compose.yaml — Añadidos Docker Compose profiles (core/vehicles/ai/business/frontend/backup) para arranque escalonado por tier de RAM. Docker Desktop recomendado: 18GB/8CPUs. Validado con docker compose config.
+[2026-03-25 22:30:46] [CREACIÓN] .env.local.example — Variables de entorno con paridad produccion (mismos nombres que K8s ConfigMaps).
+[2026-03-25 22:30:46] [MODIFICACIÓN] docs/GUIA-DESARROLLO-RAPIDO.md — Añadida sección 2 completa: metodología local-produccion, tabla tiers RAM, comandos por escenario, hot-reload, diferencias conocidas.
+[2026-03-25 22:41:44] [MODIFICACIÓN] .github/copilot-instructions.md — Incorporada metodología de desarrollo local: tiers Docker Compose, hot-reload, branch strategy, pre-gate local, Gate actualizado con filtros de integración/E2E
+[2026-03-25 22:47:04] [MODIFICACIÓN] .github/copilot-instructions.md + docs/GUIA-DESARROLLO-RAPIDO.md — Opción 1+3: staging=rama QA sin servidor, QA local con --profile business, main→auto-deploy DOKS
+[2026-03-25 22:57:21] [CREACIÓN] infra/caddy/Caddyfile — Reverse proxy HTTPS local (replica nginx ingress)
+[2026-03-25 22:57:21] [CREACIÓN] infra/setup-https-local.sh — Script setup automático mkcert+caddy+hosts
+[2026-03-25 22:57:21] [CREACIÓN] docs/HTTPS-LOCAL-SETUP.md — Documentación HTTPS local + dominio público
+[2026-03-25 22:57:21] [MODIFICACIÓN] compose.yaml — Servicios caddy (infra) + cloudflared (profile:tunnel)
+[2026-03-25 22:57:21] [MODIFICACIÓN] Gateway/Program.cs — CORS: agregado https://okla.local
+[2026-03-25 22:57:21] [MODIFICACIÓN] .env.local.example — URLs HTTPS + FRONTEND_UPSTREAM
+[2026-03-25 22:57:21] [MODIFICACIÓN] .gitignore — Excluir infra/caddy/certs/*.pem
+[2026-03-26 00:07:41] [AUDIT-SPRINT] Sprint 8 [audit] [LOCAL] despachado: Panel de Admin Completo
+[2026-03-26 06:58:19] [AUDIT-SPRINT] Sprint 8 [fix] [LOCAL] despachado: Panel de Admin Completo
+[2026-03-26 07:08:19] [AUDIT-SPRINT] Sprint 8 [reaudit] [LOCAL] despachado: Panel de Admin Completo
+[2026-03-26 07:29:39] [MONITOR/ERROR] screencapture falló — verifica Screen Recording en System Settings → Privacy
+[2026-03-26 08:28:20] [AUDIT-SPRINT] Sprint 8 [fix] [LOCAL] despachado: Panel de Admin Completo
+[2026-03-26 09:50:34] [MODIFICACIÓN] ocelot.prod.json — Add 3 missing admin gateway routes (billing/revenue-by-plan, dashboard/top-chatagent-dealers, dealers/cancelled)
+[2026-03-26 09:50:35] [MODIFICACIÓN] format.ts — Add formatFuelType, FUEL_TYPE_LABELS, normalizeCity utilities
+[2026-03-26 09:50:35] [MODIFICACIÓN] comparar/page.tsx, portal-client.tsx — Fix raw English fuelType display (P0-006)
+[2026-03-26 09:50:35] [MODIFICACIÓN] ad-engine.ts — Expand demo sponsored pool from 6 to 12 vehicles (P0-010)
+[2026-03-26 09:57:48] [CREACIÓN] SellerPlanConfiguration.cs + SellerPlanFeatureLimits.cs — P0-002 backend seller plans aligned with frontend
+[2026-03-26 09:58:10] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: all
+[2026-03-26 09:58:17] [MONITOR] Auditando TODOS los agentes IA (auditoria completa)
+[2026-03-26 09:58:32] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: all
+[2026-03-26 09:58:39] [MONITOR] Auditando TODOS los agentes IA (auditoria completa)
+[2026-03-26 09:59:09] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: all
+[2026-03-26 09:59:16] [MONITOR] Auditando TODOS los agentes IA (auditoria completa)
+[2026-03-26 09:59:42] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: SearchAgent
+[2026-03-26 09:59:48] [MONITOR] Auditando agente especifico: SearchAgent
+[2026-03-26 10:00:37] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://okla.com.do — Agente: all
+[2026-03-26 10:00:43] [MONITOR] Auditando TODOS los agentes IA (auditoria completa)
+[2026-03-26 10:09:37] [MODIFICACIÓN] prompt_6.md + monitor_prompt6.py + monitor_prompt1.py — ambiente de prueba local Docker+cloudflared
+[2026-03-26 10:10:18] [MONITOR] TIMEOUT: OpenClaw audit > 10 minutos
+[2026-03-26 10:10:18] [MONITOR] Reporte JSON guardado: ai-agents-20260326-101018.json
+[2026-03-26 10:11:13] [MONITOR] TIMEOUT: OpenClaw audit > 10 minutos
+[2026-03-26 10:11:13] [MONITOR] Reporte JSON guardado: ai-agents-20260326-101113.json
+[2026-03-26 10:26:58] [AUDIT-SPRINT] Sprint 8 [audit] [LOCAL] despachado: Panel de Admin Completo
+[2026-03-26 11:50:56] [MONITOR] URL de auditoría: https://wisconsin-flash-enlarge-property.trycloudflare.com
+[2026-03-26 11:50:56] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://wisconsin-flash-enlarge-property.trycloudflare.com — Agente: all
+[2026-03-26 11:51:05] [MONITOR] Auditando TODOS los agentes IA (auditoria completa)
+[2026-03-26 11:53:42] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260326_115057.md
+[2026-03-26 11:53:42] [MONITOR] [FALLO] OpenClaw audit — PASS: 0 | FAIL: 1 | SKIP: 0
+[2026-03-26 11:53:42] [MONITOR]   [ERROR] SearchAgent: SearchAgent Search
+[2026-03-26 11:53:42] [MONITOR] Reporte JSON guardado: ai-agents-20260326-115342.json
+[2026-03-26 12:02:16] [MONITOR] URL de auditoría: https://twist-first-studios-transcription.trycloudflare.com
+[2026-03-26 12:02:16] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://twist-first-studios-transcription.trycloudflare.com — Agente: all
+[2026-03-26 12:02:24] [MONITOR] Auditando TODOS los agentes IA (auditoria completa)
+[2026-03-26 12:03:38] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260326_120216.md
+[2026-03-26 12:03:38] [MONITOR] [FALLO] OpenClaw audit — PASS: 4 | FAIL: 4 | SKIP: 0
+[2026-03-26 12:03:38] [MONITOR]   [ERROR] [WARN] 1 advertencia(s) encontradas — revisar reporte
+[2026-03-26 12:03:38] [MONITOR] Reporte JSON guardado: ai-agents-20260326-120338.json
+[2026-03-26 12:04:41] [MONITOR] URL de auditoría: https://twist-first-studios-transcription.trycloudflare.com
+[2026-03-26 12:04:41] [MONITOR] INICIANDO auditoria OpenClaw/Chrome — URL: https://twist-first-studios-transcription.trycloudflare.com — Agente: all
+[2026-03-26 12:04:49] [MONITOR] Auditando TODOS los agentes IA (auditoria completa)
+[2026-03-26 12:09:47] [MONITOR] Reporte guardado: AI_AGENTS_AUDIT_20260326_120441.md
+[2026-03-26 12:09:47] [MONITOR] [OK] OpenClaw audit — PASS: 8 | FAIL: 0 | SKIP: 0
+[2026-03-26 12:09:47] [MONITOR]   [ERROR] [WARN] ⚠️ **IMPORTANTE:** Noto que la búsqueda SI se procesó (la query está en el campo de búsqueda), pero **sigue mostrando todos los vehículos**. Esto sugi
+[2026-03-26 12:09:47] [MONITOR] Reporte JSON guardado: ai-agents-20260326-120947.json
+[2026-03-26 12:33:47] [GIT] PUSH main 321f2a6a — ci: local-qa workflow, compose.yaml healthcheck optimization, CI/CD caches
+[2026-03-26 12:52:40] [AUDIT-SPRINT] Sprint 8 [audit] [LOCAL] despachado: Panel de Admin Completo
+[2026-03-26 13:18:24] [AUDIT] Sprint 8 Admin Panel — 24 páginas auditadas, 4 bugs esperados (servicios no en Docker), 0 bugs reales
