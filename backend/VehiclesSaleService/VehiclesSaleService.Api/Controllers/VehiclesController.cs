@@ -367,7 +367,7 @@ public class VehiclesController : ControllerBase
             Model = v.Model,
             Mileage = v.Mileage,
             Transmission = v.Transmission.ToString(),
-            FuelType = v.FuelType.ToString(),
+            FuelType = v.FuelType.ToSpanish(),
             Views = v.ViewCount,
             Favorites = v.FavoriteCount,
             CreatedAt = v.CreatedAt
@@ -1898,7 +1898,7 @@ public class VehiclesController : ControllerBase
                 Model = vehicle.Model,
                 Year = vehicle.Year,
                 BodyType = vehicle.BodyStyle.ToString(),
-                FuelType = vehicle.FuelType.ToString(),
+                FuelType = vehicle.FuelType.ToSpanish(),
                 Transmission = vehicle.Transmission.ToString(),
                 City = vehicle.City,
                 State = vehicle.State,

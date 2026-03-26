@@ -247,7 +247,7 @@ public class FavoritesController : ControllerBase
             Price = vehicle.Price,
             Mileage = vehicle.Mileage,
             Transmission = vehicle.Transmission.ToString(),
-            FuelType = vehicle.FuelType.ToString(),
+            FuelType = vehicle.FuelType.ToSpanish(),
             BodyType = vehicle.BodyStyle.ToString(),
             Location = FormatLocation(vehicle.City, vehicle.State),
             ImageUrl = vehicle.Images
@@ -272,7 +272,7 @@ public class FavoritesController : ControllerBase
             Model = vehicle.Model,
             Year = vehicle.Year,
             Mileage = vehicle.Mileage,
-            FuelType = vehicle.FuelType.ToString(),
+            FuelType = vehicle.FuelType.ToSpanish(),
             Transmission = vehicle.Transmission.ToString(),
             BodyStyle = vehicle.BodyStyle.ToString(),
             PrimaryImageUrl = vehicle.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url,

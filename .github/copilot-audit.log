@@ -2001,3 +2001,4 @@ test
 [2026-03-26 16:46:49] [MODIFICACIÓN] .prompts/openclaw_loop.py — Mensajes actualizados para proveedor configurable (Groq/Copilot/etc.)
 [2026-03-26 16:55:53] [EJECUCIÓN] OpenClaw Groq-lite configurado (agente minimal, contexto reducido, gateway reiniciado)
 [2026-03-26 17:58:31] [AUDIT-SPRINT] Sprint 9 [fix] [LOCAL] despachado: Backend API & Seguridad OWASP
+[2026-03-26 18:52:35] [MODIFICACIÓN] VehiclesSaleService FuelTypeExtensions.ToSpanish(), HomepageSectionsController, FavoritesController, VehiclesController — BACKEND-063 fuelType en español

@@ -503,3 +503,19 @@ public enum HomepageSection
     /// <summary>Aparece en todas las secciones aplicables</summary>
     All = Carousel | Sedanes | SUVs | Camionetas | Deportivos | Destacados | Lujo
 }
+
+public static class FuelTypeExtensions
+{
+    public static string ToSpanish(this FuelType ft) => ft switch
+    {
+        FuelType.Gasoline => "Gasolina",
+        FuelType.Diesel => "Diésel",
+        FuelType.Electric => "Eléctrico",
+        FuelType.Hybrid => "Híbrido",
+        FuelType.PlugInHybrid => "Híbrido Enchufable",
+        FuelType.Hydrogen => "Hidrógeno",
+        FuelType.NaturalGas => "Gas Natural / GLP",
+        FuelType.FlexFuel => "Flex Fuel",
+        _ => ft.ToString()
+    };
+}
