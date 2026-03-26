@@ -1,44 +1,102 @@
 # ============================================================================
-# COMPOSE.YAML - SOLO MICROSERVICIOS REQUERIDOS POR FRONTEND
+# COMPOSE.YAML - STACK LOCAL CON PERFILES POR TIERS
 # ============================================================================
 #
-# Este archivo levanta SOLO los servicios necesarios para que el frontend
-# funcione completamente:
+# ════════════════════════════════════════════════════════════════════════════
+# PROFILES (tiers de arranque — sube solo lo que necesitas)
+# ════════════════════════════════════════════════════════════════════════════
 #
-# 🔴 CRÍTICOS (4):
-#   - AuthService (15001)
-#   - VehiclesSaleService (15010)
-#   - MediaService (15020)
-#   - Gateway (18443)
+# PERFIL       SERVICIOS                                RAM     ACUM.
+# ─────────────────────────────────────────────────────────────────────
+# (ninguno)    infra: postgres+redis+rabbitmq+consul    ~2.4 GB  2.4 GB
+#              + seq + jaeger (observabilidad siempre)
+# core         gateway + authservice + userservice       ~3.2 GB  5.6 GB
+#              + roleservice + errorservice
+# vehicles     vehiclessaleservice + mediaservice        ~2.3 GB  7.9 GB
+#              + contactservice + notificationservice
+# ai           vehicleintelligenceservice + chatbot      ~2.3 GB  10.1 GB
+#              + recommendationservice + dealeranalytics
+# business     billingservice + crmservice + adminservice~3.1 GB  13.2 GB
+#              + reviewservice + auditservice + reports
+#              + comparison + kyc + azulpayment + spyne
+# frontend     frontend-web (Vite) + frontend-next       ~4.0 GB  17.2 GB
+# backup       pg-backup (opcional, no usar localmente)
 #
-# 🟠 IMPORTANTES (6):
-#   - UserService (15002)
-#   - ContactService (15003)
-#   - NotificationService (15005)
-#   - AdminService (15007)
-#   - ErrorService (5080) - Manejo centralizado de errores
-#   - EventTrackingService (5050) - Analytics y tracking de eventos
+# ════════════════════════════════════════════════════════════════════════════
+# COMANDOS RÁPIDOS
+# ════════════════════════════════════════════════════════════════════════════
 #
-# 🔵 INFRAESTRUCTURA (4):
-#   - PostgreSQL (5433)
-#   - RabbitMQ (5672, 15672)
-#   - Redis (6379)
-#   - Consul (8500)
+# Solo infraestructura (~2.4 GB):
+#   docker compose up -d
 #
-# 🔮 OBSERVABILIDAD - FASE 2 (2):
-#   - Seq (5341) - Logs centralizados (Serilog compatible)
-#   - Jaeger (16686, 4317) - Distributed tracing (OpenTelemetry)
+# Desarrollo backend de auth/users (~5.6 GB):
+#   docker compose --profile core up -d
 #
-# USAR:
-#   docker-compose -f compose.frontend-only.yaml up -d
+# Desarrollo de vehículos/marketplace (~7.9 GB):
+#   docker compose --profile core --profile vehicles up -d
 #
-# UIs DE OBSERVABILIDAD:
-#   - Seq UI: http://localhost:5341 (Logs)
-#   - Jaeger UI: http://localhost:16686 (Tracing)
-#   - RabbitMQ UI: http://localhost:15672 (Mensajería)
-#   - Consul UI: http://localhost:8500 (Service Discovery)
+# Con IA/chatbot (~10.1 GB):
+#   docker compose --profile core --profile vehicles --profile ai up -d
 #
+# Stack completo sin frontend (~13.2 GB):
+#   docker compose --profile core --profile vehicles --profile ai --profile business up -d
+#
+# Stack completo (~17.2 GB) — requiere Docker Desktop ≥ 18 GB:
+#   docker compose --profile core --profile vehicles --profile ai --profile business --profile frontend up -d
+#
+# UIs DE OBSERVABILIDAD (siempre disponibles):
+#   - Seq (Logs):        http://localhost:5341
+#   - Jaeger (Tracing):  http://localhost:16686
+#   - RabbitMQ UI:       http://localhost:15672
+#   - Consul UI:         http://localhost:8500
+#   - PgBouncer:         http://localhost:6432
+#
+# IMPORTANTE: Docker Desktop debe tener ≥ 16 GB para el stack full.
+# Ajustar en Docker Desktop → Settings → Resources → Memory
+#
+# OPTIMIZACIONES DE ARRANQUE LOCAL
+# ────────────────────────────────────────────────────────────────────────────
+# • Healthcheck interval: 10s (vs 30s default) — detecta healthy services 3x más rápido
+# • start_period: 20s para microservicios (vs 40s) — falla rápido si no compila
+# • start_period: 120s para vehiclessaleservice (dotnet watch run es lento la 1ra vez)
+# • Paralelismo: Docker Compose levanta perfiles en paralelo automáticamente
+#   Para más paralelismo: export COMPOSE_PARALLEL_LIMIT=10
 # ============================================================================
+
+# ═══════════════════════════════════════════════════════════════════════════
+# EXTENSION FIELDS — Configuraciones compartidas (YAML anchors)
+# Uso: <<: *deploy-api  /  <<: *deploy-heavy  /  <<: *healthcheck-api
+# ═══════════════════════════════════════════════════════════════════════════
+x-deploy-api: &deploy-api
+  resources:
+    limits:
+      cpus: "0.5"
+      memory: 384M
+    reservations:
+      memory: 256M
+
+x-deploy-std: &deploy-std
+  resources:
+    limits:
+      cpus: "0.5"
+      memory: 512M
+    reservations:
+      memory: 256M
+
+x-deploy-heavy: &deploy-heavy
+  resources:
+    limits:
+      cpus: "1.0"
+      memory: 1024M
+    reservations:
+      memory: 512M
+
+x-healthcheck-api: &healthcheck-api
+  test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
+  interval: 10s
+  timeout: 5s
+  retries: 3
+  start_period: 20s
 
 services:
   # ──────────────────────────────────────────────────────────────────────
@@ -81,7 +139,7 @@ services:
 
   # PgBouncer - Connection Pooler (reduces connection overhead to PostgreSQL)
   pgbouncer:
-    image: edoburu/pgbouncer:1.22.0
+    image: edoburu/pgbouncer:latest
     container_name: pgbouncer
     restart: unless-stopped
     deploy:
@@ -122,6 +180,7 @@ services:
 
   # pg-backup - Automated PostgreSQL backups (daily, 7-day retention)
   pg-backup:
+    profiles: [backup]
     image: prodrigestivill/postgres-backup-local:16
     container_name: pg-backup
     restart: unless-stopped
@@ -175,9 +234,10 @@ services:
       - okla-net
     healthcheck:
       test: rabbitmq-diagnostics -q ping
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 20s
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
@@ -239,7 +299,7 @@ services:
       - consul_data:/consul/data
     healthcheck:
       test: ["CMD", "consul", "members"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
       start_period: 10s
@@ -274,10 +334,10 @@ services:
           "CMD-SHELL",
           "[ -f /data/Documents/metastore.flare ] && exit 0 || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 20s
 
   # Jaeger - Distributed Tracing (OpenTelemetry compatible)
   jaeger:
@@ -302,7 +362,7 @@ services:
       - okla-net
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:14269/"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
 
@@ -312,6 +372,7 @@ services:
 
   # AuthService - Puerto 5001 (Autenticación JWT)
   authservice:
+    profiles: [core]
     build:
       context: ./backend
       dockerfile: AuthService/AuthService.Api/Dockerfile.dev
@@ -377,13 +438,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # VehiclesSaleService - Puerto 5010 (CRUD vehículos)
   vehiclessaleservice:
+    profiles: [vehicles]
     build:
       context: ./backend
       dockerfile: VehiclesSaleService/VehiclesSaleService.Api/Dockerfile.dev
@@ -415,6 +477,7 @@ services:
       Observability__SamplingRatio: "1.0"
       Observability__Prometheus__Enabled: "true"
       ErrorHandling__PublishToErrorService: "true"
+      OKLA_PII_ENCRYPTION_KEY: "CMx0ZJgjwLb3GdHw6laG0ICy09Zu9nKcNUtdzRJNfSQ="
       Services__ConfigurationService: "http://host.docker.internal:15124"
     ports:
       - "15010:80"
@@ -449,6 +512,11 @@ services:
       - ./backend/_Shared/CarDealer.Shared.Logging:/app/_Shared/CarDealer.Shared.Logging
       - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
       - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
+      - ./backend/_Shared/CarDealer.Shared.Audit:/app/_Shared/CarDealer.Shared.Audit
+      - ./backend/_Shared/CarDealer.Shared.Resilience:/app/_Shared/CarDealer.Shared.Resilience
+      - ./backend/_Shared/CarDealer.Shared.Caching:/app/_Shared/CarDealer.Shared.Caching
+      - ./backend/ErrorService/ErrorService.Domain:/app/ErrorService/ErrorService.Domain
+      - ./backend/ErrorService/ErrorService.Shared:/app/ErrorService/ErrorService.Shared
       # Volúmenes anónimos para excluir bin/obj de macOS
       - /app/VehiclesSaleService/VehiclesSaleService.Api/bin
       - /app/VehiclesSaleService/VehiclesSaleService.Api/obj
@@ -466,13 +534,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
       start_period: 120s
 
   # MediaService - Puerto 5020 (Gestión de imágenes)
   mediaservice:
+    profiles: [vehicles]
     build:
       context: ./backend
       dockerfile: MediaService/MediaService.Api/Dockerfile.dev
@@ -534,10 +603,10 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🟠 MICROSERVICIOS IMPORTANTES
@@ -545,6 +614,7 @@ services:
 
   # UserService - Puerto 5002 (Gestión de usuarios y perfiles)
   userservice:
+    profiles: [core]
     build:
       context: ./backend
       dockerfile: UserService/UserService.Api/Dockerfile.dev
@@ -577,6 +647,7 @@ services:
       Observability__SamplingRatio: "1.0"
       Observability__Prometheus__Enabled: "true"
       ErrorHandling__PublishToErrorService: "true"
+      OKLA_PII_ENCRYPTION_KEY: "CMx0ZJgjwLb3GdHw6laG0ICy09Zu9nKcNUtdzRJNfSQ="
     ports:
       - "15002:80"
     depends_on:
@@ -599,20 +670,21 @@ services:
       - ./backend/_Shared/CarDealer.Shared.Logging:/app/_Shared/CarDealer.Shared.Logging
       - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
       - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
-      - ./backend/ServiceDiscovery:/app/ServiceDiscovery
+      - ./backend/_Shared/ServiceDiscovery:/app/_Shared/ServiceDiscovery
     healthcheck:
       test:
         [
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ContactService - Puerto 5003 (Mensajería entre usuarios)
   contactservice:
+    profiles: [vehicles]
     build:
       context: ./backend
       dockerfile: ContactService/ContactService.Api/Dockerfile.dev
@@ -637,6 +709,7 @@ services:
       RabbitMQ__Port: "5672"
       Redis__Host: "redis:6379"
       Consul__Host: "http://consul:8500"
+      OKLA_PII_ENCRYPTION_KEY: "CMx0ZJgjwLb3GdHw6laG0ICy09Zu9nKcNUtdzRJNfSQ="
     ports:
       - "15003:80"
     depends_on:
@@ -655,13 +728,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 20s
 
   # NotificationService - Puerto 5005 (Email/SMS/Push)
   notificationservice:
+    profiles: [vehicles]
     build:
       context: ./backend
       dockerfile: NotificationService/NotificationService.Api/Dockerfile.dev
@@ -709,13 +783,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # AdminService - Puerto 5007 (Panel de administración)
   adminservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: AdminService/AdminService.Api/Dockerfile.dev
@@ -762,13 +837,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # StaffService - Puerto 15200 (Gestión de empleados/staff)
   errorservice:
+    profiles: [core]
     image: ${DOCKER_REGISTRY-}errorservice:latest
     build:
       context: ./backend
@@ -820,13 +896,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # EventTrackingService - Puerto 5050 (Analytics y tracking de eventos)
   roleservice:
+    profiles: [core]
     build:
       context: ./backend
       dockerfile: RoleService/RoleService.Api/Dockerfile.dev
@@ -868,13 +945,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # BillingService - Puerto 15107 (Facturación y Pagos)
   billingservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: BillingService/BillingService.Api/Dockerfile.dev
@@ -950,10 +1028,10 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🎬 SERVICIOS DE PROCESAMIENTO 360
@@ -961,6 +1039,7 @@ services:
 
   # BackgroundRemovalService - Puerto 15061 (Remoción de fondos con IA)
   dealeranalyticsservice:
+    profiles: [ai]
     build:
       context: ./backend
       dockerfile: DealerAnalyticsService/DealerAnalyticsService.Api/Dockerfile.dev
@@ -996,19 +1075,27 @@ services:
       - ./backend/DealerAnalyticsService:/app/DealerAnalyticsService
       - ./backend/_Shared/CarDealer.Contracts:/app/_Shared/CarDealer.Contracts
       - ./backend/_Shared/CarDealer.Shared:/app/_Shared/CarDealer.Shared
+      - ./backend/_Shared/CarDealer.Shared.Logging:/app/_Shared/CarDealer.Shared.Logging
+      - ./backend/_Shared/CarDealer.Shared.ErrorHandling:/app/_Shared/CarDealer.Shared.ErrorHandling
+      - ./backend/_Shared/CarDealer.Shared.Observability:/app/_Shared/CarDealer.Shared.Observability
+      - ./backend/_Shared/CarDealer.Shared.Audit:/app/_Shared/CarDealer.Shared.Audit
+      - ./backend/_Shared/CarDealer.Shared.Resilience:/app/_Shared/CarDealer.Shared.Resilience
+      - ./backend/ErrorService/ErrorService.Domain:/app/ErrorService/ErrorService.Domain
+      - ./backend/ErrorService/ErrorService.Shared:/app/ErrorService/ErrorService.Shared
     healthcheck:
       test:
         [
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # CRMService - Puerto 15106 (CRM y Leads)
   crmservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: CRMService/CRMService.Api/Dockerfile.dev
@@ -1050,13 +1137,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # SearchService - Puerto 15093 (Búsqueda)
   comparisonservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: ComparisonService/ComparisonService.Api/Dockerfile.dev
@@ -1104,13 +1192,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ReviewService - Puerto 5059 (Reseñas)
   reviewservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: ReviewService/ReviewService.Api/Dockerfile.dev
@@ -1159,13 +1248,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # FinanceService - Puerto 15108 (Financiamiento)
   reportsservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: ReportsService/ReportsService.Api/Dockerfile.dev
@@ -1213,13 +1303,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # SchedulerService - Puerto 15111 (Tareas Programadas)
   auditservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: AuditService/AuditService.Api/Dockerfile.dev
@@ -1267,16 +1358,17 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🗄️ CACHE SERVICE (Redis wrapper)
   # ──────────────────────────────────────────────────────────────────────
 
   recommendationservice:
+    profiles: [ai]
     build:
       context: ./backend
       dockerfile: RecommendationService/Dockerfile
@@ -1315,16 +1407,65 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/swagger || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔍 SEARCH AGENT SERVICE (AI-powered vehicle search)
+  # ──────────────────────────────────────────────────────────────────────
+
+  searchagent:
+    profiles: [ai]
+    build:
+      context: ./backend
+      dockerfile: SearchAgent/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=postgres_db;Port=5432;Database=searchagent;Username=postgres;Password=password;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=10"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: "${JWT__KEY:-clave-super-secreta-desarrollo-32-caracteres-aaa}"
+      Jwt__Issuer: "AuthService-Dev"
+      Jwt__Audience: "OKLA-Dev"
+      Claude__ApiKey: "${CLAUDE_API_KEY:-placeholder}"
+      RabbitMQ__Host: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      Consul__Host: "http://consul:8500"
+    ports:
+      - "15155:8080"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - okla-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://localhost:8080/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🏥 HEALTH CHECK SERVICE
   # ──────────────────────────────────────────────────────────────────────
 
   vehicleintelligenceservice:
+    profiles: [ai]
     build:
       context: ./backend
       dockerfile: VehicleIntelligenceService/Dockerfile
@@ -1364,19 +1505,20 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
   # 👤 USER BEHAVIOR SERVICE
   # ──────────────────────────────────────────────────────────────────────
 
   chatbotservice:
+    profiles: [ai]
     build:
       context: ./backend
-      dockerfile: ChatbotService/Dockerfile
+      dockerfile: ChatbotService/Dockerfile.dev
     deploy:
       resources:
         limits:
@@ -1399,6 +1541,7 @@ services:
       RabbitMQ__Host: "rabbitmq"
       RabbitMQ__Port: "5672"
       OpenAI__ApiKey: "${OPENAI_API_KEY:-sk-placeholder}"
+      OKLA_PII_ENCRYPTION_KEY: "CMx0ZJgjwLb3GdHw6laG0ICy09Zu9nKcNUtdzRJNfSQ="
     ports:
       - "15148:80"
     depends_on:
@@ -1414,16 +1557,17 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/swagger || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
   # 💳 PAYMENT SERVICE (Multi-Provider: Azul, CardNET, PixelPay, Fygaro, PayPal)
   # ──────────────────────────────────────────────────────────────────────
 
   azulpaymentservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: AzulPaymentService/Dockerfile
@@ -1466,16 +1610,17 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
   # 📚 API DOCS SERVICE
   # ──────────────────────────────────────────────────────────────────────
 
   gateway:
+    profiles: [core]
     build:
       context: ./backend
       dockerfile: Gateway/Gateway.Api/Dockerfile.dev
@@ -1511,26 +1656,22 @@ services:
     ports:
       - "18443:80"
     depends_on:
-      authservice:
-        condition: service_healthy
-      vehiclessaleservice:
-        condition: service_healthy
-      mediaservice:
-        condition: service_healthy
-      userservice:
-        condition: service_healthy
-      contactservice:
-        condition: service_healthy
-      # notificationservice:                # TEMP: disabled - ITeamsProvider DI error
-      #   condition: service_healthy
-      adminservice:
-        condition: service_healthy
+      # Infra (hard deps — always available)
       redis:
         condition: service_healthy
       seq:
         condition: service_healthy
       jaeger:
         condition: service_healthy
+      # Core services — soft dependency (gateway retries via Ocelot circuit-breaker)
+      authservice:
+        condition: service_started
+      userservice:
+        condition: service_started
+      # vehicles profile (optional — gateway routes will fail gracefully if not up)
+      # vehiclessaleservice, mediaservice, contactservice — not required at startup
+      # business profile (optional)
+      # adminservice — not required at startup
     networks:
       - okla-net
     volumes:
@@ -1547,10 +1688,10 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🔒 COMPLIANCE & LEGAL SERVICES
@@ -1558,6 +1699,7 @@ services:
 
   # KYCService - Puerto 15180 (Know Your Customer - Verificación de Identidad)
   kycservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: KYCService/KYCService.Api/Dockerfile.dev
@@ -1607,13 +1749,14 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ComplianceService - Puerto 15151 (Cumplimiento Regulatorio General)
   spyneintegrationservice:
+    profiles: [business]
     build:
       context: ./backend
       dockerfile: SpyneIntegrationService/SpyneIntegrationService.Api/Dockerfile.dev
@@ -1656,10 +1799,10 @@ services:
           "CMD-SHELL",
           "wget -q -O /dev/null http://localhost:80/health || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 20s
 
   # ────────────────────────────────────────────────────────────────────
   # 📦 FASE 4 CONSOLIDADOS: RegulatoryAlertService, ComplianceIntegrationService
@@ -1668,6 +1811,7 @@ services:
 
   # ReportingService - Puerto 15161 (Reportes Generales)
   frontend-web:
+    profiles: [frontend]
     build:
       context: ./frontend/web
       dockerfile: Dockerfile.dev
@@ -1707,16 +1851,17 @@ services:
           "CMD-SHELL",
           'node -e "require(''http'').get(''http://localhost:5173'', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on(''error'', () => process.exit(1))"',
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 20s
 
   # ──────────────────────────────────────────────────────────────────────
   # 🌐 FRONTEND WEB-NEXT (Next.js 16 Rebuild)
   # ──────────────────────────────────────────────────────────────────────
 
   frontend-next:
+    profiles: [frontend]
     build:
       context: ./frontend/web-next
       dockerfile: Dockerfile.dev # Development mode with hot reload
@@ -1761,10 +1906,76 @@ services:
           "CMD-SHELL",
           "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1",
         ]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 90s
+      start_period: 45s
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 🔒 TLS / REVERSE PROXY (equivalente al nginx ingress de K8s)
+  # ──────────────────────────────────────────────────────────────────────
+
+  # Caddy — HTTPS local con mkcert + proxy inverso
+  # Replica: Browser → https://okla.local → Caddy → Frontend/Gateway
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 64M
+        reservations:
+          memory: 32M
+    ports:
+      - "443:443" # HTTPS — https://okla.local
+      - "80:80" # HTTP  — para cloudflared tunnel
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./infra/caddy/certs:/etc/caddy/certs:ro
+    environment:
+      FRONTEND_UPSTREAM: "${FRONTEND_UPSTREAM:-host.docker.internal:3000}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - okla-net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "-O",
+          "/dev/null",
+          "http://localhost:80/proxy/health",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Cloudflared — Túnel público temporal (dominio gratuito *.trycloudflare.com)
+  # SOLO usar cuando necesites: webhooks, OAuth callbacks, testing desde móvil
+  # Inicio: docker compose --profile tunnel up -d cloudflared
+  # Ver URL: docker compose logs cloudflared | grep "trycloudflare.com"
+  cloudflared:
+    profiles: [tunnel]
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 64M
+        reservations:
+          memory: 32M
+    command: tunnel --no-autoupdate --url http://caddy:80
+    depends_on:
+      caddy:
+        condition: service_healthy
+    networks:
+      - okla-net
+    restart: unless-stopped
 
 # ============================================================================
 # NETWORKS

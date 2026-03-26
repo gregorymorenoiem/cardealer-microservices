@@ -1,0 +1,397 @@
+# =============================================================================
+# LOCAL QA — Validación rápida en el runner self-hosted (Mac M5 local)
+# =============================================================================
+# Diseñado para correr en el runner local antes de abrir un PR.
+# NO sube imágenes Docker. NO despliega a K8s. Solo valida código.
+#
+# Activación manual:
+#   gh workflow run local-qa.yml
+#
+# O automáticamente en cualquier push a ramas feature/* o hotfix/*
+#
+# Pipeline (objetivo < 5 min total):
+#   Job 1 – detect-changes  : 5s  — qué cambió
+#   Job 2 – frontend-qa     : 90s — lint + typecheck + unit tests
+#   Job 3 – backend-qa      : 90s — build + unit tests (solo servicios cambiados)
+#   Job 4 – smoke-check     : 60s — ping health endpoints del stack local
+#   Job 5 – summary         : 5s  — resumen
+# =============================================================================
+
+name: "🏠 Local QA"
+
+on:
+  push:
+    branches:
+      - "feature/**"
+      - "hotfix/**"
+      - "fix/**"
+  workflow_dispatch:
+    inputs:
+      skip_smoke:
+        description: "Omitir smoke checks del stack Docker local"
+        required: false
+        default: false
+        type: boolean
+      profile:
+        description: "Profile Docker a validar (core | vehicles | ai | business)"
+        required: false
+        default: "core"
+        type: choice
+        options: ["core", "vehicles", "ai", "business"]
+
+# Cancela runs anteriores del mismo branch para no acumular workers
+concurrency:
+  group: local-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: "8.0.x"
+  NODE_VERSION: "20.x"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  NUGET_XMLDOC_MODE: "skip"
+  # Ruta del store NuGet en el runner self-hosted (cache persistente entre runs)
+  NUGET_PACKAGES: "${{ github.workspace }}/../.nuget-cache"
+
+# =============================================================================
+# JOB 1 — Detectar cambios
+# =============================================================================
+jobs:
+  detect-changes:
+    name: "🔍 Detect Changes"
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 3
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      shared: ${{ steps.filter.outputs.shared }}
+      infra: ${{ steps.filter.outputs.infra }}
+      has_changes: ${{ steps.filter.outputs.frontend == 'true' || steps.filter.outputs.backend == 'true' }}
+
+    steps:
+      - name: "📥 Checkout (shallow)"
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2 # Solo necesitamos el commit anterior para diff
+
+      - name: "🔍 Filter changed paths"
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/web-next/**'
+              - '!frontend/web-next/**/*.md'
+            backend:
+              - 'backend/**'
+              - '!backend/**/*.md'
+            shared:
+              - 'backend/_Shared/**'
+            infra:
+              - 'compose.yaml'
+              - 'compose.*.yaml'
+              - 'infra/**'
+              - 'k8s/**'
+
+  # =============================================================================
+  # JOB 2 — Frontend QA (corre en paralelo con Job 3)
+  # =============================================================================
+  frontend-qa:
+    name: "🌐 Frontend QA"
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 6
+
+    steps:
+      - name: "📥 Checkout (shallow)"
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: "🔧 Setup Node.js"
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: "📦 Setup pnpm"
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # Cache del store pnpm en el runner local (clave por lockfile)
+      - name: "📦 Cache pnpm store"
+        uses: actions/cache@v5
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}
+          restore-keys: pnpm-
+
+      # Cache del build de Next.js (.next/cache) — reduce tiempo de typecheck y build
+      - name: "⚡ Cache Next.js build"
+        uses: actions/cache@v5
+        with:
+          path: frontend/web-next/.next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}-${{ hashFiles('frontend/web-next/src/**/*.{ts,tsx,js,jsx}') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}-
+            nextjs-${{ runner.os }}-
+
+      - name: "📦 Install dependencies (frozen)"
+        working-directory: frontend/web-next
+        run: pnpm install --frozen-lockfile
+
+      # Los 4 checks corren secuencialmente pero en < 90s gracias al cache
+      - name: "🔍 Lint"
+        working-directory: frontend/web-next
+        run: pnpm lint
+
+      - name: "📝 Typecheck"
+        working-directory: frontend/web-next
+        run: pnpm typecheck
+
+      - name: "🧪 Unit tests"
+        working-directory: frontend/web-next
+        env:
+          CI: "true"
+        run: pnpm test -- --run --reporter=verbose
+
+      # Build solo en local-qa para detectar errores de compilación antes del PR
+      - name: "🏗️ Build (detectar errores de compilación)"
+        working-directory: frontend/web-next
+        env:
+          NEXT_PUBLIC_API_URL: "" # Modo BFF — mismo que producción
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: pnpm build
+
+  # =============================================================================
+  # JOB 3 — Backend QA (corre en paralelo con Job 2)
+  # =============================================================================
+  backend-qa:
+    name: "🔧 Backend QA"
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 8
+
+    steps:
+      - name: "📥 Checkout (shallow)"
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: "🔧 Setup .NET ${{ env.DOTNET_VERSION }}"
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # Cache NuGet en directorio fuera del workspace — persiste entre runs y branches
+      - name: "📦 Cache NuGet packages"
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/*.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      # Cache de objetos de build de MSBuild (archivos .dll intermedios)
+      # Clave incluye solo el hash de las soluciones → invalida si algo en un.csproj cambió
+      - name: "⚡ Cache MSBuild outputs"
+        uses: actions/cache@v5
+        with:
+          path: |
+            backend/**/bin/Release
+            backend/**/obj/Release
+          key: msbuild-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/*.sln', 'backend/_Shared/**/*.cs') }}
+          restore-keys: |
+            msbuild-${{ runner.os }}-
+
+      - name: "🔍 Detect changed backend services"
+        id: changed
+        run: |
+          # Lista de servicios que cambiaron vs. el commit anterior
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
+            | grep "^backend/" \
+            | cut -d'/' -f2 \
+            | grep -v "^_Shared$" \
+            | sort -u)
+
+          # Si _Shared cambió, validar también authservice + gateway como proxy
+          if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q "^backend/_Shared/"; then
+            CHANGED="$CHANGED AuthService Gateway"
+          fi
+
+          # Deduplicar y formatear
+          CHANGED=$(echo "$CHANGED" | sort -u | tr '\n' ' ' | xargs)
+          echo "services=$CHANGED" >> $GITHUB_OUTPUT
+          echo "Changed services: [$CHANGED]"
+
+      - name: "📦 Restore (solo servicios cambiados)"
+        run: |
+          SERVICES="${{ steps.changed.outputs.services }}"
+          if [ -z "$SERVICES" ]; then
+            echo "No backend services changed — skipping restore"
+            exit 0
+          fi
+          for SVC in $SERVICES; do
+            SLN="backend/$SVC/${SVC}.sln"
+            if [ -f "$SLN" ]; then
+              echo "  ↳ dotnet restore $SVC"
+              dotnet restore "$SLN" --verbosity quiet
+            fi
+          done
+
+      - name: "🔨 Build (--no-restore, TreatWarningsAsErrors)"
+        run: |
+          SERVICES="${{ steps.changed.outputs.services }}"
+          if [ -z "$SERVICES" ]; then
+            echo "No backend services to build"
+            exit 0
+          fi
+          FAILED=""
+          for SVC in $SERVICES; do
+            SLN="backend/$SVC/${SVC}.sln"
+            if [ -f "$SLN" ]; then
+              echo "  ↳ building $SVC..."
+              dotnet build "$SLN" \
+                --no-restore \
+                --configuration Release \
+                /p:TreatWarningsAsErrors=true \
+                /p:WarningLevel=5 \
+                --verbosity minimal \
+              || FAILED="$FAILED $SVC"
+            fi
+          done
+          if [ -n "$FAILED" ]; then
+            echo "::error::Build failed for:$FAILED"
+            exit 1
+          fi
+
+      - name: "🧪 Unit tests (Category!=Integration, Category!=E2E)"
+        run: |
+          SERVICES="${{ steps.changed.outputs.services }}"
+          if [ -z "$SERVICES" ]; then
+            echo "No backend services to test"
+            exit 0
+          fi
+          FAILED=""
+          for SVC in $SERVICES; do
+            TEST_DIR="backend/$SVC/${SVC}.Tests"
+            SLN="backend/$SVC/${SVC}.sln"
+            if [ -d "$TEST_DIR" ] && [ -f "$SLN" ]; then
+              echo "  ↳ testing $SVC..."
+              dotnet test "$SLN" \
+                --no-build \
+                --configuration Release \
+                --filter "Category!=Integration&Category!=E2E&FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~E2ETests" \
+                --logger "console;verbosity=minimal" \
+                --blame-hang \
+                --blame-hang-timeout 2min \
+                --verbosity minimal \
+              || FAILED="$FAILED $SVC"
+            fi
+          done
+          if [ -n "$FAILED" ]; then
+            echo "::error::Unit tests failed for:$FAILED"
+            exit 1
+          fi
+
+  # =============================================================================
+  # JOB 4 — Smoke Check (verifica que el stack local esté levantado y healthy)
+  # =============================================================================
+  smoke-check:
+    name: "🔥 Smoke Check — Stack Local"
+    needs: [detect-changes, frontend-qa, backend-qa]
+    # Corre si no se pidió skip Y si al menos un check corrió
+    if: |
+      always() &&
+      github.event.inputs.skip_smoke != 'true' &&
+      (needs.frontend-qa.result == 'success' || needs.backend-qa.result == 'success' || needs.frontend-qa.result == 'skipped' || needs.backend-qa.result == 'skipped')
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 3
+
+    steps:
+      - name: "🔥 Health check endpoints"
+        run: |
+          echo "=== Smoke Check — Stack Docker Local ==="
+          FAILED=""
+
+          check() {
+            local name="$1"
+            local url="$2"
+            local expected="${3:-200}"
+            local code
+            code=$(curl -s -m 8 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
+            if [ "$code" = "$expected" ]; then
+              echo "  ✅ $name ($code)"
+            else
+              echo "  ❌ $name — expected $expected, got $code  [$url]"
+              FAILED="$FAILED $name"
+            fi
+          }
+
+          # Infraestructura base (siempre debe estar corriendo)
+          check "Gateway"      "http://localhost:18443/health"
+          check "AuthService"  "http://localhost:18443/api/auth/health"
+          check "Frontend"     "http://localhost:3000"
+
+          # Servicios opcionales (warning, no error)
+          CHATBOT_STATUS=$(curl -s -m 5 -o /dev/null -w "%{http_code}" http://localhost:5060/health 2>/dev/null)
+          if [ "$CHATBOT_STATUS" = "200" ]; then
+            echo "  ✅ ChatbotService (host:5060) — $CHATBOT_STATUS"
+          else
+            echo "  ⚠️  ChatbotService (host:5060) no disponible — arrancar con: cd backend/ChatbotService && dotnet watch run"
+          fi
+
+          # Tunnel (solo si está levantado)
+          TUNNEL_URL=$(docker logs cloudflared 2>/dev/null | grep -o 'https://[a-z-]*\.trycloudflare\.com' | tail -1)
+          if [ -n "$TUNNEL_URL" ]; then
+            check "Cloudflare Tunnel (frontend)" "$TUNNEL_URL" "200"
+            check "Cloudflare Tunnel (auth)"    "$TUNNEL_URL/api/auth/health" "200"
+          else
+            echo "  ℹ️  Tunnel no activo (opcional — levantar con: docker compose --profile tunnel up -d cloudflared)"
+          fi
+
+          if [ -n "$FAILED" ]; then
+            echo ""
+            echo "::error::Smoke check failed para:$FAILED"
+            echo "Asegúrate de tener el stack local corriendo:"
+            echo "  docker compose --profile core --profile vehicles up -d"
+            echo "  cd frontend/web-next && pnpm dev"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ Smoke check completado — stack local saludable"
+
+  # =============================================================================
+  # JOB 5 — Summary
+  # =============================================================================
+  summary:
+    name: "📊 Local QA Summary"
+    needs: [detect-changes, frontend-qa, backend-qa, smoke-check]
+    if: always()
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 2
+
+    steps:
+      - name: "📊 Write job summary"
+        run: |
+          echo "## 🏠 Local QA — Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend QA | ${{ needs.frontend-qa.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend QA  | ${{ needs.backend-qa.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Smoke Check | ${{ needs.smoke-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.frontend-qa.result }}" == "failure" || "${{ needs.backend-qa.result }}" == "failure" || "${{ needs.smoke-check.result }}" == "failure" ]]; then
+            echo "❌ **Local QA falló — NO abrir PR hasta corregir errores**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Local QA OK — listo para abrir PR hacia \`staging\`**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "git push origin ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "# Luego abrir PR: ${{ github.ref_name }} → staging" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi

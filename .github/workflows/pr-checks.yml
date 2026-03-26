@@ -4,9 +4,15 @@
 # Optimizado para ejecutar en ~3-5 minutos
 # Solo lint, type check, y unit tests rápidos
 #
+# Optimizaciones:
+#   - Cache pnpm store (keyed por pnpm-lock.yaml)
+#   - Cache Next.js build (.next/cache)
+#   - Cache NuGet (directorio persistente fuera del workspace)
+#   - dotnet build --no-restore (evita restore redundante)
+#
 # Soporta PRs hacia:
 #   - main (producción)
-#   - development (integración)
+#   - staging (rama QA)
 #   - sprint/* (trabajo de sprint)
 # =============================================================================
 
@@ -14,7 +20,7 @@ name: 🔍 PR Checks
 
 on:
   pull_request:
-    branches: [main, "sprint/**"]
+    branches: [main, staging, "sprint/**"]
 
 # Evita ejecuciones duplicadas
 concurrency:
@@ -24,6 +30,10 @@ concurrency:
 env:
   NODE_VERSION: "20.x"
   DOTNET_VERSION: "8.0.x"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  NUGET_XMLDOC_MODE: "skip"
+  NUGET_PACKAGES: "${{ github.workspace }}/../.nuget-cache"
 
 jobs:
   # ============================================
@@ -79,18 +89,21 @@ jobs:
         with:
           version: 9
 
-      - name: 📦 Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
       - name: 📦 Cache pnpm store
         uses: actions/cache@v5
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          path: ~/.pnpm-store
+          key: pnpm-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}
+          restore-keys: pnpm-
+
+      - name: ⚡ Cache Next.js build
+        uses: actions/cache@v5
+        with:
+          path: frontend/web-next/.next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}-${{ hashFiles('frontend/web-next/src/**/*.{ts,tsx,js,jsx}') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+            nextjs-${{ runner.os }}-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}-
+            nextjs-${{ runner.os }}-
 
       - name: 📦 Install dependencies
         working-directory: frontend/web-next
@@ -148,7 +161,15 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: ${{ runner.os }}-nuget-
 
-      - name: 🔍 Detect changed services
+      - name: � Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/*.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: �🔍 Detect changed services
         id: changed-services
         run: |
           # Get list of changed backend directories
@@ -169,8 +190,8 @@ jobs:
           for svc in ${{ steps.changed-services.outputs.services }}; do
             if [ -d "$svc" ] && [ -f "$svc/${svc}.sln" ]; then
               echo "🔨 Building $svc..."
-              dotnet restore "$svc/${svc}.sln"
-              dotnet build "$svc/${svc}.sln" --no-restore --configuration Release
+              dotnet restore "$svc/${svc}.sln" --verbosity quiet
+              dotnet build "$svc/${svc}.sln" --no-restore --configuration Release /p:TreatWarningsAsErrors=true
             fi
           done
 

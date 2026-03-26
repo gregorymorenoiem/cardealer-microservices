@@ -4,6 +4,14 @@
 # Job 1 (ci):     Detecta cambios, build/test frontend & backend,
 #                 push Docker images, integration tests.
 # Job 2 (deploy): Aplica manifiestos K8s y reinicia solo los pods que cambiaron.
+#
+# Optimizaciones activas:
+#   - Cache NuGet ($NUGET_PACKAGES fuera del workspace — persiste entre runs)
+#   - Cache pnpm store (keyed por pnpm-lock.yaml)
+#   - Cache Next.js build (.next/cache — reduce typecheck+build ~60%)
+#   - Cache Docker layers (ghcr.io inline cache — reduce build ~70% en cambios menores)
+#   - --no-restore / --no-build para evitar trabajo redundante
+#   - Timeout reducido: 90 min → 30 min
 # =============================================================================
 
 name: "🚀 CI/CD"
@@ -23,6 +31,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  NUGET_XMLDOC_MODE: "skip"
+  # Directorio NuGet FUERA del workspace → persiste entre runs en el runner local
+  NUGET_PACKAGES: "${{ github.workspace }}/../.nuget-cache"
+  DOTNET_VERSION: "8.0.x"
+
 jobs:
   # ============================================================
   # JOB 1: CI -- Build, Test & Push Images
@@ -30,7 +46,7 @@ jobs:
   ci:
     name: "🔨 CI — Build, Test & Push Images"
     runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 90
+    timeout-minutes: 30
     outputs:
       changed_services: ${{ steps.collect-changed.outputs.changed }}
 
@@ -40,6 +56,33 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 2
+
+      # --- NuGet cache (fuera del workspace, persiste entre pushes) ----
+      - name: "📦 Cache NuGet packages"
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/*.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      # --- Frontend node_modules / pnpm store ----------------------
+      - name: "📦 Cache pnpm store"
+        uses: actions/cache@v5
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}
+          restore-keys: pnpm-
+
+      # --- Next.js build cache (.next/cache) -----------------------
+      - name: "⚡ Cache Next.js build"
+        uses: actions/cache@v5
+        with:
+          path: frontend/web-next/.next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}-${{ hashFiles('frontend/web-next/src/**/*.{ts,tsx,js,jsx}') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('frontend/web-next/pnpm-lock.yaml') }}-
+            nextjs-${{ runner.os }}-
 
       # --- Detect Changes -----------------------------------------
       - name: "🔍 Detect file changes"
@@ -269,7 +312,7 @@ jobs:
           steps.filter.outputs.gateway == 'true' ||
           steps.filter.outputs.vehiclessaleservice == 'true' ||
           steps.filter.outputs.billingservice == 'true'
-        run: dotnet restore
+        run: dotnet restore --verbosity quiet
 
       - name: "🔨 dotnet build"
         if: >-
@@ -282,7 +325,7 @@ jobs:
           steps.filter.outputs.gateway == 'true' ||
           steps.filter.outputs.vehiclessaleservice == 'true' ||
           steps.filter.outputs.billingservice == 'true'
-        run: dotnet build --no-restore /p:TreatWarningsAsErrors=true
+        run: dotnet build --no-restore /p:TreatWarningsAsErrors=true --verbosity minimal
 
       - name: "🧪 Backend unit tests"
         if: >-
@@ -296,7 +339,7 @@ jobs:
           steps.filter.outputs.vehiclessaleservice == 'true' ||
           steps.filter.outputs.billingservice == 'true'
         run: >
-          dotnet test --no-build
+          dotnet test --no-build --no-restore
           --filter "Category!=Integration&Category!=E2E&FullyQualifiedName!~E2E&FullyQualifiedName!~IntegrationTests.&FullyQualifiedName!~.Integration."
           --logger "console;verbosity=minimal"
           --blame-hang --blame-hang-timeout 2min
@@ -347,6 +390,11 @@ jobs:
           echo "Logged into ghcr.io as ${{ github.actor }} (credential-helper-free)"
 
       # --- Docker Build & Push (one step per service) -------------
+      # --- Docker Build & Push (with inline layer cache) --------
+      # cache-from/cache-to usa ghcr.io inline cache:
+      # → Primera ejecución: build completo + sube cache (~5 min)
+      # → Ejecuciones siguientes: solo capas que cambiaron (~1-2 min)
+
       - name: "🐳 Build & Push AuthService"
         if: steps.filter.outputs.authservice == 'true' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
@@ -356,6 +404,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/authservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/authservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/authservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/authservice:cache,mode=max
 
       - name: "🐳 Build & Push ErrorService"
         if: steps.filter.outputs.errorservice == 'true' && github.ref == 'refs/heads/main'
@@ -366,6 +416,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/errorservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/errorservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/errorservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/errorservice:cache,mode=max
 
       - name: "🐳 Build & Push NotificationService"
         if: steps.filter.outputs.notificationservice == 'true' && github.ref == 'refs/heads/main'
@@ -376,6 +428,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/notificationservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/notificationservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/notificationservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/notificationservice:cache,mode=max
 
       - name: "🐳 Build & Push VehiclesSaleService"
         if: steps.filter.outputs.vehiclessaleservice == 'true' && github.ref == 'refs/heads/main'
@@ -386,6 +440,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/vehiclessaleservice:cache,mode=max
 
       - name: "🐳 Build & Push MediaService"
         if: steps.filter.outputs.mediaservice == 'true' && github.ref == 'refs/heads/main'
@@ -396,6 +452,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/mediaservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mediaservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/mediaservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/mediaservice:cache,mode=max
 
       - name: "🐳 Build & Push AdminService"
         if: steps.filter.outputs.adminservice == 'true' && github.ref == 'refs/heads/main'
@@ -406,6 +464,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/adminservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/adminservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/adminservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/adminservice:cache,mode=max
 
       - name: "🐳 Build & Push ContactService"
         if: steps.filter.outputs.contactservice == 'true' && github.ref == 'refs/heads/main'
@@ -416,6 +476,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/contactservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/contactservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/contactservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/contactservice:cache,mode=max
 
       - name: "🐳 Build & Push BillingService"
         if: steps.filter.outputs.billingservice == 'true' && github.ref == 'refs/heads/main'
@@ -426,6 +488,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/billingservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/billingservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/billingservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/billingservice:cache,mode=max
 
       - name: "🐳 Build & Push ReviewService"
         if: steps.filter.outputs.reviewservice == 'true' && github.ref == 'refs/heads/main'
@@ -436,6 +500,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/reviewservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/reviewservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/reviewservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/reviewservice:cache,mode=max
 
       - name: "🐳 Build & Push Gateway"
         if: steps.filter.outputs.gateway == 'true' && github.ref == 'refs/heads/main'
@@ -446,6 +512,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/gateway:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/gateway:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/gateway:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/gateway:cache,mode=max
 
       - name: "🐳 Build & Push ChatbotService"
         if: steps.filter.outputs.chatbotservice == 'true' && github.ref == 'refs/heads/main'
@@ -456,6 +524,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/chatbotservice:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/chatbotservice:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/chatbotservice:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/chatbotservice:cache,mode=max
 
       - name: "🐳 Build & Push LLM Server"
         if: steps.filter.outputs.llm-server == 'true' && github.ref == 'refs/heads/main'
@@ -465,6 +535,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/llm-server:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/llm-server:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/llm-server:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/llm-server:cache,mode=max
 
       - name: "🐳 Build & Push Frontend Web"
         if: steps.filter.outputs.frontend-web == 'true' && github.ref == 'refs/heads/main'
@@ -474,6 +546,11 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/frontend-web:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/frontend-web:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/frontend-web:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/frontend-web:cache,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=
+            NEXT_TELEMETRY_DISABLED=1
 
       # --- Integration Tests (only on main) -----------------------
       - name: "🔧 Create CI secrets for Docker Compose"
