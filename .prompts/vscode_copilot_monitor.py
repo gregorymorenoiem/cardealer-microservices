@@ -82,8 +82,8 @@ MAX_CONTINUE_ATTEMPTS = 3     # Intentos de "continuar" antes de nuevo chat
 MAX_NEW_CHAT_ATTEMPTS = 2     # Intentos de nuevo chat antes de restart
 VISUAL_STALL_THRESHOLD = 120  # Segundos sin cambio visual en el chat = conversación detenida
 WORKSPACE_SETTLE_TIME  = 150  # Tiempo mínimo sin cambio en prompt_1.md antes de actuar
-USER_ACTIVE_GRACE      = 180  # Segundos de cooldown cuando se detecta usuario escribiendo en el chat
-HID_ACTIVE_THRESHOLD   = 30   # Segundos: último HID + VS Code en foco → actividad humana detectada
+USER_ACTIVE_GRACE      = 60    # Segundos de cooldown cuando se detecta usuario escribiendo en el chat
+HID_ACTIVE_THRESHOLD   = 5    # Segundos: último HID + VS Code en foco → actividad humana detectada
 SCREENSHOTS_KEEP      = 20    # Número máximo de screenshots a conservar
 
 # ─── OpenClaw — rotación automática de modelos GitHub Copilot gratuitos ──────
@@ -682,98 +682,65 @@ def cleanup_old_screenshots(keep: int = SCREENSHOTS_KEEP):
 # LÓGICA DE DETECCIÓN
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ─── OpenClaw gateway ────────────────────────────────────────────────────────
-_OC_GATEWAY = "ws://127.0.0.1:18789"
-_OC_TOKEN   = "f24fcea34191739b761db1153cefd910706083c1546c9c00"
+# ─── OpenClaw gateway / CLI ───────────────────────────────────────────────────
+_OC_BINARY  = "/opt/homebrew/lib/node_modules/openclaw/openclaw.mjs"
 _OC_AGENT   = "copilot-watchdog"
-_OC_TIMEOUT = 20  # segundos máximo esperando respuesta del agente
+_OC_TIMEOUT = 60  # segundos máximo esperando respuesta del agente
 
 
 def _ask_watchdog_agent(ocr_text: str, extra_context: str = "") -> str | None:
     """
-    Envía el OCR del chat al agente copilot-watchdog de OpenClaw vía WebSocket.
-    El agente responde con una sola palabra: OK | CONTINUAR | NUEVO_CHAT | REINICIAR.
-    Retorna la palabra en mayúsculas, o None si falla la conexión.
+    Envía el OCR del chat al agente copilot-watchdog de OpenClaw via CLI nativo.
+    Usa el binario original (bypasea el wrapper non-premium que rompe los args).
+    El agente responde con una sola palabra: OK | CONTINUAR | NUEVO_CHAT | REINICIAR | ESPERAR.
+    Retorna la palabra en mayúsculas, o None si falla.
     """
-    if not _WS_AVAILABLE:
-        log("websocket-client no instalado — usando clasificación local", "WARN")
-        return None
-
-    result = {"decision": None, "authenticated": False, "done": False}
-    event  = threading.Event()
-
     prompt = (
         f"Estado del chat de GitHub Copilot en VS Code (OCR):\n\n"
-        f"{ocr_text or '(sin texto visible)'}"
-        f"\n\n{extra_context}" if extra_context else
+        f"{ocr_text or '(sin texto visible)'}\n\n{extra_context}"
+        if extra_context else
         f"Estado del chat de GitHub Copilot en VS Code (OCR):\n\n"
         f"{ocr_text or '(sin texto visible)'}"
     )
 
-    def on_message(ws_conn, raw):
-        try:
-            msg = json.loads(raw)
-        except Exception:
-            return
-        ev = msg.get("event") or msg.get("type", "")
-
-        # Autenticación
-        if ev == "connect.challenge":
-            nonce = (msg.get("payload") or {}).get("nonce", "")
-            sig   = hmac_mod.new(_OC_TOKEN.encode(), nonce.encode(), "sha256").hexdigest()
-            ws_conn.send(json.dumps({
-                "type": "authenticate",
-                "payload": {"token": _OC_TOKEN, "hmac": sig, "nonce": nonce},
-                "agentId": _OC_AGENT,
-            }))
-
-        if ev in ("connect.ready", "authenticated", "auth.ok", "ready", "agent.idle"):
-            if not result["authenticated"]:
-                result["authenticated"] = True
-                ws_conn.send(json.dumps({
-                    "type": "message",
-                    "payload": {"text": prompt, "role": "user"},
-                    "agentId": _OC_AGENT,
-                }))
-
-        # Respuesta del agente
-        if ev in ("agent.message", "message", "message.complete"):
-            text = ""
-            payload = msg.get("payload") or {}
-            if isinstance(payload, dict):
-                text = payload.get("text") or payload.get("content") or ""
-            elif isinstance(payload, str):
-                text = payload
-            word = text.strip().upper().split()[0] if text.strip() else ""
-            if word in ("OK", "CONTINUAR", "NUEVO_CHAT", "REINICIAR"):
-                result["decision"] = word
-                result["done"]   = True
-                event.set()
-                ws_conn.close()
-
-    def on_error(ws_conn, err):
-        log(f"WS watchdog error: {err}", "WARN")
-        event.set()
-
-    def on_close(ws_conn, *_):
-        event.set()
+    VALID_WORDS = {"OK", "CONTINUAR", "NUEVO_CHAT", "REINICIAR", "ESPERAR"}
+    binary = _OC_BINARY if Path(_OC_BINARY).exists() else "node"
+    cmd = (
+        ["node", _OC_BINARY, "agent", "--agent", _OC_AGENT, "-m", prompt, "--json"]
+        if Path(_OC_BINARY).exists()
+        else None
+    )
+    if cmd is None:
+        log("OpenClaw binary no encontrado — usando clasificación local", "WARN")
+        return None
 
     try:
-        ws_conn = websocket.WebSocketApp(
-            _OC_GATEWAY,
-            on_message=on_message,
-            on_error=on_error,
-            on_close=on_close,
+        result = subprocess.run(
+            cmd,
+            capture_output=True, text=True, timeout=_OC_TIMEOUT
         )
-        t = threading.Thread(target=ws_conn.run_forever, daemon=True)
-        t.start()
-        event.wait(timeout=_OC_TIMEOUT)
-        ws_conn.close()
+        raw = result.stdout
+        # Buscar "text": "PALABRA" en la salida JSON
+        import re as _re
+        match = _re.search(r'"text"\s*:\s*"([^"]+)"', raw)
+        if match:
+            word = match.group(1).strip().upper().split()[0]
+            if word in VALID_WORDS:
+                return word
+        # Fallback: buscar palabra válida en cualquier línea
+        for line in raw.splitlines():
+            w = line.strip().upper().split()[0] if line.strip() else ""
+            if w in VALID_WORDS:
+                return w
+        if result.returncode != 0:
+            log(f"WS watchdog error (rc={result.returncode}): {result.stderr[:150]}", "WARN")
+        return None
+    except subprocess.TimeoutExpired:
+        log(f"WS watchdog timeout ({_OC_TIMEOUT}s)", "WARN")
+        return None
     except Exception as exc:
         log(f"WS watchdog excepción: {exc}", "WARN")
         return None
-
-    return result["decision"]
 
 
 # Mapa de respuesta del agente → estados internos del monitor
@@ -1181,7 +1148,7 @@ def monitor_cycle(state: dict, debug: bool = False) -> tuple[str, dict]:
     if human_active:
         log(f"👤 Actividad humana detectada ({hid_desc}) — cooldown {USER_ACTIVE_GRACE}s")
         state["user_active_until_ts"] = now + USER_ACTIVE_GRACE
-        state["last_visual_change_ts"] = now
+        # NO resetear last_visual_change_ts: no interferir con el contador de stall
         return "user_active", state
 
     # ── 1. Capturar área de mensajes del chat ──────────────────────────────────
