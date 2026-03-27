@@ -58,9 +58,9 @@ public sealed class GetLlmCostQueryHandler : IRequestHandler<GetLlmCostQuery, Co
             ProjectedMonthlyUsd = projected,
             Thresholds = new CostThresholdsDto
             {
-                Warning = WarningThreshold,
-                Critical = CriticalThreshold,
-                HardLimit = HardLimitThreshold
+                WarningUsd = WarningThreshold,
+                CriticalUsd = CriticalThreshold,
+                AggressiveCacheUsd = HardLimitThreshold
             },
             IsAggressiveCacheModeActive = false,
             Status = status,

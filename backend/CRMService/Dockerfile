@@ -9,7 +9,7 @@ RUN mkdir -p /run/secrets
 # Install wget for healthcheck (Alpine uses apk)
 RUN apk add --no-cache wget
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -43,7 +43,7 @@ WORKDIR "/src/CRMService/CRMService.Api"
 RUN dotnet build "CRMService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "CRMService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
+RUN dotnet publish "CRMService.Api.csproj" -c Release -o /app/publish --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

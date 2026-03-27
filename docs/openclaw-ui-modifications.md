@@ -100,30 +100,31 @@ Todas las opciones de la Control UI se configuran bajo `gateway.controlUi` en `~
   gateway: {
     controlUi: {
       // ─── Opciones básicas ───────────────────────────────────────────
-      enabled: true,                  // activar/desactivar la Control UI
+      enabled: true, // activar/desactivar la Control UI
 
-      basePath: "/openclaw",          // cambiar la ruta base
-                                      // Por defecto: "/" → http://host:18789/
-                                      // Con basePath: http://host:18789/openclaw
+      basePath: "/openclaw", // cambiar la ruta base
+      // Por defecto: "/" → http://host:18789/
+      // Con basePath: http://host:18789/openclaw
 
       // ─── Orígenes permitidos (para acceso remoto) ───────────────────
-      allowedOrigins: [               // REQUERIDO para orígenes no-loopback
+      allowedOrigins: [
+        // REQUERIDO para orígenes no-loopback
         "https://control.ejemplo.com",
-        "http://localhost:5173",       // solo para dev
+        "http://localhost:5173", // solo para dev
       ],
 
       // ─── Compatibilidad HTTP inseguro ───────────────────────────────
-      allowInsecureAuth: false,       // permite sesiones localhost sin device
-                                      // identity en contextos HTTP no-seguro
-                                      // (NO bypasea pairing checks)
+      allowInsecureAuth: false, // permite sesiones localhost sin device
+      // identity en contextos HTTP no-seguro
+      // (NO bypasea pairing checks)
 
       // ─── Break-glass (solo emergencias) ────────────────────────────
-      dangerouslyDisableDeviceAuth: false,  // deshabilita device identity checks
-                                            // REVERTIR INMEDIATAMENTE tras uso
+      dangerouslyDisableDeviceAuth: false, // deshabilita device identity checks
+      // REVERTIR INMEDIATAMENTE tras uso
 
       dangerouslyAllowHostHeaderOriginFallback: false, // modo Host-header origin
-    }
-  }
+    },
+  },
 }
 ```
 
@@ -152,14 +153,14 @@ openclaw config get gateway.controlUi
 
 La Control UI se auto-detecta según el locale del browser. Se puede cambiar manualmente desde el **panel Access** en la UI.
 
-| Locale | Idioma |
-|--------|--------|
-| `en` | English (default fallback) |
-| `es` | Español |
-| `zh-CN` | Chino Simplificado |
-| `zh-TW` | Chino Tradicional |
-| `pt-BR` | Portugués Brasileño |
-| `de` | Alemán |
+| Locale  | Idioma                     |
+| ------- | -------------------------- |
+| `en`    | English (default fallback) |
+| `es`    | Español                    |
+| `zh-CN` | Chino Simplificado         |
+| `zh-TW` | Chino Tradicional          |
+| `pt-BR` | Portugués Brasileño        |
+| `de`    | Alemán                     |
 
 > El idioma seleccionado se guarda en `localStorage` del browser. Traducciones no-inglesas se cargan lazy. Claves faltantes hacen fallback a inglés.
 
@@ -167,20 +168,20 @@ La Control UI se auto-detecta según el locale del browser. Se puede cambiar man
 
 ## 5. Paneles disponibles en la Control UI
 
-| Panel | Funcionalidades |
-|-------|----------------|
-| **Chat** | Enviar mensajes, ver tool calls en streaming, tool output cards, abort runs |
-| **Channels** | Estado WhatsApp/Telegram/Discord/Slack, QR login, config por canal |
-| **Instances** | Lista de presencia de instancias, refresh (`system-presence`) |
-| **Sessions** | Listar sesiones, aplicar overrides (thinking/fast/verbose/reasoning) |
-| **Cron** | Agregar/editar/ejecutar/habilitar/deshabilitar jobs + historial |
-| **Skills** | Estado, enable/disable, instalar desde ClawHub, actualizar API keys |
-| **Nodes** | Lista de nodos disponibles y sus capacidades |
-| **Exec Approvals** | Editar allowlists del gateway/node, política de `exec` |
-| **Config** | Editar `openclaw.json` via form visual **o** Raw JSON editor |
-| **Debug** | Status/health/models snapshots, event log, RPC manual |
-| **Logs** | Live tail de logs del gateway con filtros y export |
-| **Update** | Actualizar el paquete + restart con reporte |
+| Panel              | Funcionalidades                                                             |
+| ------------------ | --------------------------------------------------------------------------- |
+| **Chat**           | Enviar mensajes, ver tool calls en streaming, tool output cards, abort runs |
+| **Channels**       | Estado WhatsApp/Telegram/Discord/Slack, QR login, config por canal          |
+| **Instances**      | Lista de presencia de instancias, refresh (`system-presence`)               |
+| **Sessions**       | Listar sesiones, aplicar overrides (thinking/fast/verbose/reasoning)        |
+| **Cron**           | Agregar/editar/ejecutar/habilitar/deshabilitar jobs + historial             |
+| **Skills**         | Estado, enable/disable, instalar desde ClawHub, actualizar API keys         |
+| **Nodes**          | Lista de nodos disponibles y sus capacidades                                |
+| **Exec Approvals** | Editar allowlists del gateway/node, política de `exec`                      |
+| **Config**         | Editar `openclaw.json` via form visual **o** Raw JSON editor                |
+| **Debug**          | Status/health/models snapshots, event log, RPC manual                       |
+| **Logs**           | Live tail de logs del gateway con filtros y export                          |
+| **Update**         | Actualizar el paquete + restart con reporte                                 |
 
 ### Notas del panel Cron
 
@@ -218,30 +219,27 @@ El **Model Picker** (dropdown de modelos) en la UI se alimenta de `agents.defaul
       // ─── Modelo primario (el que aparece seleccionado por defecto) ──
       model: {
         primary: "github-copilot/claude-haiku-4.5",
-        fallbacks: [
-          "github-copilot/claude-sonnet-4-5",
-          "ollama/llama3.2"
-        ]
+        fallbacks: ["github-copilot/claude-sonnet-4-5", "ollama/llama3.2"],
       },
 
       // ─── Catálogo visible en el dropdown ───────────────────────────
       // Solo los modelos listados aquí aparecerán en el Model Picker
       models: {
         "github-copilot/claude-haiku-4.5": {
-          alias: "Haiku (Rápido)"         // nombre visible en el picker
+          alias: "Haiku (Rápido)", // nombre visible en el picker
         },
         "github-copilot/claude-sonnet-4-5": {
-          alias: "Sonnet 4.5 (Calidad)"
+          alias: "Sonnet 4.5 (Calidad)",
         },
         "github-copilot/claude-sonnet-4-6": {
-          alias: "Sonnet 4.6 (Latest)"
+          alias: "Sonnet 4.6 (Latest)",
         },
         "ollama/llama3.2": {
-          alias: "Llama 3.2 (Local)"
-        }
-      }
-    }
-  }
+          alias: "Llama 3.2 (Local)",
+        },
+      },
+    },
+  },
 }
 ```
 
@@ -399,7 +397,7 @@ openclaw agents delete mi-agente
       {
         id: "main",
         agentDir: "/Users/gregorymoreno/.openclaw/agents/main/agent",
-        model: "github-copilot/claude-haiku-4.5"
+        model: "github-copilot/claude-haiku-4.5",
       },
 
       // ─── Agente "dev-senior" (ya configurado) ─────────────────────
@@ -413,8 +411,8 @@ openclaw agents delete mi-agente
           name: "QA-Senior",
           theme: "Auditor autónomo — un inspector de calidad incansable",
           emoji: "🔍",
-          avatar: "_(none)"
-        }
+          avatar: "_(none)",
+        },
       },
 
       // ─── Agregar nuevo agente aquí ─────────────────────────────────
@@ -428,11 +426,11 @@ openclaw agents delete mi-agente
           name: "OKLA Agent",
           theme: "Especialista en marketplace de vehículos dominicano",
           emoji: "🚗",
-          avatar: "_(none)"
-        }
-      }
-    ]
-  }
+          avatar: "_(none)",
+        },
+      },
+    ],
+  },
 }
 ```
 
@@ -476,10 +474,10 @@ El **Session Picker** muestra todas las sesiones del agente actual.
 
 ### Scope de sesiones
 
-| Scope | Comportamiento |
-|-------|---------------|
-| `per-sender` | Cada agente tiene múltiples sesiones (default) |
-| `global` | El TUI siempre usa la sesión `global` (el picker puede estar vacío) |
+| Scope        | Comportamiento                                                      |
+| ------------ | ------------------------------------------------------------------- |
+| `per-sender` | Cada agente tiene múltiples sesiones (default)                      |
+| `global`     | El TUI siempre usa la sesión `global` (el picker puede estar vacío) |
 
 ### Atajo de teclado (TUI)
 
@@ -493,16 +491,16 @@ Ctrl+P  →  Abre el Session Picker
 
 Desde el panel **Sessions** de la Control UI (o con slash commands en el TUI), puedes modificar el comportamiento de **cada sesión individualmente**:
 
-| Override | Valores | Descripción |
-|----------|---------|-------------|
-| `think` | `off`, `minimal`, `low`, `medium`, `high` | Nivel de razonamiento extendido |
-| `fast` | `on`, `off` | Modo rápido (menor latencia) |
-| `verbose` | `on`, `full`, `off` | Verbosidad de respuestas |
-| `reasoning` | `on`, `off`, `stream` | Mostrar razonamiento en streaming |
-| `usage` | `off`, `tokens`, `full` | Mostrar uso de tokens |
-| `elevated` | `on`, `off`, `ask`, `full` | Nivel elevado de permisos |
-| `activation` | `mention`, `always` | Cuándo el agente responde |
-| `deliver` | `on`, `off` | Entregar respuestas al canal |
+| Override     | Valores                                   | Descripción                       |
+| ------------ | ----------------------------------------- | --------------------------------- |
+| `think`      | `off`, `minimal`, `low`, `medium`, `high` | Nivel de razonamiento extendido   |
+| `fast`       | `on`, `off`                               | Modo rápido (menor latencia)      |
+| `verbose`    | `on`, `full`, `off`                       | Verbosidad de respuestas          |
+| `reasoning`  | `on`, `off`, `stream`                     | Mostrar razonamiento en streaming |
+| `usage`      | `off`, `tokens`, `full`                   | Mostrar uso de tokens             |
+| `elevated`   | `on`, `off`, `ask`, `full`                | Nivel elevado de permisos         |
+| `activation` | `mention`, `always`                       | Cuándo el agente responde         |
+| `deliver`    | `on`, `off`                               | Entregar respuestas al canal      |
 
 ### Slash commands correspondientes (TUI y Chat UI)
 
@@ -558,17 +556,17 @@ openclaw tui --deliver
 
 ### Atajos de teclado completos
 
-| Shortcut | Acción |
-|----------|--------|
-| `Enter` | Enviar mensaje |
-| `Esc` | Abortar run activo |
-| `Ctrl+C` | Limpiar input (2x = salir) |
-| `Ctrl+D` | Salir |
-| `Ctrl+L` | **Model Picker** 🔑 |
-| `Ctrl+G` | **Agent Picker** 🔑 |
-| `Ctrl+P` | **Session Picker** 🔑 |
+| Shortcut | Acción                                |
+| -------- | ------------------------------------- |
+| `Enter`  | Enviar mensaje                        |
+| `Esc`    | Abortar run activo                    |
+| `Ctrl+C` | Limpiar input (2x = salir)            |
+| `Ctrl+D` | Salir                                 |
+| `Ctrl+L` | **Model Picker** 🔑                   |
+| `Ctrl+G` | **Agent Picker** 🔑                   |
+| `Ctrl+P` | **Session Picker** 🔑                 |
 | `Ctrl+O` | Toggle tool output expanded/collapsed |
-| `Ctrl+T` | Toggle thinking visibility |
+| `Ctrl+T` | Toggle thinking visibility            |
 
 ### Variables de entorno para tema
 
@@ -582,16 +580,16 @@ export OPENCLAW_THEME=dark
 
 ### Opciones de la TUI
 
-| Flag | Descripción |
-|------|-------------|
-| `--url <url>` | URL del Gateway WS (default: `ws://127.0.0.1:<port>`) |
-| `--token <token>` | Token del Gateway |
-| `--password <password>` | Password del Gateway |
-| `--session <key>` | Clave de sesión inicial (default: `main`) |
-| `--deliver` | Activar delivery desde inicio |
-| `--thinking <level>` | Override de thinking para sends |
-| `--timeout-ms <ms>` | Timeout del agente |
-| `--history-limit <n>` | Límite de historial (default: 200) |
+| Flag                    | Descripción                                           |
+| ----------------------- | ----------------------------------------------------- |
+| `--url <url>`           | URL del Gateway WS (default: `ws://127.0.0.1:<port>`) |
+| `--token <token>`       | Token del Gateway                                     |
+| `--password <password>` | Password del Gateway                                  |
+| `--session <key>`       | Clave de sesión inicial (default: `main`)             |
+| `--deliver`             | Activar delivery desde inicio                         |
+| `--thinking <level>`    | Override de thinking para sends                       |
+| `--timeout-ms <ms>`     | Timeout del agente                                    |
+| `--history-limit <n>`   | Límite de historial (default: 200)                    |
 
 ---
 
@@ -625,19 +623,19 @@ openclaw configure --section channels         # solo canales
 
 ### Paths más usados
 
-| Path | Qué controla |
-|------|-------------|
-| `agents.defaults.model.primary` | Modelo primario (default en el picker) |
-| `agents.defaults.model.fallbacks` | Fallbacks en orden |
-| `agents.defaults.models` | **Catálogo del Model Picker (allowlist)** |
-| `agents.defaults.imageModel.primary` | Modelo para imágenes |
-| `agents.list[0].model` | Modelo específico del agente 0 |
-| `agents.list[0].identity.name` | Nombre visible del agente 0 |
-| `agents.list[0].identity.emoji` | Emoji del agente 0 |
-| `gateway.controlUi.enabled` | Habilitar/deshabilitar la UI |
-| `gateway.controlUi.basePath` | Ruta base de la UI |
-| `gateway.controlUi.allowedOrigins` | Orígenes permitidos |
-| `gateway.port` | Puerto del gateway (default: 18789) |
+| Path                                 | Qué controla                              |
+| ------------------------------------ | ----------------------------------------- |
+| `agents.defaults.model.primary`      | Modelo primario (default en el picker)    |
+| `agents.defaults.model.fallbacks`    | Fallbacks en orden                        |
+| `agents.defaults.models`             | **Catálogo del Model Picker (allowlist)** |
+| `agents.defaults.imageModel.primary` | Modelo para imágenes                      |
+| `agents.list[0].model`               | Modelo específico del agente 0            |
+| `agents.list[0].identity.name`       | Nombre visible del agente 0               |
+| `agents.list[0].identity.emoji`      | Emoji del agente 0                        |
+| `gateway.controlUi.enabled`          | Habilitar/deshabilitar la UI              |
+| `gateway.controlUi.basePath`         | Ruta base de la UI                        |
+| `gateway.controlUi.allowedOrigins`   | Orígenes permitidos                       |
+| `gateway.port`                       | Puerto del gateway (default: 18789)       |
 
 ---
 
@@ -677,14 +675,14 @@ openclaw agents set-identity \
       {
         id: "main",
         identity: {
-          name: "OKLA Agent",          // nombre visible en el picker
+          name: "OKLA Agent", // nombre visible en el picker
           theme: "Asistente de vehículos para la República Dominicana",
-          emoji: "🦞",                 // emoji en la UI
-          avatar: "avatars/okla.png",  // ruta relativa al workspace, URL https, o data URI
-        }
-      }
-    ]
-  }
+          emoji: "🦞", // emoji en la UI
+          avatar: "avatars/okla.png", // ruta relativa al workspace, URL https, o data URI
+        },
+      },
+    ],
+  },
 }
 ```
 
@@ -748,21 +746,21 @@ Configuración actual de `~/.openclaw/openclaw.json` para el proyecto OKLA:
     lastTouchedVersion: "2026.3.23-beta.1",
   },
   browser: {
-    enabled: true
+    enabled: true,
   },
   agents: {
     defaults: {
       model: {
-        primary: "github-copilot/claude-haiku-4.5"
+        primary: "github-copilot/claude-haiku-4.5",
       },
       // Sin allowlist definida → muestra TODO el catálogo del proveedor
-      models: {}
+      models: {},
     },
     list: [
       {
         id: "main",
         agentDir: "/Users/gregorymoreno/.openclaw/agents/main/agent",
-        model: "github-copilot/claude-haiku-4.5"
+        model: "github-copilot/claude-haiku-4.5",
       },
       {
         id: "dev-senior",
@@ -773,10 +771,10 @@ Configuración actual de `~/.openclaw/openclaw.json` para el proyecto OKLA:
           name: "QA-Senior",
           theme: "Auditor autónomo",
           emoji: "🔍",
-          avatar: "_(none)"
-        }
-      }
-    ]
+          avatar: "_(none)",
+        },
+      },
+    ],
   },
   gateway: {
     port: 18789,
@@ -784,9 +782,9 @@ Configuración actual de `~/.openclaw/openclaw.json` para el proyecto OKLA:
     bind: "loopback",
     auth: {
       mode: "token",
-      token: "f24fcea34191739b761db1153cefd910706083c1546c9c00"
-    }
-  }
+      token: "f24fcea34191739b761db1153cefd910706083c1546c9c00",
+    },
+  },
 }
 ```
 
@@ -824,19 +822,19 @@ openclaw dashboard
 
 ## Referencias a la documentación oficial
 
-| Sección | URL |
-|---------|-----|
-| Control UI | [docs.openclaw.ai/web/control-ui](https://docs.openclaw.ai/web/control-ui) |
-| TUI | [docs.openclaw.ai/web/tui](https://docs.openclaw.ai/web/tui) |
-| Config CLI | [docs.openclaw.ai/cli/config](https://docs.openclaw.ai/cli/config) |
-| Models CLI | [docs.openclaw.ai/concepts/models](https://docs.openclaw.ai/concepts/models) |
-| Agents CLI | [docs.openclaw.ai/cli/agents](https://docs.openclaw.ai/cli/agents) |
-| Configure wizard | [docs.openclaw.ai/cli/configure](https://docs.openclaw.ai/cli/configure) |
-| Config Reference | [docs.openclaw.ai/gateway/configuration-reference](https://docs.openclaw.ai/gateway/configuration-reference) |
-| Providers + Modelos | [docs.openclaw.ai/providers/models](https://docs.openclaw.ai/providers/models) |
-| Devices (pairing) | [docs.openclaw.ai/cli/devices](https://docs.openclaw.ai/cli/devices) |
-| Skills | [docs.openclaw.ai/tools/skills](https://docs.openclaw.ai/tools/skills) |
+| Sección             | URL                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Control UI          | [docs.openclaw.ai/web/control-ui](https://docs.openclaw.ai/web/control-ui)                                   |
+| TUI                 | [docs.openclaw.ai/web/tui](https://docs.openclaw.ai/web/tui)                                                 |
+| Config CLI          | [docs.openclaw.ai/cli/config](https://docs.openclaw.ai/cli/config)                                           |
+| Models CLI          | [docs.openclaw.ai/concepts/models](https://docs.openclaw.ai/concepts/models)                                 |
+| Agents CLI          | [docs.openclaw.ai/cli/agents](https://docs.openclaw.ai/cli/agents)                                           |
+| Configure wizard    | [docs.openclaw.ai/cli/configure](https://docs.openclaw.ai/cli/configure)                                     |
+| Config Reference    | [docs.openclaw.ai/gateway/configuration-reference](https://docs.openclaw.ai/gateway/configuration-reference) |
+| Providers + Modelos | [docs.openclaw.ai/providers/models](https://docs.openclaw.ai/providers/models)                               |
+| Devices (pairing)   | [docs.openclaw.ai/cli/devices](https://docs.openclaw.ai/cli/devices)                                         |
+| Skills              | [docs.openclaw.ai/tools/skills](https://docs.openclaw.ai/tools/skills)                                       |
 
 ---
 
-*Documentación generada: 2026-03-24 — Basada en `openclaw@2026.3.23-beta.1` y [docs.openclaw.ai](https://docs.openclaw.ai)*
+_Documentación generada: 2026-03-24 — Basada en `openclaw@2026.3.23-beta.1` y [docs.openclaw.ai](https://docs.openclaw.ai)_

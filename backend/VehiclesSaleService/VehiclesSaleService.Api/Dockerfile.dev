@@ -17,6 +17,11 @@ COPY _Shared/CarDealer.Contracts/ /app/_Shared/CarDealer.Contracts/
 COPY _Shared/CarDealer.Shared.Logging/ /app/_Shared/CarDealer.Shared.Logging/
 COPY _Shared/CarDealer.Shared.ErrorHandling/ /app/_Shared/CarDealer.Shared.ErrorHandling/
 COPY _Shared/CarDealer.Shared.Observability/ /app/_Shared/CarDealer.Shared.Observability/
+COPY _Shared/CarDealer.Shared.Audit/ /app/_Shared/CarDealer.Shared.Audit/
+COPY _Shared/CarDealer.Shared.Resilience/ /app/_Shared/CarDealer.Shared.Resilience/
+COPY _Shared/CarDealer.Shared.Caching/ /app/_Shared/CarDealer.Shared.Caching/
+COPY ErrorService/ErrorService.Domain/ /app/ErrorService/ErrorService.Domain/
+COPY ErrorService/ErrorService.Shared/ /app/ErrorService/ErrorService.Shared/
 
 # Copy service projects
 COPY VehiclesSaleService/VehiclesSaleService.Domain/ /app/VehiclesSaleService/VehiclesSaleService.Domain/

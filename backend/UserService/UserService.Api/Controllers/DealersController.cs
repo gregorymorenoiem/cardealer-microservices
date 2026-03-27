@@ -28,6 +28,25 @@ public class DealersController : ControllerBase
     }
 
     /// <summary>
+    /// Get list of active dealers with pagination and search.
+    /// Public endpoint for the dealer directory page.
+    /// </summary>
+    [HttpGet]
+    [AllowAnonymous]
+    [ResponseCache(Duration = 120)]
+    [ProducesResponseType(typeof(PublicDealerListResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListDealers(
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? province = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 12)
+    {
+        var query = new ListPublicDealersQuery(searchTerm, province, page, pageSize);
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Register a new dealer (company). Status will be Pending until admin approves.
     /// Requires authentication. The authenticated user becomes the dealer owner.
     /// </summary>

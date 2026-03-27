@@ -3,7 +3,7 @@
 ############################################
 
 # Stage 1: Build
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -20,8 +20,8 @@ COPY ["MediaService/MediaService.Infrastructure/MediaService.Infrastructure.cspr
 COPY ["MediaService/MediaService.Shared/MediaService.Shared.csproj", "MediaService/MediaService.Shared/"]
 COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
 COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
-COPY ["ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "ServiceDiscovery/ServiceDiscovery.Application/"]
-COPY ["ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
+COPY ["_Shared/ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "_Shared/ServiceDiscovery/ServiceDiscovery.Application/"]
+COPY ["_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
 
 # Restore packages
 RUN dotnet restore "MediaService/MediaService.Api/MediaService.Api.csproj"
@@ -35,7 +35,7 @@ RUN dotnet build "MediaService.Api.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish "MediaService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
+RUN dotnet publish "MediaService.Api.csproj" -c Release -o /app/publish --self-contained false /p:UseAppHost=false
 
 # Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime

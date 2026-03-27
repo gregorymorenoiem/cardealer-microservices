@@ -8,9 +8,9 @@ namespace AdminService.Application.UseCases.LlmGateway;
 
 public sealed class CostThresholdsDto
 {
-    public decimal Warning { get; init; } = 400m;
-    public decimal Critical { get; init; } = 600m;
-    public decimal HardLimit { get; init; } = 800m;
+    public decimal WarningUsd { get; init; } = 400m;
+    public decimal CriticalUsd { get; init; } = 600m;
+    public decimal AggressiveCacheUsd { get; init; } = 800m;
 }
 
 public sealed class CostBreakdownDto

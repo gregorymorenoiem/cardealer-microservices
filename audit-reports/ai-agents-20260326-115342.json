@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "passed": 0,
+  "failed": 1,
+  "skipped": 0,
+  "errors": [
+    "SearchAgent: SearchAgent Search"
+  ],
+  "report_file": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/AI_AGENTS_AUDIT_20260326_115057.md",
+  "timestamp": "2026-03-26T11:53:42.957783",
+  "base_url": "https://wisconsin-flash-enlarge-property.trycloudflare.com",
+  "agent_focus": "all"
+}

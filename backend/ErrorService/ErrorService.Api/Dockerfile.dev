@@ -21,9 +21,9 @@ COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
 COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
 
 # Copy ServiceDiscovery project files
-COPY ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
-COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
-COPY ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
+COPY _Shared/ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./_Shared/ServiceDiscovery/ServiceDiscovery.Application/
+COPY _Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY _Shared/ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./_Shared/ServiceDiscovery/ServiceDiscovery.Domain/
 
 # Restore packages
 RUN dotnet restore "ErrorService/ErrorService.Api/ErrorService.Api.csproj"

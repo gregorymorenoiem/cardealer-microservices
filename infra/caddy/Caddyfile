@@ -1,0 +1,55 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# OKLA — Caddy Reverse Proxy (equivalente local del nginx ingress de K8s)
+#
+# Replica la arquitectura de producción:
+#   Browser → HTTPS (okla.local) → Caddy → Frontend (Next.js) → Gateway → Microservices
+#
+# Dos modos:
+#   1) HTTPS local: https://okla.local   (mkcert, dev diario)
+#   2) HTTP:80      para cloudflared tunnel (dominio público temporal)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── HTTPS — Desarrollo local con dominio seguro ─────────────────────────────
+https://okla.local {
+	tls /etc/caddy/certs/okla.local.pem /etc/caddy/certs/okla.local-key.pem
+
+	# Seguridad headers (mismos que nginx ingress en producción)
+	header {
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		X-XSS-Protection "1; mode=block"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+
+	# API → Gateway (BFF pattern: misma ruta que en producción)
+	handle /api/* {
+		reverse_proxy gateway:80
+	}
+
+	# Health check del proxy
+	handle /proxy/health {
+		respond "OK" 200
+	}
+
+	# Todo lo demás → Frontend (Next.js)
+	handle {
+		reverse_proxy {$FRONTEND_UPSTREAM:host.docker.internal:3000}
+	}
+}
+
+# ── HTTP — Endpoint para cloudflared tunnel ──────────────────────────────────
+:80 {
+	# Mismas rutas, sin TLS (cloudflared provee HTTPS al exterior)
+	handle /api/* {
+		reverse_proxy gateway:80
+	}
+
+	handle /proxy/health {
+		respond "OK" 200
+	}
+
+	handle {
+		reverse_proxy {$FRONTEND_UPSTREAM:host.docker.internal:3000}
+	}
+}

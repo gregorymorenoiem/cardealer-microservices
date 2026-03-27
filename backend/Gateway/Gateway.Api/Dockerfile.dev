@@ -21,9 +21,9 @@ COPY _Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.cspro
 COPY _Shared/CarDealer.Shared.RateLimiting/CarDealer.Shared.RateLimiting.csproj ./_Shared/CarDealer.Shared.RateLimiting/
 COPY _Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj ./_Shared/CarDealer.Shared.Resilience/
 COPY _Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj ./_Shared/CarDealer.Shared.Audit/
-COPY ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
-COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
-COPY ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
+COPY _Shared/ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj ./_Shared/ServiceDiscovery/ServiceDiscovery.Application/
+COPY _Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj ./_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY _Shared/ServiceDiscovery/ServiceDiscovery.Domain/ServiceDiscovery.Domain.csproj ./_Shared/ServiceDiscovery/ServiceDiscovery.Domain/
 COPY Gateway/Gateway.Application/Gateway.Application.csproj ./Gateway/Gateway.Application/
 COPY Gateway/Gateway.Infrastructure/Gateway.Infrastructure.csproj ./Gateway/Gateway.Infrastructure/
 COPY Gateway/Gateway.Domain/Gateway.Domain.csproj ./Gateway/Gateway.Domain/
@@ -33,7 +33,7 @@ RUN dotnet restore "Gateway/Gateway.Api/Gateway.Api.csproj"
 # 3) Copia el resto del código fuente
 COPY Gateway/ ./Gateway/
 COPY _Shared/ ./_Shared/
-COPY ServiceDiscovery/ ./ServiceDiscovery/
+COPY _Shared/ServiceDiscovery/ ./_Shared/ServiceDiscovery/
 
 # Variables de entorno para desarrollo
 ENV ASPNETCORE_ENVIRONMENT=Development \

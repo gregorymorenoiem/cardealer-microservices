@@ -1,0 +1,11 @@
+Agent,Health_Endpoint,HTTP_Status,Status,P0_Count,P1_Count,P2_Count,Latency_ms,Notes
+SearchAgent,/api/search-agent/health,200,✅ OPERATIONAL,0,0,1,3837,Claude Haiku 4.5 - Excellent NLP
+DealerChatAgent,/api/chat/health,200,✅ OPERATIONAL (API),0,1,0,-,Claude Sonnet 4.5 - UI blocked by maintenance
+PricingAgent,/api/pricing-agent/health,404,❌ NOT DEPLOYED,1,0,0,-,Route not found - not deployed in production
+RecoAgent,/api/reco-agent/health,502,❌ ERROR,1,1,0,-,Claude Sonnet 4.5 - Upstream service failure
+SupportAgent,/api/support-agent/health,404,❌ NOT DEPLOYED,1,0,0,-,Claude Haiku 4.5 - Route not found
+LLM_Gateway,/api/admin/llm-gateway/health,401,⚠️ AUTH REQUIRED,0,1,0,-,Admin auth token needed to verify
+WhatsApp_Webhook,/api/whatsapp/webhook,400/403,⚠️ VALIDATION,0,1,0,-,Requires valid hub.verify_token parameter
+Security_Tests,-,-,✅ PASS,0,0,0,-,SQL injection & XSS protected
+PromptCache_Metrics,/api/chat/metrics/prompt-cache,N/A,❌ BLOCKED,1,0,0,-,Frontend maintenance blocks access
+Frontend_UI,/vehiculos,200,⚠️ MAINTENANCE,1,0,0,-,Blocks UI testing for all agents

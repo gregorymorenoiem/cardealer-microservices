@@ -121,7 +121,7 @@ export default function LlmCostDashboardPage() {
   }
 
   const budgetPercent = Math.min(
-    (cost.monthlyTotalUsd / cost.thresholds.aggressiveCacheUsd) * 100,
+    (cost.monthlyTotalUsd / (cost.thresholds?.aggressiveCacheUsd || 1)) * 100,
     100
   );
 
@@ -202,7 +202,7 @@ export default function LlmCostDashboardPage() {
             </div>
             <p className="mt-1 text-xs text-zinc-500">
               {budgetPercent.toFixed(0)}% del límite (
-              {formatUsd(cost.thresholds.aggressiveCacheUsd)})
+              {formatUsd(cost.thresholds?.aggressiveCacheUsd ?? 0)})
             </p>
           </div>
         </div>
@@ -225,9 +225,9 @@ export default function LlmCostDashboardPage() {
           </div>
           <div
             className={`text-3xl font-bold ${
-              cost.projectedMonthlyUsd > cost.thresholds.criticalUsd
+              cost.projectedMonthlyUsd > (cost.thresholds?.criticalUsd ?? 600)
                 ? 'text-red-400'
-                : cost.projectedMonthlyUsd > cost.thresholds.warningUsd
+                : cost.projectedMonthlyUsd > (cost.thresholds?.warningUsd ?? 400)
                   ? 'text-yellow-400'
                   : 'text-white'
             }`}
@@ -413,21 +413,21 @@ export default function LlmCostDashboardPage() {
           <div className="rounded-xl border border-yellow-500/30 bg-yellow-900/10 p-4">
             <div className="mb-1 text-sm font-medium text-yellow-400">⚠️ Warning</div>
             <div className="text-2xl font-bold text-white">
-              {formatUsd(cost.thresholds.warningUsd)}/mes
+              {formatUsd(cost.thresholds?.warningUsd ?? 0)}/mes
             </div>
             <p className="mt-1 text-xs text-zinc-500">Alerta al equipo admin</p>
           </div>
           <div className="rounded-xl border border-red-500/30 bg-red-900/10 p-4">
             <div className="mb-1 text-sm font-medium text-red-400">🔴 Crítico</div>
             <div className="text-2xl font-bold text-white">
-              {formatUsd(cost.thresholds.criticalUsd)}/mes
+              {formatUsd(cost.thresholds?.criticalUsd ?? 0)}/mes
             </div>
             <p className="mt-1 text-xs text-zinc-500">Alerta al CTO (&lt;5 min SLA)</p>
           </div>
           <div className="rounded-xl border border-red-600/30 bg-red-900/20 p-4">
             <div className="mb-1 text-sm font-medium text-red-500">🚨 Emergencia</div>
             <div className="text-2xl font-bold text-white">
-              {formatUsd(cost.thresholds.aggressiveCacheUsd)}/mes
+              {formatUsd(cost.thresholds?.aggressiveCacheUsd ?? 0)}/mes
             </div>
             <p className="mt-1 text-xs text-zinc-500">Modo caché agresivo automático</p>
           </div>

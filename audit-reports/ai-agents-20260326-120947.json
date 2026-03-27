@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "passed": 8,
+  "failed": 0,
+  "skipped": 0,
+  "errors": [
+    "[WARN] ⚠️ **IMPORTANTE:** Noto que la búsqueda SI se procesó (la query está en el campo de búsqueda), pero **sigue mostrando todos los vehículos**. Esto sugi"
+  ],
+  "report_file": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/AI_AGENTS_AUDIT_20260326_120441.md",
+  "timestamp": "2026-03-26T12:09:47.085383",
+  "base_url": "https://twist-first-studios-transcription.trycloudflare.com",
+  "agent_focus": "all"
+}

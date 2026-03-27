@@ -3,7 +3,7 @@
 ############################################
 
 # Stage 1: Build
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 # Speed up dotnet restore and prevent network hangs
 ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
     DOTNET_NOLOGO=1 \
@@ -23,9 +23,9 @@ COPY _Shared/CarDealer.Contracts/*.csproj ./_Shared/CarDealer.Contracts/
 COPY _Shared/CarDealer.Shared/*.csproj ./_Shared/CarDealer.Shared/
 
 # Copy ServiceDiscovery project files
-COPY ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./ServiceDiscovery/ServiceDiscovery.Application/
-COPY ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./ServiceDiscovery/ServiceDiscovery.Infrastructure/
-COPY ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./ServiceDiscovery/ServiceDiscovery.Domain/
+COPY _Shared/ServiceDiscovery/ServiceDiscovery.Application/*.csproj ./_Shared/ServiceDiscovery/ServiceDiscovery.Application/
+COPY _Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/*.csproj ./_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/
+COPY _Shared/ServiceDiscovery/ServiceDiscovery.Domain/*.csproj ./_Shared/ServiceDiscovery/ServiceDiscovery.Domain/
 
 # Restore packages
 RUN dotnet restore "RoleService/RoleService.Api/RoleService.Api.csproj"
@@ -38,7 +38,7 @@ RUN dotnet build "RoleService/RoleService.Api/RoleService.Api.csproj" -c Release
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish "RoleService/RoleService.Api/RoleService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
+RUN dotnet publish "RoleService/RoleService.Api/RoleService.Api.csproj" -c Release -o /app/publish --self-contained false /p:UseAppHost=false
 
 # Stage 3: Runtime (slim image)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime

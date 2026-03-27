@@ -145,7 +145,8 @@ try
                         "http://localhost:5174",    // Frontend original
                         "http://localhost:3000",    // React alternative
                         "http://localhost:4200",    // Angular (si aplica)
-                        "http://localhost:8080"     // Frontend Docker
+                        "http://localhost:8080",    // Frontend Docker
+                        "https://okla.local"        // HTTPS local (Caddy + mkcert)
                       )
                       .AllowAnyMethod()
                       .AllowAnyHeader()

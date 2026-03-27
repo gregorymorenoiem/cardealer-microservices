@@ -7,7 +7,7 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 # Install curl for health checks
 RUN apk add --no-cache curl
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Speed up dotnet restore and prevent network hangs
@@ -42,7 +42,7 @@ WORKDIR "/src/ChatbotService/ChatbotService.Api"
 RUN dotnet build "ChatbotService.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ChatbotService.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
+RUN dotnet publish "ChatbotService.Api.csproj" -c Release -o /app/publish --self-contained false /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

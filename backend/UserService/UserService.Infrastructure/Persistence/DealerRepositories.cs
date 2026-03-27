@@ -112,6 +112,47 @@ namespace UserService.Infrastructure.Persistence
                 .ToListAsync();
         }
 
+        public async Task<int> SearchCountAsync(
+            string? searchTerm,
+            string? city,
+            string? state,
+            DealerType? dealerType,
+            bool? isVerified)
+        {
+            var query = _context.Dealers.Where(d => d.IsActive).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(d =>
+                    d.BusinessName.Contains(searchTerm) ||
+                    (d.Description != null && d.Description.Contains(searchTerm)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(city))
+            {
+                query = query.Where(d => d.City == city);
+            }
+
+            if (!string.IsNullOrWhiteSpace(state))
+            {
+                query = query.Where(d => d.State == state);
+            }
+
+            if (dealerType.HasValue)
+            {
+                query = query.Where(d => d.DealerType == dealerType.Value);
+            }
+
+            if (isVerified.HasValue)
+            {
+                query = query.Where(d => isVerified.Value
+                    ? d.VerificationStatus == DealerVerificationStatus.Verified
+                    : d.VerificationStatus != DealerVerificationStatus.Verified);
+            }
+
+            return await query.CountAsync();
+        }
+
         public async Task<Dealer> AddAsync(Dealer dealer)
         {
             await _context.Dealers.AddAsync(dealer);

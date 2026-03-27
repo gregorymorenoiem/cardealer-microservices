@@ -1,0 +1,11 @@
+{
+  "continue_attempts": 1,
+  "new_chat_attempts": 0,
+  "last_continue_ts": 1774562270.7309859,
+  "last_new_chat_ts": 1774556031.3716779,
+  "last_restart_ts": 1774555120.1286242,
+  "last_working_ts": 1774551628.5996149,
+  "read_since_ts": null,
+  "last_chat_hash": "d496e0147c4dddecd70da85ce1bcfe84",
+  "last_visual_change_ts": 1774562168.9088671
+}

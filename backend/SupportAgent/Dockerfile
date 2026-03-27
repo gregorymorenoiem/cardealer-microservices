@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
@@ -28,7 +28,7 @@ COPY . .
 WORKDIR "/src/SupportAgent/SupportAgent.Api"
 
 FROM build AS publish
-RUN dotnet publish "SupportAgent.Api.csproj" -c Release -o /app/publish -r linux-x64 --self-contained false /p:UseAppHost=false
+RUN dotnet publish "SupportAgent.Api.csproj" -c Release -o /app/publish --self-contained false /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
 WORKDIR /app

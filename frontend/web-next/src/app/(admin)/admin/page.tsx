@@ -174,7 +174,7 @@ export default function AdminDashboardPage() {
 
   // Budget alert threshold (80%)
   const budgetPercent = llmCost
-    ? (llmCost.monthlyTotalUsd / llmCost.thresholds.aggressiveCacheUsd) * 100
+    ? (llmCost.monthlyTotalUsd / (llmCost.thresholds?.aggressiveCacheUsd || 1)) * 100
     : 0;
   const showBudgetAlert = budgetPercent >= 80;
 
@@ -514,7 +514,7 @@ export default function AdminDashboardPage() {
                   <div>
                     <span className="text-muted-foreground">Presupuesto: </span>
                     <span className="font-semibold">
-                      ${llmCost.thresholds.aggressiveCacheUsd.toFixed(2)} USD
+                      ${(llmCost.thresholds?.aggressiveCacheUsd ?? 0).toFixed(2)} USD
                     </span>
                   </div>
                 </div>
@@ -619,7 +619,7 @@ export default function AdminDashboardPage() {
                       <td className="py-2 pr-4 text-right font-semibold">
                         {dealer.conversationCount.toLocaleString('es-DO')}
                       </td>
-                      <td className="py-2 text-right">{dealer.avgPerDay.toFixed(1)}</td>
+                      <td className="py-2 text-right">{(dealer.avgPerDay ?? 0).toFixed(1)}</td>
                     </tr>
                   ))}
                 </tbody>

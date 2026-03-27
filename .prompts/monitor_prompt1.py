@@ -23,7 +23,7 @@ Protocolo de comunicación:
 Uso:
   python3 .prompts/monitor_prompt1.py                      # Ver estado
   python3 .prompts/monitor_prompt1.py --sprint 1           # Despachar sprint 1 (producción)
-  python3 .prompts/monitor_prompt1.py --sprint 1 --local   # Despachar sprint 1 (https://okla.local)
+  python3 .prompts/monitor_prompt1.py --sprint 1 --local   # Despachar sprint 1 (tunnel auto-detectado)
   python3 .prompts/monitor_prompt1.py --next               # Siguiente sprint/fase pendiente
   python3 .prompts/monitor_prompt1.py --next --local       # Siguiente (modo local)
   python3 .prompts/monitor_prompt1.py --cycle --local      # Ciclo completo local
@@ -67,10 +67,19 @@ def get_tunnel_url() -> str:
     return LOCAL_URL
 
 def get_base_url():
-    return LOCAL_URL if _USE_LOCAL else PRODUCTION_URL
+    if _USE_LOCAL:
+        # Prefer tunnel URL (public HTTPS via cloudflared) — works with Playwright MCP
+        # Falls back to LOCAL_URL if tunnel is not running
+        return get_tunnel_url()
+    return PRODUCTION_URL
 
 def get_environment_label():
-    return "LOCAL (Docker Desktop + cloudflared tunnel)" if _USE_LOCAL else "PRODUCCIÓN (okla.com.do)"
+    if _USE_LOCAL:
+        url = get_tunnel_url()
+        if url != LOCAL_URL:
+            return f"LOCAL (Docker Desktop + cloudflared tunnel: {url})"
+        return "LOCAL (Docker Desktop — tunnel NO detectado, usando https://okla.local)"
+    return "PRODUCCIÓN (okla.com.do)"
 
 ACCOUNTS = {
     "admin":  {"username": "admin@okla.local",       "password": "Admin123!@#",     "role": "Admin"},
@@ -3071,23 +3080,43 @@ def generate_sprint_prompt(sprint, phase="audit", fix_attempt=0):
         "",
     ]
 
-    # Instrucciones de ambiente local
+    # Instrucciones de ambiente local (tunnel o mkcert)
     if _USE_LOCAL:
-        lines.extend([
-            "## Ambiente Local (HTTPS)",
-            "> Auditoría corriendo contra **https://okla.local** (Caddy + mkcert).",
-            "> Asegúrate de que la infra esté levantada: `docker compose up -d`",
-            "> Frontend: `cd frontend/web-next && pnpm dev`",
-            "> Caddy redirige: `/api/*` → Gateway, `/*` → Next.js (host:3000)",
-            "",
-            "| Servicio | URL local |",
-            "|----------|-----------|",
-            f"| Frontend | {base_url} |",
-            f"| API (via Gateway) | {base_url}/api/* |",
-            f"| Auth Swagger | http://localhost:15001/swagger |",
-            f"| Gateway Swagger | http://localhost:18443/swagger |",
-            "",
-        ])
+        tunnel_url = get_tunnel_url()
+        is_tunnel = tunnel_url != LOCAL_URL
+        if is_tunnel:
+            lines.extend([
+                "## Ambiente Local (HTTPS público via cloudflared tunnel)",
+                f"> Auditoría corriendo contra **{base_url}** (cloudflared tunnel → Caddy → servicios).",
+                "> Asegúrate de que la infra esté levantada: `docker compose up -d`",
+                "> Frontend: `cd frontend/web-next && pnpm dev`",
+                "> Tunnel: `docker compose --profile tunnel up -d cloudflared`",
+                "> Caddy redirige: `/api/*` → Gateway, `/*` → Next.js (host:3000)",
+                "",
+                "| Servicio | URL |",
+                "|----------|-----|",
+                f"| Frontend (tunnel) | {base_url} |",
+                f"| API (tunnel) | {base_url}/api/* |",
+                f"| Auth Swagger (local) | http://localhost:15001/swagger |",
+                f"| Gateway Swagger (local) | http://localhost:18443/swagger |",
+                "",
+            ])
+        else:
+            lines.extend([
+                "## Ambiente Local (HTTPS — tunnel NO detectado)",
+                f"> ⚠️ cloudflared tunnel no detectado. Usando **{base_url}** (Caddy + mkcert).",
+                "> Para Playwright MCP, levanta el tunnel: `docker compose --profile tunnel up -d cloudflared`",
+                "> Asegúrate de que la infra esté levantada: `docker compose up -d`",
+                "> Frontend: `cd frontend/web-next && pnpm dev`",
+                "",
+                "| Servicio | URL local |",
+                "|----------|-----------|",
+                f"| Frontend | {base_url} |",
+                f"| API (via Gateway) | {base_url}/api/* |",
+                f"| Auth Swagger | http://localhost:15001/swagger |",
+                f"| Gateway Swagger | http://localhost:18443/swagger |",
+                "",
+            ])
 
     # Instrucciones por fase
     if phase == "audit":
@@ -3100,7 +3129,7 @@ def generate_sprint_prompt(sprint, phase="audit", fix_attempt=0):
             lines.extend([
                 "",
                 f"⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `{base_url}` en vez de producción.",
-                "Verifica que Caddy + infra estén corriendo antes de empezar.",
+                "Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.",
                 "Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.",
             ])
         lines.extend([
@@ -3340,10 +3369,18 @@ def print_status():
     print(f"Ciclo: AUDIT → FIX → RE-AUDIT (máx {MAX_FIX_ATTEMPTS} intentos)")
     print("Modo: Chrome (como humano) — sin scripts")
     if _USE_LOCAL:
-        print("\n  ⚠️  MODO LOCAL — Requiere:")
-        print("     • docker compose up -d (Caddy + infra)")
-        print("     • cd frontend/web-next && pnpm dev")
-        print("     • mkcert instalado (./infra/setup-https-local.sh)")
+        tunnel_url = get_tunnel_url()
+        is_tunnel = tunnel_url != LOCAL_URL
+        if is_tunnel:
+            print(f"\n  ✅ TUNNEL DETECTADO: {tunnel_url}")
+            print("     • docker compose up -d (Caddy + infra)")
+            print("     • cd frontend/web-next && pnpm dev")
+            print("     • docker compose --profile tunnel up -d cloudflared")
+        else:
+            print("\n  ⚠️  MODO LOCAL — tunnel NO detectado:")
+            print("     • docker compose up -d (Caddy + infra)")
+            print("     • cd frontend/web-next && pnpm dev")
+            print("     • Para Playwright MCP: docker compose --profile tunnel up -d cloudflared")
     print("=" * 80)
     print()
 
@@ -3399,8 +3436,8 @@ def generate_report():
 
     if _USE_LOCAL:
         lines.extend([
-            "> Auditoría ejecutada en ambiente LOCAL (https://okla.local).",
-            "> Infraestructura: Docker Compose + Caddy + mkcert.",
+            f"> Auditoría ejecutada en ambiente LOCAL ({base_url}).",
+            "> Infraestructura: Docker Compose + Caddy + cloudflared tunnel.",
             "",
         ])
 
@@ -3436,7 +3473,7 @@ def main():
     parser.add_argument("--status", action="store_true", help="Estado detallado de sprints")
     parser.add_argument("--report", action="store_true", help="Generar reporte MD")
     parser.add_argument("--check", action="store_true", help="Verificar si fase actual completada (READ)")
-    parser.add_argument("--local", action="store_true", help="Usar ambiente local HTTPS (https://okla.local via Caddy+mkcert)")
+    parser.add_argument("--local", action="store_true", help="Usar ambiente local (auto-detecta tunnel cloudflared, fallback a https://okla.local)")
     args = parser.parse_args()
 
     # Activar modo local si se pasa --local o si el estado guardado lo indica
@@ -3518,15 +3555,15 @@ def main():
     print_status()
     print("Comandos:")
     print("  python3 .prompts/monitor_prompt1.py --sprint 1    # Despachar sprint 1 (audit) - producción")
-    print("  python3 .prompts/monitor_prompt1.py --sprint 1 --local  # Sprint 1 contra https://okla.local")
+    print("  python3 .prompts/monitor_prompt1.py --sprint 1 --local  # Sprint 1 contra tunnel (auto-detecta URL)")
     print("  python3 .prompts/monitor_prompt1.py --next         # Avanzar fase/sprint")
-    print("  python3 .prompts/monitor_prompt1.py --next --local  # Avanzar (modo local)")
-    print("  python3 .prompts/monitor_prompt1.py --cycle --local # Ciclo completo local")
+    print("  python3 .prompts/monitor_prompt1.py --next --local  # Avanzar (modo local + tunnel)")
+    print("  python3 .prompts/monitor_prompt1.py --cycle --local # Ciclo completo local (tunnel)")
     print("  python3 .prompts/monitor_prompt1.py --check        # Fase completada?")
     print("  python3 .prompts/monitor_prompt1.py --status       # Estado detallado")
-    print("  python3 .prompts/monitor_prompt1.py --status --local  # Estado (modo local)")
+    print("  python3 .prompts/monitor_prompt1.py --status --local  # Estado (modo local + tunnel)")
     print("  python3 .prompts/monitor_prompt1.py --report       # Generar reporte MD")
-    print("  python3 .prompts/monitor_prompt1.py --report --local  # Reporte (modo local)")
+    print("  python3 .prompts/monitor_prompt1.py --report --local  # Reporte (modo local + tunnel)")
 
 
 if __name__ == "__main__":

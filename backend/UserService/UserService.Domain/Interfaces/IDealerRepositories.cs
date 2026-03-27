@@ -13,6 +13,7 @@ namespace UserService.Domain.Interfaces
         Task<IEnumerable<Dealer>> GetAllAsync(int page = 1, int pageSize = 10);
         Task<IEnumerable<Dealer>> GetForSitemapAsync();
         Task<IEnumerable<Dealer>> SearchAsync(string? searchTerm, string? city, string? state, DealerType? dealerType, bool? isVerified, int page = 1, int pageSize = 10);
+        Task<int> SearchCountAsync(string? searchTerm, string? city, string? state, DealerType? dealerType, bool? isVerified);
         Task<Dealer> AddAsync(Dealer dealer);
         Task UpdateAsync(Dealer dealer);
         Task DeleteAsync(Guid id);

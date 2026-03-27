@@ -47,7 +47,9 @@ export default function AdminBillingPage() {
         <div className="flex gap-2">
           <Button variant="outline">
             <Calendar className="mr-2 h-4 w-4" />
-            Febrero 2024
+            {new Date()
+              .toLocaleDateString('es-DO', { month: 'long', year: 'numeric' })
+              .replace(/^\w/, c => c.toUpperCase())}
           </Button>
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />

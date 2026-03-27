@@ -92,7 +92,8 @@ x-deploy-heavy: &deploy-heavy
       memory: 512M
 
 x-healthcheck-api: &healthcheck-api
-  test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
+  test:
+    ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/health || exit 1"]
   interval: 10s
   timeout: 5s
   retries: 3

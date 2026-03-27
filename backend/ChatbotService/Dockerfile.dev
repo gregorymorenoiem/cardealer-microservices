@@ -1,0 +1,38 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip \
+    DOTNET_NUGET_SIGNATURE_VERIFICATION=false
+
+# Copy shared project files
+COPY ["_Shared/CarDealer.Contracts/CarDealer.Contracts.csproj", "_Shared/CarDealer.Contracts/"]
+COPY ["_Shared/CarDealer.Shared/CarDealer.Shared.csproj", "_Shared/CarDealer.Shared/"]
+COPY ["_Shared/CarDealer.Shared.Logging/CarDealer.Shared.Logging.csproj", "_Shared/CarDealer.Shared.Logging/"]
+COPY ["_Shared/CarDealer.Shared.Observability/CarDealer.Shared.Observability.csproj", "_Shared/CarDealer.Shared.Observability/"]
+COPY ["_Shared/CarDealer.Shared.ErrorHandling/CarDealer.Shared.ErrorHandling.csproj", "_Shared/CarDealer.Shared.ErrorHandling/"]
+COPY ["_Shared/CarDealer.Shared.Audit/CarDealer.Shared.Audit.csproj", "_Shared/CarDealer.Shared.Audit/"]
+COPY ["_Shared/CarDealer.Shared.Resilience/CarDealer.Shared.Resilience.csproj", "_Shared/CarDealer.Shared.Resilience/"]
+COPY ["_Shared/ServiceDiscovery/ServiceDiscovery.Application/ServiceDiscovery.Application.csproj", "_Shared/ServiceDiscovery/ServiceDiscovery.Application/"]
+COPY ["_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/ServiceDiscovery.Infrastructure.csproj", "_Shared/ServiceDiscovery/ServiceDiscovery.Infrastructure/"]
+COPY ["ErrorService/ErrorService.Domain/ErrorService.Domain.csproj", "ErrorService/ErrorService.Domain/"]
+COPY ["ErrorService/ErrorService.Shared/ErrorService.Shared.csproj", "ErrorService/ErrorService.Shared/"]
+
+# Copy ChatbotService project files
+COPY ["ChatbotService/ChatbotService.Api/ChatbotService.Api.csproj", "ChatbotService/ChatbotService.Api/"]
+COPY ["ChatbotService/ChatbotService.Application/ChatbotService.Application.csproj", "ChatbotService/ChatbotService.Application/"]
+COPY ["ChatbotService/ChatbotService.Domain/ChatbotService.Domain.csproj", "ChatbotService/ChatbotService.Domain/"]
+COPY ["ChatbotService/ChatbotService.Infrastructure/ChatbotService.Infrastructure.csproj", "ChatbotService/ChatbotService.Infrastructure/"]
+
+RUN dotnet restore "ChatbotService/ChatbotService.Api/ChatbotService.Api.csproj"
+
+COPY . .
+
+WORKDIR "/src/ChatbotService/ChatbotService.Api"
+ENTRYPOINT ["dotnet", "watch", "run", "--no-launch-profile", "--urls", "http://+:80"]

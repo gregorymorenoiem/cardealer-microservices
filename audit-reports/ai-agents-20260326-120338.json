@@ -1,0 +1,13 @@
+{
+  "exit_code": 0,
+  "passed": 4,
+  "failed": 4,
+  "skipped": 0,
+  "errors": [
+    "[WARN] 1 advertencia(s) encontradas — revisar reporte"
+  ],
+  "report_file": "/Users/gregorymoreno/Developer/Web/Backend/cardealer-microservices/audit-reports/AI_AGENTS_AUDIT_20260326_120216.md",
+  "timestamp": "2026-03-26T12:03:38.594077",
+  "base_url": "https://twist-first-studios-transcription.trycloudflare.com",
+  "agent_focus": "all"
+}
