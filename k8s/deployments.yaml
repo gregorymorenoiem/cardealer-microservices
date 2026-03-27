@@ -4504,7 +4504,7 @@ metadata:
     app: supportagent
     tier: backend
 spec:
-  replicas: 0 # STAGING: non-essential
+  replicas: 1 # ENABLED: support chatbot required for production
   selector:
     matchLabels:
       app: supportagent
@@ -4640,6 +4640,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: global-config
+            - secretRef:
+                name: recoagent-db-secret
             - secretRef:
                 name: jwt-secrets
             - secretRef:

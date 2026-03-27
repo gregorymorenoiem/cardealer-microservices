@@ -20,7 +20,7 @@ export default function CookiesPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-foreground text-3xl font-bold">Política de Cookies</h1>
-            <p className="text-muted-foreground mt-2">Última actualización: Enero 2026</p>
+            <p className="text-muted-foreground mt-2">Última actualización: Marzo 2026 (v2026.1)</p>
           </div>
 
           {/* Content */}
@@ -132,6 +132,31 @@ export default function CookiesPage() {
                     etc.
                   </li>
                 </ul>
+              </section>
+
+              <section>
+                <h2 className="text-foreground text-xl font-semibold">Base Legal (Ley 172-13)</h2>
+                <p className="mt-2">
+                  El uso de cookies en OKLA se fundamenta en la{' '}
+                  <strong>Ley No. 172-13 sobre Protección de Datos de Carácter Personal</strong> de
+                  la República Dominicana. Las cookies estrictamente necesarias son procesadas en
+                  virtud de nuestro interés legítimo para la prestación del servicio. Las cookies
+                  analíticas y de marketing requieren tu consentimiento explícito, el cual puedes
+                  otorgar o revocar en cualquier momento desde el panel de preferencias de cookies o
+                  escribiéndonos a{' '}
+                  <a href="mailto:privacidad@okla.com.do" className="text-primary hover:underline">
+                    privacidad@okla.com.do
+                  </a>
+                  .
+                </p>
+                <p className="mt-2">
+                  Bajo la Ley 172-13, tienes derecho a acceder, rectificar y suprimir tus datos, así
+                  como a oponerte al tratamiento. Para ejercer estos derechos, visita nuestra{' '}
+                  <a href="/privacidad" className="text-primary hover:underline">
+                    Política de Privacidad
+                  </a>{' '}
+                  o contáctanos directamente.
+                </p>
               </section>
 
               <section>
