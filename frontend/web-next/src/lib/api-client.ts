@@ -101,6 +101,11 @@ apiClient.interceptors.request.use(
 // call is made — all others await the same promise.
 let refreshPromise: Promise<AxiosResponse> | null = null;
 
+// Cooldown to prevent spamming /api/auth/refresh-token for unauthenticated guests.
+// After a failed refresh (400/401 = no valid token), wait 30s before retrying.
+let lastRefreshFailureTime: number = 0;
+const REFRESH_COOLDOWN_MS = 30_000;
+
 // Exponential backoff helper — waits 2^attempt * 1000ms (max 16s)
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -156,6 +161,11 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
+      // Cooldown: if a refresh attempt failed recently (guest user, no token), skip
+      if (Date.now() - lastRefreshFailureTime < REFRESH_COOLDOWN_MS) {
+        return Promise.reject(transformError(error));
+      }
+
       try {
         // Deduplicate: reuse in-flight refresh request if one is already pending
         if (!refreshPromise) {
@@ -177,7 +187,10 @@ apiClient.interceptors.response.use(
         // Retry the original request — new tokens are in HttpOnly cookies
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh failed - Clear any legacy tokens
+        // Refresh failed - record cooldown timestamp to avoid guest spam
+        lastRefreshFailureTime = Date.now();
+
+        // Clear any legacy tokens
         if (typeof window !== 'undefined') {
           localStorage.removeItem(ACCESS_TOKEN_KEY);
           localStorage.removeItem(REFRESH_TOKEN_KEY);
