@@ -18,6 +18,7 @@ export interface BlogPost {
   title: string;
   excerpt: string;
   date: string;
+  isoDate: string;
   readTime: string;
   icon: LucideIcon;
   author: string;
@@ -37,6 +38,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       'Descubre qué modelos dominaron las ventas en el mercado automotriz dominicano el año pasado y qué esperar para 2026.',
     date: 'Feb 15, 2026',
+    isoDate: '2026-02-15',
     readTime: '6 min',
     icon: TrendingUp,
     author: 'Equipo OKLA',
@@ -78,6 +80,7 @@ En OKLA, ya puedes encontrar estos modelos disponibles tanto nuevos como usados.
     excerpt:
       'Guía práctica para sacar el mejor precio al comprar tu próximo vehículo. Técnicas de negociación que realmente funcionan.',
     date: 'Feb 10, 2026',
+    isoDate: '2026-02-10',
     readTime: '8 min',
     icon: Car,
     author: 'Equipo OKLA',
@@ -129,6 +132,7 @@ En OKLA, los vendedores verificados han pasado por nuestro proceso KYC, lo que r
     excerpt:
       'Aprende a identificar las señales de alerta más frecuentes y protégete de fraudes en el mercado de vehículos usados.',
     date: 'Feb 5, 2026',
+    isoDate: '2026-02-05',
     readTime: '5 min',
     icon: Shield,
     author: 'Equipo OKLA',
@@ -178,6 +182,7 @@ Recuerda: si un trato parece demasiado bueno para ser verdad, probablemente lo s
     excerpt:
       'Analizamos el estado actual de la infraestructura de carga en República Dominicana y si vale la pena invertir en un EV.',
     date: 'Ene 28, 2026',
+    isoDate: '2026-01-28',
     readTime: '10 min',
     icon: Car,
     author: 'Equipo OKLA',
@@ -251,6 +256,7 @@ Usa nuestra calculadora de importación en OKLA para estimar exactamente cuánto
     excerpt:
       'Comparativa de las mejores opciones de financiamiento para comprar tu vehículo. Banco Popular, BHD León, Banreservas y más.',
     date: 'Ene 20, 2026',
+    isoDate: '2026-01-20',
     readTime: '7 min',
     icon: TrendingUp,
     author: 'Equipo OKLA',
@@ -328,6 +334,7 @@ Usa nuestra calculadora de financiamiento en OKLA para simular tu cuota mensual 
     excerpt:
       'El uso de plataformas digitales está cambiando la forma en que los dealers en RD venden sus inventarios. Casos de éxito.',
     date: 'Ene 15, 2026',
+    isoDate: '2026-01-15',
     readTime: '6 min',
     icon: BookOpen,
     author: 'Equipo OKLA',
