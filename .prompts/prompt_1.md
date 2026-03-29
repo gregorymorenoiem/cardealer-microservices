@@ -1,9 +1,9 @@
-# RE-AUDITORÍA (Verificación de fixes, intento 3/3) — Sprint 5: Buyer — Buscar, Comparar y Contactar
+# AUDITORÍA — Sprint 6: Seller — Publicar Mi Primer Vehículo
 
-**Fecha:** 2026-03-29 06:47:02
-**Fase:** REAUDIT
+**Fecha:** 2026-03-29 07:09:33
+**Fase:** AUDIT
 **Ambiente:** LOCAL/TUNNEL (cloudflared forzado: https://ought-feed-shipping-wright.trycloudflare.com)
-**Usuario:** Buyer (buyer002@okla-test.com / BuyerTest2026!)
+**Usuario:** Seller (gmoreno@okla.com.do / $Gregory1)
 **URL Base:** https://ought-feed-shipping-wright.trycloudflare.com
 
 ## Ambiente Local (HTTPS público via cloudflared tunnel)
@@ -21,16 +21,22 @@
 | Auth Swagger (local)    | http://localhost:15001/swagger                             |
 | Gateway Swagger (local) | http://localhost:18443/swagger                             |
 
-## Instrucciones — RE-AUDITORÍA (Verificación de Fixes)
+## Instrucciones
 
-Esta es la re-verificación del Sprint 5 (intento 3/3).
-Re-ejecuta las mismas tareas de auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`) para verificar que los fixes funcionan.
+Ejecuta TODA la auditoría con las herramientas MCP del browser (`mcp_aisquare-play_browser_*`).
+NO uses scripts shell — usa `mcp_aisquare-play_browser_*`. Scripts solo para upload/download de fotos vía MediaService.
 
-- Si TODOS los bugs están corregidos → agrega `READ` al final
-- Si ALGÚN bug persiste → documenta cuáles persisten en 'Hallazgos'
-  y agrega `READ` igualmente. El script enviará otra ronda de fixes.
+⚠️ **AMBIENTE LOCAL:** Todas las URLs apuntan a `https://ought-feed-shipping-wright.trycloudflare.com` en vez de producción.
+Verifica que Caddy + infra + cloudflared tunnel estén corriendo antes de empezar.
+Diferencias esperadas vs producción: ver `docs/HTTPS-LOCAL-SETUP.md`.
 
-IMPORTANTE: Usa `mcp_aisquare-play_browser_*` para todas las interacciones. NO scripts shell.
+Para cada tarea:
+
+1. Navega con `mcp_aisquare-play_browser_navigate` a la URL indicada
+2. Toma screenshot cuando se indique
+3. Documenta bugs y discrepancias en la sección 'Hallazgos'
+4. Marca la tarea como completada: `- [ ]` → `- [x]`
+5. Al terminar TODAS las tareas, agrega `READ` al final
 
 ## 🔧 PROTOCOLO DE TROUBLESHOOTING OKLA
 
@@ -190,93 +196,145 @@ frontend (pnpm dev en host, NO Docker)
 
 ## TAREAS
 
-### S5-T01: Flujo completo: buscar → comparar → contactar
+### S6-T01: Wizard de publicación paso a paso
 
 **Pasos:**
 
-- [x] Paso 1: Login como buyer (buyer002@okla-test.com / BuyerTest2026!) ✅ Sesión activa
-- [x] Paso 2: Navega a /vehiculos ✅ 10 vehículos listados
-- [x] Paso 3: Busca 'Toyota SUV' ✅ 1 resultado: 2023 Toyota RAV4 RD$4,100,000
-- [x] Paso 4: Screenshot de resultados ✅
-- [x] Paso 5: Filtra por precio < 2M ✅ 0 resultados (todos los test data > RD$2M — issue de datos, no bug)
-- [x] Paso 6: Ordena por 'Más recientes' ✅ Sort dropdown con 7 opciones funcional
-- [x] Paso 7: 2 vehículos en comparador ✅ Toyota Camry + Honda CR-V ya estaban agregados
-- [x] Paso 8: Navega a /comparar ✅ Página de comparación cargó correctamente
-- [x] Paso 9: Screenshot de comparación ✅ Tabla completa con specs y highlighting verde para ganador
-- [x] Paso 10: Click en "Ver detalle" Toyota Camry ✅ /vehiculos/2023-toyota-camry-b1000001
-- [x] Paso 11: Sección de contacto visible ✅ 5 CTAs: Chat en Vivo, WhatsApp, Ver teléfono, Chatear con Ana (IA), Agendar visita
-- [x] Paso 12: Screenshot de contacto ✅ "Contacto verificado por OKLA" badge
-- [x] Paso 13: No hay formulario tradicional — UX usa botones CTA directos (mejor UX que form con prefilled fields)
-- [x] Paso 14: Documentado — no se envió mensaje
-- [x] Paso 15: Vehículo ya en favoritos ✅ Botón "Guardado" visible
-- [x] Paso 16: Navega a /cuenta/favoritos ✅
-- [x] Paso 17: Screenshot ✅ "1 vehículo guardado" — Toyota Camry LE 2023 con timestamp
+- [x] Paso 1: TROUBLESHOOTING: Verifica que vehiclessaleservice esté corriendo si usas perfil vehicles
+- [x] Paso 2: Login como seller (gmoreno@okla.com.do / $Gregory1)
+- [x] Paso 3: Navega a {BASE_URL}/publicar (o el botón 'Publicar' del navbar)
+- [x] Paso 4: Toma screenshot — ¿es un wizard paso a paso?
+- [x] Paso 5: Paso 1: Datos básicos (marca, modelo, año, versión)
+- [x] Paso 6: ¿Los menús desplegables funcionan?
+- [x] Paso 7: ¿Las marcas están en orden alfabético?
+- [x] Paso 8: ¿Los modelos se filtran por marca seleccionada?
+- [x] Paso 9: Paso 2: Características (km, combustible, transmisión, color)
+- [x] Paso 10: ¿Los campos tienen validación?
+- [x] Paso 11: ¿Los tipos de combustible están en español?
+- [x] Paso 12: Paso 3: Fotos
+- [x] Paso 13: ¿Hay zona de drag & drop?
+- [x] Paso 14: ¿Indica límites (máx fotos, tamaño)?
+- [x] Paso 15: Paso 4: Precio y ubicación
+- [x] Paso 16: ¿Puedo poner precio en RD$?
+- [x] Paso 17: ¿Las ubicaciones son de RD (Santo Domingo, Santiago, etc.)?
+- [x] Paso 18: Paso 5: Preview antes de publicar
+- [x] Paso 19: Toma screenshot del preview
+- [x] Paso 20: ¿Se ve como lo verá el comprador?
+- [x] Paso 21: NO PUBLICAR — solo documentar todo el flujo
 
 **A validar:**
 
-- [x] UF-033: ✅ Flujo buscar→comparar→contactar funciona sin errores
-- [x] UF-034: ✅ Comparador muestra diferencias útiles con highlighting verde (precio, año, km, transmisión, combustible, motor, potencia, tracción, tipo, asientos, colores, ubicación)
-- [x] UF-035: ⚠️ No hay formulario de contacto tradicional — el diseño usa CTAs directos (Chat, WhatsApp, Teléfono, IA, Agendar). Es mejor UX pero no aplica "pre-llenar datos"
-- [x] UF-036: ✅ Favoritos se guardan correctamente, visible en /cuenta/favoritos con timestamp
+- [x] UF-040: ¿El wizard funciona paso a paso sin errores?
+- [x] UF-041: ¿Los dropdowns de marca/modelo se filtran correctamente?
+- [x] UF-042: ¿El drag & drop de fotos funciona?
+- [x] UF-043: ¿El preview muestra lo que verá el comprador?
+- [x] UF-044: ¿Todo está en español incluyendo ubicaciones?
 
 **Hallazgos:**
-- ✅ Búsqueda AI funcional (Toyota SUV → 1 resultado correcto)
-- ✅ Comparador muestra tabla completa con 13 atributos y highlights verdes para valores ganadores
-- ✅ Transmisión muestra "Automática" (fix de i18n confirmado funcionando)
-- ✅ Contacto al vendedor: 5 métodos (Chat en Vivo, WhatsApp, Ver teléfono, Chatear con Ana IA, Agendar visita) + badge "Contacto verificado por OKLA"
-- ✅ Favoritos: guardado correcto con timestamp "Guardado hace X min"
-- ⚠️ Filtro precio < 2M retorna 0 resultados — todos los vehículos test > RD$2M (issue de datos seed, no bug de código)
-- ✅ Sort dropdown: 7 opciones (Más relevantes, Publicados recientemente, Precio menor/mayor, Año, Menor kilometraje)
-- ✅ FIX retry:1 en navbar.tsx confirmado — no hay polling infinito en errores
+
+**PASSES ✅**
+- Wizard carga con 3 métodos de entrada: Escanear VIN, Escribir VIN, Llenar manualmente ✅
+- 6 pasos en la progress bar: Información → Fotos → Video → Vista 360° → Precio → Revisión ✅
+- Paso 1: Formulario completo con 3 secciones (Información Básica, Especificaciones, Condición y Colores) ✅
+- Marcas en orden alfabético (Chevrolet, Ford, Honda, Hyundai, Jeep, Kia…) ✅
+- Búsqueda de marcas funciona (escribió "Toyo" → filtró a Toyota) ✅
+- Modelos filtran por marca seleccionada (Toyota → Camry, Corolla, Fortuner, Hilux, RAV4, 4Runner) ✅
+- Tipos de combustible en español: Gasolina, Diésel, Híbrido, Eléctrico, Híbrido Enchufable, GLP/Gas ✅
+- Teléfono pre-llenado del perfil del vendedor ✅
+- Botón "Guardar borrador" visible en todos los pasos ✅
+- Paso 2 Fotos: drag & drop zone con guía de 5 ángulos requeridos (Frente, Trasera, Lado izquierdo, Lado derecho, Frontal izquierda) ✅
+- Paso 3 Video: gate premium "Función Premium" con botón "Saltar" para plan Libre ✅
+- Paso 4 Vista 360°: gate premium con botón "Omitir este paso" ✅
+- Paso 5 Precio: moneda RD$ DOP por defecto (también disponible US$ USD) ✅
+- Paso 5: toggles "Precio negociable" y "Acepta intercambios" ✅
+- Paso 5: "Auto-generar" descripción con IA ✅
+- Paso 5: Widget de comparación de precios de mercado (Precio de Mercado IA) ✅
+- Paso 5: Ubicación del vehículo viene del perfil del vendedor: "Santo Domingo, Distrito Nacional" ✅
+- Paso 6 Revisión Final: score de calidad del listing (15/100 "Mejorable") con breakdown por categoría ✅
+- Paso 6: Card preview con datos del vehículo, precio en RD$, badge Negociable, info de contacto ✅
+- Paso 6: Sección "Revisión antes de publicar" con flujo de moderación 24h ✅
+- Paso 6: Checkbox de confirmación legal con link a Términos de Servicio ✅
+- Paso 6: Botones "Enviar a Revisión" + "Guardar como Borrador" ✅
+
+**BUGS 🐛**
+- **BUG-S6-01 [UX]**: Pantalla de bienvenida dice "3 pasos" pero el wizard tiene **6 pasos** — onboarding mismatch
+- **BUG-S6-02 [VALIDACIÓN — CRÍTICO]**: El wizard avanza entre pasos sin validar campos requeridos. Dejando vacíos Tipo de Carrocería, Combustible, Transmisión, Kilometraje (Paso 1) y sin fotos (Paso 2), el botón "Siguiente" avanza sin bloquear. La validación solo aparece en el Paso 6 (Revisión) como lista. Debería ser step-by-step.
+- **BUG-S6-03 [UX/COPY]**: Paso 2 Fotos muestra hint "Las publicaciones con **8+ fotos** reciben 3× más contactos" pero el plan Libre solo permite máx **5 fotos** — hint engañoso para usuarios en plan gratuito
+- **BUG-S6-04 [I18N]**: Paso 6 Revisión muestra `Condición: Used` (inglés) en vez de `Usado` (español) — el valor raw del enum TypeScript/backend filtra hacia la UI
+
+**MENORES**
+- 4Runner aparece después de RAV4 en el dropdown de modelos Toyota (alfanumérico incorrecto — números deberían preceder letras)
+- Precio de Mercado IA retorna "No hay suficientes datos" cuando falta el campo Año — comportamiento esperado pero la UX podría guiar mejor al usuario a completar el año
 
 ---
 
-### S5-T02: Mi cuenta como comprador
+### S6-T02: Dashboard del vendedor
 
 **Pasos:**
 
-- [x] Paso 1: /cuenta Dashboard ✅ "¡Hola, Buyer! 👋", stats: 1 Favoritos, 0 Búsquedas, 0 Alertas
-- [x] Paso 2: Screenshot ✅ Secciones: Estadísticas, Acciones Rápidas, Mis Favoritos Recientes
-- [x] Paso 3: /cuenta/perfil ✅ Nombre: Buyer, Apellido: Test, badge "Comprador", foto editable
-- [x] Paso 4: /cuenta/favoritos ✅ "1 vehículo guardado" — Toyota Camry LE 2023
-- [x] Paso 5: /cuenta/busquedas ✅ "Error al cargar las búsquedas" (userservice unhealthy — pre-existente, no Sprint 5)
-- [x] Paso 6: /cuenta/notificaciones ✅ "Error al cargar notificaciones" (NotificationService no activo en Docker profile — pre-existente)
-- [x] Paso 7: /mensajes ✅ Tabs (Mensajes, Asistentes IA), búsqueda, "Sin mensajes aún" empty state
-- [x] Paso 8: Screenshots de cada sección ✅
-- [x] Paso 9: ✅ Todo en español, diseño consistente con sidebar en todas las páginas /cuenta/*
-- [x] Paso 10: Sesión mantenida para siguiente sprint (no cerrar)
+- [ ] Paso 1: Navega a {BASE_URL}/cuenta/mis-vehiculos
+- [ ] Paso 2: Toma screenshot — ¿veo mis vehículos publicados?
+- [ ] Paso 3: ¿Puedo editar un vehículo existente?
+- [ ] Paso 4: ¿Puedo pausar/activar un listado?
+- [ ] Paso 5: ¿Veo estadísticas (vistas, contactos)?
+- [ ] Paso 6: Navega a {BASE_URL}/cuenta/suscripcion
+- [ ] Paso 7: Toma screenshot — ¿veo mi plan actual?
+- [ ] Paso 8: ¿Los planes coinciden con lo que vi en /vender como guest?
+- [ ] Paso 9: Navega a {BASE_URL}/cuenta/estadisticas (si existe)
+- [ ] Paso 10: ¿Hay métricas útiles para el vendedor?
+- [ ] Paso 11: Cierra sesión
 
 **A validar:**
 
-- [x] UF-037: ✅ Todas las secciones de /cuenta son accesibles (dashboard, perfil, favoritos, búsquedas, notificaciones, mensajes, seguridad)
-- [x] UF-038: ✅ Datos del perfil son editables (nombre, apellido, foto de perfil)
-- [x] UF-039: ✅ Diseño consistente en todas las secciones (sidebar + contenido principal, todo en español)
+- [x] UF-045: ✅ Dashboard muestra sección de vehículos con empty state apropiado
+- [x] UF-046: ⚠️ PARCIAL — sin vehículos activos no se pudo probar editar/pausar; UI de tabs y búsqueda presentes
+- [x] UF-047: ✅ Planes en /cuenta/suscripcion coinciden con estructura de 3 niveles (Libre/Estándar/Verificado)
+- [x] UF-048: ✅ Estadísticas con premium gate apropiado; para plan Libre la página explica qué se obtiene al subir
 
 **Hallazgos:**
-- ✅ Dashboard muestra estadísticas correctas (1 favorito coincide con lo guardado en S5-T01)
-- ✅ Perfil editable con campos Nombre/Apellido + upload de foto + badge "Comprador"
-- ✅ Favoritos muestra vehículo guardado con timestamp relativo
-- ✅ Mensajes tiene tabs (Mensajes / Asistentes IA) + buscador + empty state correcto
-- ✅ Seguridad: cambiar contraseña, 2FA (toggle para habilitar), sesiones activas (Chrome en macOS)
-- ⚠️ /cuenta/busquedas: error al cargar (userservice unhealthy — pre-existente, container no del scope Sprint 5)
-- ⚠️ /cuenta/notificaciones: error al cargar (NotificationService no corriendo — no está en Docker profile activo)
-- ✅ Web Vitals buenos: FCP 192ms, TTFB 137ms
-- ✅ Console: 502/500 solo de servicios no activos (pre-existente) — retry:1 fix limita reintentos correctamente
-- ✅ FIX use-reviews.ts retry:1 confirmado — no hay polling infinito en errores de reviews
+
+**PASSES ✅**
+- /cuenta (Dashboard): "Mi Panel de Vendedor" con badge de plan "Libre" ✅
+- KPIs en el dashboard: 0 Vehículos Activos, 0 Ventas Completadas, — Calificación, — Tasa de Respuesta ✅
+- Banner "Verifica tu identidad para vender" con CTA "Verificar ahora" ✅
+- Upsell banner (dismissable ×) con "Actualizar Plan →" ✅
+- "Acciones Rápidas": 5 tiles — Mis Vehículos, Consultas, Estadísticas, Pagos, Mi Plan ✅
+- /cuenta/mis-vehiculos: Empty state "No tienes vehículos publicados" + CTA "+ Publicar vehículo" ✅
+- Tabs de ciclo de vida: Todos, Activos, En Revisión, Rechazados, Pausados, Vendidos ✅
+- Buscador "Buscar por título..." ✅
+- /cuenta/suscripcion: 3 planes con precios en RD$ (Libre=Gratis, Estándar=RD$579/publicación, Verificado=RD$2,029/mes) ✅
+- Plan actual "Libre" marcado como "Plan Actual" ✅
+- Medidores de uso: Publicaciones activas 0/1, Fotos por vehículo 0/5 ✅
+- /cuenta/estadisticas: Premium gate correcto — "Requiere: Verificado" con CTA "Mejorar Mi Plan" ✅
+- Sidebar navegación completa: Dashboard, Mi Perfil, Mi Garage, Estadísticas, Consultas Recibidas, Reseñas, Favoritos, Alertas de Precio, Pagos, Seguridad, Notificaciones, Preferencias, Cerrar Sesión ✅
+
+**BUGS 🐛**
+- **BUG-S6-05 [UX]**: "Destacadas este mes: **0/0**" en /cuenta/suscripcion muestra barra roja al 100% — plan Libre no incluye destacadas, debería mostrar "N/A" u ocultar el medidor
+- **BUG-S6-06 [I18N/PRECIO]**: Plan Estándar muestra "Renovación de listing: **$6.99**" con símbolo $ en lugar de RD$ — posible mezcla de precio USD con el contexto RD$ del resto de la página
+- **BUG-S6-07 [COPY — CRÍTICO]**: Dashboard upsell dice "Hasta **50 fotos** por publicación" pero Suscripción muestra máx 12 fotos (plan Verificado) — copy incorrecto que puede generar expectativas falsas
+
+**PARCIAL**
+- UF-046: Sin vehículos publicados no fue posible probar editar/pausar listados — requiere test adicional con vehículo activo
 
 ---
 
 ## Resultado
 
-- Sprint: 5 — Buyer — Buscar, Comparar y Contactar
-- Fase: REAUDIT
+- Sprint: 6 — Seller — Publicar Mi Primer Vehículo
+- Fase: AUDIT
 - Ambiente: LOCAL/TUNNEL (cloudflared forzado: https://ought-feed-shipping-wright.trycloudflare.com)
 - URL: https://ought-feed-shipping-wright.trycloudflare.com
-- Estado: EN PROGRESO
-- Bugs encontrados: _(completar)_
+- Estado: COMPLETADO
+- Bugs encontrados: **7 bugs** (4 en S6-T01, 3 en S6-T02)
+  - BUG-S6-01: Wizard dice "3 pasos" pero tiene 6 [UX]
+  - BUG-S6-02: Sin validación step-by-step — deferred al Paso 6 [CRÍTICO]
+  - BUG-S6-03: Hint "8+ fotos" en plan que permite máx 5 [UX/COPY]
+  - BUG-S6-04: Condición "Used" en inglés en Revisión Final [I18N]
+  - BUG-S6-05: Medidor "Destacadas 0/0" con barra roja en plan Libre [UX]
+  - BUG-S6-06: Renovación listing "$6.99" debería ser "RD$" [I18N/PRECIO]
+  - BUG-S6-07: Upsell dice "50 fotos" vs. máx real de 12 [COPY — CRÍTICO]
+- Features confirmadas OK: Wizard 6 pasos, dropdowns marca/modelo, combustibles en español, RD$ por defecto, ubicación RD, score de calidad, moderation flow, planes con precios RD$, premium gates con upgrade CTAs
 
 ---
 
 _Cuando termines, agrega la palabra READ al final de este archivo._
-
-READ
