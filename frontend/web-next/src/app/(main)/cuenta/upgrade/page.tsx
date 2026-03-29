@@ -167,7 +167,7 @@ const DEALER_PLANS: Record<string, PlanInfo> = {
     features: [
       'Publicaciones ilimitadas',
       'Hasta 20 fotos + video tour',
-      '#1 garantizado en posición de búsqueda',
+      'Máxima visibilidad en búsquedas',
       '50 publicaciones destacadas/mes',
       '👑 Badge Enterprise',
       '$300 OKLA Coins/mes',
@@ -217,7 +217,7 @@ const SELLER_PLANS: Record<string, PlanInfo> = {
       '⬆ Posición media (bajo dealers)',
       '🔵 Badge Vendedor OKLA',
       'KYC: email + teléfono verificados',
-      'Renovación de listing: $6.99',
+      'Renovación de listing: RD$579',
       '1 valoración PricingAgent IA por listing',
     ],
   },
@@ -326,7 +326,7 @@ function buildSellerComparison(currentKey: string, targetKey: string): Compariso
   };
   const renewalMap: Record<string, string> = {
     libre_seller: '—',
-    estandar: '$6.99',
+    estandar: 'RD$579',
     verificado: 'Incluida',
   };
   const pricingAgentMap: Record<string, string> = {
@@ -1136,6 +1136,7 @@ function UpgradeCheckoutInner() {
       {/* Trust Footer */}
       <div className="flex flex-col items-center gap-2 text-center">
         <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png"
             alt="PayPal"

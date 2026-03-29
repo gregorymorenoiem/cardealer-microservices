@@ -164,7 +164,7 @@ const DEFAULT_SELLER_FEATURES: Record<string, string[]> = {
     '⬆ Posición media (bajo dealers)',
     '🔵 Badge Vendedor OKLA',
     'KYC: email + teléfono verificados',
-    'Renovación de listing: $6.99',
+    'Renovación de listing: RD$579',
     '1 valoración PricingAgent IA por listing',
   ],
   verificado: [
