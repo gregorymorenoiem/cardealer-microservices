@@ -678,8 +678,8 @@ export function SmartPublishWizard({
       const uploaded = formData.images.filter(
         img => img.url && !img.url.startsWith('blob:') && !img.isUploading
       );
-      if (uploaded.length === 0) {
-        toast.error('Agrega al menos una foto antes de continuar');
+      if (uploaded.length < 3) {
+        toast.error('Agrega al menos 3 fotos antes de continuar');
         return;
       }
     }

@@ -132,7 +132,9 @@ function VehicleCard({
 
               <h3 className="text-foreground truncate font-semibold">{vehicle.title}</h3>
 
-              <p className="text-primary mt-1 text-xl font-bold">{formatPrice(vehicle.price)}</p>
+              <p className="text-primary mt-1 text-xl font-bold">
+                {formatPrice(vehicle.price, vehicle.currency)}
+              </p>
 
               {/* Stats */}
               <div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
@@ -341,7 +343,7 @@ export default function MyVehiclesPage() {
       })
     );
     try {
-      await vehicleService.publish(id);
+      await vehicleService.publish(id, { disclaimerAccepted: true, tosVersion: '2026.1' });
       toast.success('Vehículo enviado a revisión nuevamente');
     } catch {
       queryClient.invalidateQueries({ queryKey: ['user-vehicles'] });

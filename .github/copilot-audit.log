@@ -2392,3 +2392,36 @@ test
 [2026-03-28 15:42:30] [MODIFICACIÓN] frontend/web-next/src/app/(main)/faq/page.tsx — Fix S3-T01: FAQ inconsistency (5 vehicles → 3 active listings to match plans)
 [2026-03-28 15:42:31] [MODIFICACIÓN] frontend/web-next/next.config.ts — Fix S3-T02: Add /preguntas-frecuentes → /faq redirect (permanent 301)
 [2026-03-28 15:42:31] [MODIFICACIÓN] frontend/web-next/src/app/(main)/contacto/page.tsx — Fix S3-T02: FAQ CTA links to /faq instead of /ayuda
+[2026-03-28 15:57:14] [AUDIT-SPRINT] Sprint 3 [reaudit] [TUNNEL] despachado: Visitante — Explorando Cómo Vender en OKLA
+[2026-03-28 16:10:14] [AUDIT-SPRINT] Sprint 3 [fix] [TUNNEL] despachado: Visitante — Explorando Cómo Vender en OKLA
+[2026-03-28 16:15:15] [AUDIT-SPRINT] Sprint 3 [reaudit] [TUNNEL] despachado: Visitante — Explorando Cómo Vender en OKLA
+[2026-03-28 16:20:15] [AUDIT-SPRINT] Sprint 3 [fix] [TUNNEL] despachado: Visitante — Explorando Cómo Vender en OKLA
+[2026-03-28 16:21:16] [AUDIT-SPRINT] Sprint 3 [reaudit] [TUNNEL] despachado: Visitante — Explorando Cómo Vender en OKLA
+[2026-03-28 16:26:46] [AUDIT-SPRINT] Sprint 3 completado (ciclo completo)
+[2026-03-28 16:26:46] [AUDIT-SPRINT] Sprint 4 [audit] [TUNNEL] despachado: Nuevo Usuario — Registro y Login
+[2026-03-28 16:44:17] [AUDIT-SPRINT] Sprint 4 [fix] [TUNNEL] despachado: Nuevo Usuario — Registro y Login
+[2026-03-28 16:54:48] [AUDIT-SPRINT] Sprint 4 [reaudit] [TUNNEL] despachado: Nuevo Usuario — Registro y Login
+[2026-03-28 16:57:18] [AUDIT-SPRINT] Sprint 4 [fix] [TUNNEL] despachado: Nuevo Usuario — Registro y Login
+[2026-03-28 16:58:19] [AUDIT-SPRINT] Sprint 4 [reaudit] [TUNNEL] despachado: Nuevo Usuario — Registro y Login
+[2026-03-28 16:59:49] [AUDIT-SPRINT] Sprint 4 [fix] [TUNNEL] despachado: Nuevo Usuario — Registro y Login
+[2026-03-28 17:00:20] [AUDIT-SPRINT] Sprint 4 [reaudit] [TUNNEL] despachado: Nuevo Usuario — Registro y Login
+[2026-03-28 17:03:20] [AUDIT-SPRINT] Sprint 4 completado (ciclo completo)
+[2026-03-28 17:03:20] [AUDIT-SPRINT] Sprint 5 [audit] [TUNNEL] despachado: Buyer — Buscar, Comparar y Contactar
+[2026-03-28 18:37:51] [AUDIT-SPRINT] Sprint 5 [fix] [TUNNEL] despachado: Buyer — Buscar, Comparar y Contactar
+[2026-03-28 19:09:22] [AUDIT-SPRINT] Sprint 5 [reaudit] [TUNNEL] despachado: Buyer — Buscar, Comparar y Contactar
+[2026-03-29 00:00:26] [AUDIT-SPRINT] Sprint 5 [fix] [TUNNEL] despachado: Buyer — Buscar, Comparar y Contactar
+[2026-03-29 00:27:49] [MODIFICACIÓN] S5 FIX — getSlug format fixed (year-make-model-shortId8), formatTransmission added (EN→ES), Gate passed, committed 62d1828f, pushed to main
+[2026-03-29 00:27:57] [AUDIT-SPRINT] Sprint 5 [reaudit] [TUNNEL] despachado: Buyer — Buscar, Comparar y Contactar
+[2026-03-29 06:17:02] [AUDIT-SPRINT] Sprint 5 [fix] [TUNNEL] despachado: Buyer — Buscar, Comparar y Contactar
+[2026-03-29 06:47:02] [AUDIT-SPRINT] Sprint 5 [reaudit] [TUNNEL] despachado: Buyer — Buscar, Comparar y Contactar
+[2026-03-29 07:09:33] [AUDIT-SPRINT] Sprint 5 completado (ciclo completo)
+[2026-03-29 07:09:33] [AUDIT-SPRINT] Sprint 6 [audit] [TUNNEL] despachado: Seller — Publicar Mi Primer Vehículo
+[2026-03-29 10:10:58] [AUDIT] S6 Sprint 6 completado — 7 bugs documentados, migración aplicada, READ escrito
+[2026-03-29 10:11:06] [AUDIT-SPRINT] Sprint 6 [fix] [TUNNEL] despachado: Seller — Publicar Mi Primer Vehículo
+[2026-03-29 10:39:49] [MODIFICACIÓN] .prompts/agent/vscode_copilot_monitor.py — Fix detección de finalización: _body_hash(), completion check fuera del else, sin _stall_ok
+[2026-03-29 11:43:37] [AUDIT-SPRINT] Sprint 6 [reaudit] [TUNNEL] despachado: Seller — Publicar Mi Primer Vehículo
+[2026-03-29 11:55:50] [EJECUCIÓN] Docker VM 100% lleno — eliminando volumen SEQ (23GB logs históricos) para recuperar espacio
+[2026-03-29 13:47:09] [AUDIT-SPRINT] Sprint 6 [fix] [TUNNEL] despachado: Seller — Publicar Mi Primer Vehículo
+[2026-03-29 14:01:39] [AUDIT-SPRINT] Sprint 6 [reaudit] [TUNNEL] despachado: Seller — Publicar Mi Primer Vehículo
+[2026-03-29 14:22:11] [AUDIT-SPRINT] Sprint 6 [fix] [TUNNEL] despachado: Seller — Publicar Mi Primer Vehículo
+[2026-03-29 14:58:04] [MODIFICACIÓN] smart-publish-wizard.tsx — BUG-S6-T01: foto validation 1→3 (match review step). mis-vehiculos/page.tsx — BUG-S6-T02: formatPrice sin currency → con vehicle.currency
